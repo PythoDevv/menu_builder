@@ -27,12 +27,16 @@ async def get_or_create_user(tg_id: int, full_name: str, username: Optional[str]
         if user is None:
             user = User(tg_id=tg_id, full_name=full_name, username=username)
             s.add(user)
-        else:
+            await s.commit()
+        elif (
+            user.full_name != full_name
+            or user.username != username
+            or not user.is_active
+        ):
             user.full_name = full_name
             user.username = username
-            if not user.is_active:
-                user.is_active = True
-        await s.commit()
+            user.is_active = True
+            await s.commit()
         return user
 
 

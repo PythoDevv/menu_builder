@@ -130,7 +130,7 @@ def content_add_done_kb(item_id: int) -> InlineKeyboardMarkup:
 def start_msg_kb(exists: bool) -> InlineKeyboardMarkup:
     rows = [[_btn("✏️ O'zgartirish" if exists else "➕ Qo'shish", "st:edit")]]
     if exists:
-        rows.append([_btn("🗑 O'chirish", "st:del")])
+        rows.append([_btn("👁 Ko'rish", "st:prev"), _btn("🗑 O'chirish", "st:del")])
     rows.append(BACK_HOME)
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
@@ -142,6 +142,12 @@ def start_delete_kb() -> InlineKeyboardMarkup:
             [_btn("⬅️ Yo'q", "st:show")],
         ]
     )
+
+
+# ------------------------------------------------------------------------ TELEFON
+def phone_settings_kb(enabled: bool) -> InlineKeyboardMarkup:
+    label = "🔴 O'chirish" if enabled else "🟢 Yoqish"
+    return InlineKeyboardMarkup(inline_keyboard=[[_btn(label, "adm:phone:tog")], BACK_HOME])
 
 
 # ---------------------------------------------------------------------- BROADCAST
