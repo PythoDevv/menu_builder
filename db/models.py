@@ -32,6 +32,22 @@ class User(Base):
     )
 
 
+class Admin(Base):
+    """Paneldan qo'shilgan admin. .env dagi ADMINS bu yerga yozilmaydi."""
+
+    __tablename__ = "admins"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    tg_id: Mapped[int] = mapped_column(BigInteger, unique=True, index=True)
+    full_name: Mapped[str] = mapped_column(String(255), default="", server_default="")
+    username: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
+    # kim qo'shgan (tg_id)
+    added_by: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class Channel(Base):
     __tablename__ = "channels"
 

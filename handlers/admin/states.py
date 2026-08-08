@@ -1,6 +1,10 @@
 from aiogram.fsm.state import State, StatesGroup
 
 
+class AdminSG(StatesGroup):
+    waiting_id = State()
+
+
 class ChannelSG(StatesGroup):
     waiting_chat = State()
     waiting_type = State()

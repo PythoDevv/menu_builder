@@ -2,7 +2,7 @@ from typing import Optional
 
 from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from db.models import Channel, Content, MenuItem
+from db.models import Admin, Channel, Content, MenuItem
 from utils.content import content_label
 
 
@@ -24,7 +24,38 @@ def admin_home_kb() -> InlineKeyboardMarkup:
             [_btn("📢 Kanallar", "ch:list"), _btn("🗂 Menyu tugmalari", "mn:open:root")],
             [_btn("✏️ Start xabar", "st:show"), _btn("☎️ Telefon so'rash", "adm:phone")],
             [_btn("📨 Xabar yuborish", "adm:send"), _btn("📊 Excel", "xl:menu")],
-            [_btn("👥 Statistika", "adm:stats")],
+            [_btn("👥 Statistika", "adm:stats"), _btn("👮 Adminlar", "ad:list")],
+        ]
+    )
+
+
+# ---------------------------------------------------------------------- ADMINLAR
+def admins_kb(admins: list[Admin], supers: list[int]) -> InlineKeyboardMarkup:
+    rows = []
+    for tg_id in supers:
+        rows.append([_btn(f"⭐ {tg_id}", "ad:super")])
+    for a in admins:
+        label = a.full_name or (f"@{a.username}" if a.username else str(a.tg_id))
+        rows.append([_btn(f"👤 {label}", f"ad:one:{a.id}")])
+    rows.append([_btn("➕ Admin qo'shish", "ad:add")])
+    rows.append(BACK_HOME)
+    return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def admin_one_kb(admin_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [_btn("🗑 Adminlikdan olish", f"ad:del:{admin_id}")],
+            [_btn("⬅️ Adminlar", "ad:list")],
+        ]
+    )
+
+
+def admin_delete_kb(admin_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [_btn("✅ Ha, olib tashlansin", f"ad:delok:{admin_id}")],
+            [_btn("⬅️ Yo'q", f"ad:one:{admin_id}")],
         ]
     )
 

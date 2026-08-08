@@ -9,7 +9,7 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from config import TIMEZONE
 from db.base import session_maker
-from db.models import Channel, Content, JoinRequest, MenuItem, Setting, User
+from db.models import Admin, Channel, Content, JoinRequest, MenuItem, Setting, User
 
 TZ = ZoneInfo(TIMEZONE)
 
@@ -90,6 +90,55 @@ async def get_stats() -> dict:
         "week": week or 0,
         "with_phone": with_phone or 0,
     }
+
+
+# =========================================================================== ADMINS
+async def get_admins() -> list[Admin]:
+    async with session_maker() as s:
+        return list(await s.scalars(select(Admin).order_by(Admin.id)))
+
+
+async def get_admin_ids() -> list[int]:
+    async with session_maker() as s:
+        return list(await s.scalars(select(Admin.tg_id)))
+
+
+async def get_admin(admin_id: int) -> Optional[Admin]:
+    async with session_maker() as s:
+        return await s.get(Admin, admin_id)
+
+
+async def get_admin_by_tg_id(tg_id: int) -> Optional[Admin]:
+    async with session_maker() as s:
+        return await s.scalar(select(Admin).where(Admin.tg_id == tg_id))
+
+
+async def add_admin(
+    tg_id: int, full_name: str, username: Optional[str], added_by: Optional[int]
+) -> tuple[Admin, bool]:
+    """(admin, yangi_qo'shildimi) qaytaradi."""
+    async with session_maker() as s:
+        admin = await s.scalar(select(Admin).where(Admin.tg_id == tg_id))
+        if admin is not None:
+            return admin, False
+        admin = Admin(
+            tg_id=tg_id, full_name=full_name, username=username, added_by=added_by
+        )
+        s.add(admin)
+        await s.commit()
+        return admin, True
+
+
+async def delete_admin(admin_id: int) -> Optional[int]:
+    """O'chirilgan adminning tg_id sini qaytaradi (topilmasa None)."""
+    async with session_maker() as s:
+        admin = await s.get(Admin, admin_id)
+        if admin is None:
+            return None
+        tg_id = admin.tg_id
+        await s.delete(admin)
+        await s.commit()
+        return tg_id
 
 
 # ========================================================================= CHANNELS

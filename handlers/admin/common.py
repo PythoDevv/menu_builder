@@ -1,21 +1,30 @@
 from contextlib import suppress
 from typing import Optional
 
-from aiogram import F, Router
+from aiogram import Router
 from aiogram.exceptions import TelegramBadRequest
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup
+from aiogram.filters import BaseFilter
+from aiogram.types import CallbackQuery, InlineKeyboardMarkup, TelegramObject
 
-from config import ADMINS
 from keyboards.admin_kb import admin_home_kb
+from utils.admins import is_admin
 
 HOME_TEXT = "👑 <b>Admin panel</b>\n\nKerakli bo'limni tanlang:"
+
+
+class IsAdmin(BaseFilter):
+    """Ro'yxat xotirada (utils.admins), shuning uchun bazaga murojaat yo'q."""
+
+    async def __call__(self, event: TelegramObject) -> bool:
+        user = getattr(event, "from_user", None)
+        return user is not None and is_admin(user.id)
 
 
 def admin_router() -> Router:
     """Faqat adminlar uchun router."""
     router = Router()
-    router.message.filter(F.from_user.id.in_(ADMINS))
-    router.callback_query.filter(F.from_user.id.in_(ADMINS))
+    router.message.filter(IsAdmin())
+    router.callback_query.filter(IsAdmin())
     return router
 
 

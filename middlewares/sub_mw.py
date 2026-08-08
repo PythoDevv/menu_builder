@@ -7,9 +7,9 @@ from aiogram import BaseMiddleware, Bot
 from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message, TelegramObject
 
-from config import ADMINS
 from db.queries import is_phone_required
 from keyboards.user_kb import phone_kb, subscribe_kb
+from utils.admins import is_admin
 from utils.subscription import check_subscription
 
 SUB_TEXT = (
@@ -56,7 +56,7 @@ class SubscriptionMiddleware(BaseMiddleware):
         user = data.get("event_from_user")
         bot: Bot = data["bot"]
 
-        if user is None or user.id in ADMINS or not _private_chat(event):
+        if user is None or is_admin(user.id) or not _private_chat(event):
             return await handler(event, data)
 
         missing = await check_subscription(bot, user.id)
@@ -79,7 +79,7 @@ class PhoneMiddleware(BaseMiddleware):
         user = data.get("event_from_user")
         db_user = data.get("db_user")
 
-        if user is None or user.id in ADMINS or not _private_chat(event):
+        if user is None or is_admin(user.id) or not _private_chat(event):
             return await handler(event, data)
         # kontakt xabarining o'zi o'tib ketishi kerak
         if isinstance(event, Message) and event.contact:
