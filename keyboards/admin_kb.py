@@ -1,202 +1,226 @@
-from typing import Optional
+"""Admin panel klaviaturalari — hammasi reply (pastdagi) tugmalar.
 
-from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
+Reply tugmada callback_data bo'lmagani uchun tugma matni orqali ishlaymiz.
+Ro'yxatlar (kanal, menyu, admin, kontent) raqamlanadi: matn -> id moslik
+FSM ma'lumotida saqlanadi (handlers/admin/common.py).
+"""
+
+from typing import Optional, Sequence
+
+from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
 
 from db.models import Admin, Channel, Content, MenuItem
 from utils.content import content_label
 
+# ------------------------------------------------------------------ umumiy tugmalar
+BTN_HOME = "🏠 Admin panel"
+BTN_BACK = "⬅️ Orqaga"
+BTN_CANCEL = "❌ Bekor qilish"
+BTN_EXIT = "🚪 Chiqish"
+BTN_YES_DELETE = "✅ Ha, o'chirilsin"
+BTN_NO = "⬅️ Yo'q"
+BTN_DELETE = "🗑 O'chirish"
+BTN_VIEW = "👁 Ko'rish"
+BTN_ON = "🟢 Yoqish"
+BTN_OFF = "🔴 O'chirish"
 
-def _btn(text: str, data: str) -> InlineKeyboardButton:
-    return InlineKeyboardButton(text=text, callback_data=data)
+# ------------------------------------------------------------------- bosh sahifa
+BTN_CHANNELS = "📢 Kanallar"
+BTN_MENU = "🗂 Menyu tugmalari"
+BTN_START_MSG = "✏️ Start xabar"
+BTN_SUB_MSG = "📌 Obuna xabari"
+BTN_PHONE = "☎️ Telefon so'rash"
+BTN_BROADCAST = "📨 Xabar yuborish"
+BTN_EXCEL = "📊 Excel"
+BTN_STATS = "👥 Statistika"
+BTN_ADMINS = "👮 Adminlar"
+
+# ---------------------------------------------------------------------- kanallar
+BTN_CH_ADD = "➕ Kanal qo'shish"
+BTN_CH_LIST = "⬅️ Kanallar"
+BTN_CH_ENABLE = "🟢 Faollashtirish"
+BTN_CH_DISABLE = "🔴 To'xtatish"
+BTN_CH_PUBLIC = "📢 Ochiq kanal"
+BTN_CH_PRIVATE = "🔒 Yopiq (qo'shilish so'rovi)"
+
+# ------------------------------------------------------------------------- menyu
+BTN_MN_ADD = "➕ Tugma qo'shish"
+BTN_MN_RENAME = "✏️ Nomi"
+BTN_MN_SHOW = "👁 Ko'rsatish"
+BTN_MN_HIDE = "🚫 Yashirish"
+BTN_MN_UP = "⬆️ Yuqoriga"
+BTN_MN_DOWN = "⬇️ Pastga"
+BTN_CONTENT = "📎 Kontent"  # yoniga soni qo'shiladi: "📎 Kontent (3)"
+BTN_CNT_ADD = "➕ Kontent qo'shish"
+BTN_CNT_DONE = "✅ Tugatish"
+
+# ------------------------------------------------------- start / obuna xabari
+BTN_ST_EDIT = "✏️ O'zgartirish"
+BTN_ST_ADD = "➕ Qo'shish"
+BTN_SUB_RESET = "♻️ Standartga qaytarish"
+
+# ---------------------------------------------------------------------- broadcast
+BTN_BC_SEND = "✅ Yuborish"
+
+# -------------------------------------------------------------------------- excel
+BTN_XL_GET = "📥 Faylni olish"
+BTN_XL_REFRESH = "🔄 Yangilash"
+
+# ------------------------------------------------------------------------ adminlar
+BTN_AD_ADD = "➕ Admin qo'shish"
+BTN_AD_LIST = "⬅️ Adminlar"
+BTN_AD_DELETE = "🗑 Adminlikdan olish"
+BTN_AD_YES = "✅ Ha, olib tashlansin"
 
 
-BACK_HOME = [_btn("⬅️ Admin panel", "adm:home")]
-CANCEL_ROW = [_btn("❌ Bekor qilish", "adm:cancel")]
-
-
-def cancel_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(inline_keyboard=[CANCEL_ROW])
-
-
-def admin_home_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [_btn("📢 Kanallar", "ch:list"), _btn("🗂 Menyu tugmalari", "mn:open:root")],
-            [_btn("✏️ Start xabar", "st:show"), _btn("☎️ Telefon so'rash", "adm:phone")],
-            [_btn("📨 Xabar yuborish", "adm:send"), _btn("📊 Excel", "xl:menu")],
-            [_btn("👥 Statistika", "adm:stats"), _btn("👮 Adminlar", "ad:list")],
-        ]
+def _kb(rows: Sequence[Sequence[str]], placeholder: str = "Tugmani tanlang") -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[[KeyboardButton(text=t) for t in row] for row in rows],
+        resize_keyboard=True,
+        input_field_placeholder=placeholder,
     )
+
+
+def _list_rows(labels: Sequence[str]) -> list[list[str]]:
+    return [[label] for label in labels]
+
+
+# ------------------------------------------------------------------- bosh sahifa
+def admin_home_kb() -> ReplyKeyboardMarkup:
+    return _kb(
+        [
+            [BTN_CHANNELS, BTN_MENU],
+            [BTN_START_MSG, BTN_SUB_MSG],
+            [BTN_PHONE, BTN_BROADCAST],
+            [BTN_EXCEL, BTN_STATS],
+            [BTN_ADMINS],
+            [BTN_EXIT],
+        ],
+        "Bo'limni tanlang",
+    )
+
+
+def cancel_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_CANCEL]], "Yuboring yoki bekor qiling")
+
+
+def confirm_delete_kb(no_button: str = BTN_NO) -> ReplyKeyboardMarkup:
+    return _kb([[BTN_YES_DELETE], [no_button]], "Tasdiqlang")
 
 
 # ---------------------------------------------------------------------- ADMINLAR
-def admins_kb(admins: list[Admin], supers: list[int]) -> InlineKeyboardMarkup:
-    rows = []
-    for tg_id in supers:
-        rows.append([_btn(f"⭐ {tg_id}", "ad:super")])
-    for a in admins:
-        label = a.full_name or (f"@{a.username}" if a.username else str(a.tg_id))
-        rows.append([_btn(f"👤 {label}", f"ad:one:{a.id}")])
-    rows.append([_btn("➕ Admin qo'shish", "ad:add")])
-    rows.append(BACK_HOME)
-    return InlineKeyboardMarkup(inline_keyboard=rows)
+def admin_label(admin: Admin, index: int) -> str:
+    name = admin.full_name or (f"@{admin.username}" if admin.username else str(admin.tg_id))
+    return f"{index}. 👤 {name}"
 
 
-def admin_one_kb(admin_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [_btn("🗑 Adminlikdan olish", f"ad:del:{admin_id}")],
-            [_btn("⬅️ Adminlar", "ad:list")],
-        ]
-    )
+def super_admin_label(tg_id: int) -> str:
+    return f"⭐ {tg_id}"
 
 
-def admin_delete_kb(admin_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [_btn("✅ Ha, olib tashlansin", f"ad:delok:{admin_id}")],
-            [_btn("⬅️ Yo'q", f"ad:one:{admin_id}")],
-        ]
-    )
+def admins_kb(labels: Sequence[str]) -> ReplyKeyboardMarkup:
+    return _kb(_list_rows(labels) + [[BTN_AD_ADD], [BTN_HOME]])
+
+
+def admin_one_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_AD_DELETE], [BTN_AD_LIST]])
+
+
+def admin_delete_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_AD_YES], [BTN_NO]], "Tasdiqlang")
 
 
 # ---------------------------------------------------------------------- KANALLAR
-def channels_kb(channels: list[Channel]) -> InlineKeyboardMarkup:
-    rows = []
-    for ch in channels:
-        mark = "🟢" if ch.is_active else "🔴"
-        kind = "🔒" if ch.is_private else "📢"
-        rows.append([_btn(f"{mark} {kind} {ch.title}", f"ch:one:{ch.id}")])
-    rows.append([_btn("➕ Kanal qo'shish", "ch:add")])
-    rows.append(BACK_HOME)
-    return InlineKeyboardMarkup(inline_keyboard=rows)
+def channel_label(ch: Channel, index: int) -> str:
+    mark = "🟢" if ch.is_active else "🔴"
+    kind = "🔒" if ch.is_private else "📢"
+    return f"{index}. {mark} {kind} {ch.title}"
 
 
-def channel_one_kb(ch: Channel) -> InlineKeyboardMarkup:
-    toggle = "🔴 O'chirish" if ch.is_active else "🟢 Yoqish"
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [_btn(toggle, f"ch:tog:{ch.id}"), _btn("🗑 O'chirish", f"ch:del:{ch.id}")],
-            [_btn("⬅️ Kanallar", "ch:list")],
-        ]
-    )
+def channels_kb(labels: Sequence[str]) -> ReplyKeyboardMarkup:
+    return _kb(_list_rows(labels) + [[BTN_CH_ADD], [BTN_HOME]])
 
 
-def channel_delete_kb(channel_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [_btn("✅ Ha, o'chirilsin", f"ch:delok:{channel_id}")],
-            [_btn("⬅️ Yo'q", f"ch:one:{channel_id}")],
-        ]
-    )
+def channel_one_kb(ch: Channel) -> ReplyKeyboardMarkup:
+    toggle = BTN_CH_DISABLE if ch.is_active else BTN_CH_ENABLE
+    return _kb([[toggle, BTN_DELETE], [BTN_CH_LIST]])
 
 
-def channel_type_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [_btn("📢 Ochiq kanal", "ch:type:public")],
-            [_btn("🔒 Yopiq (qo'shilish so'rovi)", "ch:type:private")],
-            CANCEL_ROW,
-        ]
-    )
+def channel_type_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_CH_PUBLIC], [BTN_CH_PRIVATE], [BTN_CANCEL]], "Turini tanlang")
 
 
 # ------------------------------------------------------------------------- MENYU
+def menu_item_label(item: MenuItem, index: int) -> str:
+    mark = "" if item.is_active else "🚫 "
+    return f"{index}. {mark}{item.title}"
+
+
+def content_button(count: int) -> str:
+    return f"{BTN_CONTENT} ({count})"
+
+
 def menu_node_kb(
-    item: Optional[MenuItem], children: list[MenuItem], content_count: int
-) -> InlineKeyboardMarkup:
-    node_id = "root" if item is None else str(item.id)
-    rows = []
-    for child in children:
-        mark = "" if child.is_active else "🚫 "
-        rows.append([_btn(f"{mark}{child.title}", f"mn:open:{child.id}")])
-
-    rows.append([_btn("➕ Tugma qo'shish", f"mn:add:{node_id}")])
-
-    if item is not None:
-        rows.append([_btn(f"📎 Kontent ({content_count})", f"mn:cnt:{item.id}")])
-        toggle = "🚫 Yashirish" if item.is_active else "👁 Ko'rsatish"
-        rows.append([_btn("✏️ Nomi", f"mn:ren:{item.id}"), _btn(toggle, f"mn:tog:{item.id}")])
-        rows.append(
-            [
-                _btn("⬆️", f"mn:up:{item.id}"),
-                _btn("⬇️", f"mn:down:{item.id}"),
-                _btn("🗑 O'chirish", f"mn:del:{item.id}"),
-            ]
-        )
-        back = "root" if item.parent_id is None else str(item.parent_id)
-        rows.append([_btn("⬅️ Orqaga", f"mn:open:{back}")])
+    labels: Sequence[str], item: Optional[MenuItem], content_count: int
+) -> ReplyKeyboardMarkup:
+    rows = _list_rows(labels)
+    rows.append([BTN_MN_ADD])
+    if item is None:
+        rows.append([BTN_HOME])
     else:
-        rows.append(BACK_HOME)
-    return InlineKeyboardMarkup(inline_keyboard=rows)
+        rows.append([content_button(content_count)])
+        rows.append([BTN_MN_RENAME, BTN_MN_HIDE if item.is_active else BTN_MN_SHOW])
+        rows.append([BTN_MN_UP, BTN_MN_DOWN, BTN_DELETE])
+        rows.append([BTN_BACK, BTN_HOME])
+    return _kb(rows)
 
 
-def menu_delete_kb(item_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [_btn("✅ Ha, o'chirilsin", f"mn:delok:{item_id}")],
-            [_btn("⬅️ Yo'q", f"mn:open:{item_id}")],
-        ]
-    )
+def contents_kb(labels: Sequence[str]) -> ReplyKeyboardMarkup:
+    rows = _list_rows(labels)
+    rows.append([BTN_CNT_ADD])
+    if labels:
+        rows.append([BTN_VIEW])
+    rows.append([BTN_BACK])
+    return _kb(rows)
 
 
-def contents_kb(item_id: int, contents: list[Content]) -> InlineKeyboardMarkup:
-    rows = []
-    for i, c in enumerate(contents, start=1):
-        rows.append([_btn(f"🗑 {content_label(c, i)}", f"mn:cdel:{c.id}")])
-    rows.append([_btn("➕ Kontent qo'shish", f"mn:cadd:{item_id}")])
-    if contents:
-        rows.append([_btn("👁 Ko'rish", f"mn:cprev:{item_id}")])
-    rows.append([_btn("⬅️ Orqaga", f"mn:open:{item_id}")])
-    return InlineKeyboardMarkup(inline_keyboard=rows)
+def content_item_label(content: Content, index: int) -> str:
+    return f"🗑 {content_label(content, index)}"
 
 
-def content_add_done_kb(item_id: int) -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[[_btn("✅ Tugatish", f"mn:cnt:{item_id}")]]
-    )
+def content_add_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_CNT_DONE]], "Kontentni yuboring")
 
 
 # -------------------------------------------------------------------- START XABAR
-def start_msg_kb(exists: bool) -> InlineKeyboardMarkup:
-    rows = [[_btn("✏️ O'zgartirish" if exists else "➕ Qo'shish", "st:edit")]]
+def start_msg_kb(exists: bool) -> ReplyKeyboardMarkup:
+    rows = [[BTN_ST_EDIT if exists else BTN_ST_ADD]]
     if exists:
-        rows.append([_btn("👁 Ko'rish", "st:prev"), _btn("🗑 O'chirish", "st:del")])
-    rows.append(BACK_HOME)
-    return InlineKeyboardMarkup(inline_keyboard=rows)
+        rows.append([BTN_VIEW, BTN_DELETE])
+    rows.append([BTN_HOME])
+    return _kb(rows)
 
 
-def start_delete_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [_btn("✅ Ha, o'chirilsin", "st:delok")],
-            [_btn("⬅️ Yo'q", "st:show")],
-        ]
-    )
+# ------------------------------------------------------------------ OBUNA XABARI
+def sub_msg_kb(custom: bool) -> ReplyKeyboardMarkup:
+    """custom — admin o'z xabarini qo'yganmi (yo'q bo'lsa standart ishlaydi)."""
+    rows = [[BTN_ST_EDIT if custom else BTN_ST_ADD], [BTN_VIEW]]
+    if custom:
+        rows.append([BTN_SUB_RESET])
+    rows.append([BTN_HOME])
+    return _kb(rows)
 
 
 # ------------------------------------------------------------------------ TELEFON
-def phone_settings_kb(enabled: bool) -> InlineKeyboardMarkup:
-    label = "🔴 O'chirish" if enabled else "🟢 Yoqish"
-    return InlineKeyboardMarkup(inline_keyboard=[[_btn(label, "adm:phone:tog")], BACK_HOME])
+def phone_settings_kb(enabled: bool) -> ReplyKeyboardMarkup:
+    return _kb([[BTN_OFF if enabled else BTN_ON], [BTN_HOME]])
 
 
 # ---------------------------------------------------------------------- BROADCAST
-def broadcast_confirm_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [_btn("✅ Yuborish", "bc:go")],
-            CANCEL_ROW,
-        ]
-    )
+def broadcast_confirm_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_BC_SEND], [BTN_CANCEL]], "Tasdiqlang")
 
 
 # -------------------------------------------------------------------------- EXCEL
-def excel_kb() -> InlineKeyboardMarkup:
-    return InlineKeyboardMarkup(
-        inline_keyboard=[
-            [_btn("📥 Faylni olish", "xl:get")],
-            [_btn("🔄 Yangilash", "xl:refresh")],
-            BACK_HOME,
-        ]
-    )
+def excel_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_XL_GET, BTN_XL_REFRESH], [BTN_HOME]])

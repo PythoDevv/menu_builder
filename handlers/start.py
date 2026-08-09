@@ -7,20 +7,21 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
 from db.queries import get_items, get_start_message, set_phone
-from keyboards.user_kb import nav_kb, phone_kb
+from handlers.menu import EMPTY_TEXT, KEY_NODE, MENU_TEXT
+from keyboards.user_kb import CB_CHECK_SUB, menu_kb, phone_kb
 from utils.content import send_raw_content
 
 router = Router()
 
-EMPTY_TEXT = "⚠️ Hozircha menyu bo'sh. Keyinroq urinib ko'ring."
-MENU_TEXT = "🏠 Asosiy menyu"
 
-
-async def send_start_screen(bot: Bot, chat_id: int) -> None:
+async def send_start_screen(bot: Bot, chat_id: int, state: FSMContext) -> None:
     """Start xabar (agar bor bo'lsa) + asosiy menyu tugmalari."""
+    await state.set_state(None)
+    await state.set_data({KEY_NODE: None})
+
     start_msg = await get_start_message()
     items = await get_items(None, active_only=True)
-    kb = nav_kb(items, back_to=None) if items else None
+    kb = menu_kb(items, is_root=True)
 
     if start_msg:
         await send_raw_content(bot, chat_id, start_msg, reply_markup=kb)
@@ -32,21 +33,22 @@ async def send_start_screen(bot: Bot, chat_id: int) -> None:
 
 @router.message(CommandStart())
 async def cmd_start(message: Message, state: FSMContext) -> None:
-    await state.clear()
-    await send_start_screen(message.bot, message.chat.id)
+    await send_start_screen(message.bot, message.chat.id, state)
 
 
-@router.callback_query(F.data == "check_sub")
-async def check_sub(callback: CallbackQuery) -> None:
+@router.callback_query(F.data == CB_CHECK_SUB)
+async def check_sub(callback: CallbackQuery, state: FSMContext) -> None:
     # bu yergacha yetib kelgan bo'lsa — obuna tekshiruvidan o'tgan
     await callback.answer("✅ Rahmat!")
-    with suppress(TelegramBadRequest):
-        await callback.message.delete()
-    await send_start_screen(callback.bot, callback.message.chat.id)
+    chat_id = callback.message.chat.id if callback.message else callback.from_user.id
+    if callback.message:
+        with suppress(TelegramBadRequest):
+            await callback.message.delete()
+    await send_start_screen(callback.bot, chat_id, state)
 
 
 @router.message(F.contact)
-async def get_contact(message: Message) -> None:
+async def get_contact(message: Message, state: FSMContext) -> None:
     contact = message.contact
     if contact.user_id != message.from_user.id:
         await message.answer(
@@ -60,4 +62,4 @@ async def get_contact(message: Message) -> None:
         phone = "+" + phone
     await set_phone(message.from_user.id, phone)
     await message.answer("✅ Raqam saqlandi. Rahmat!", reply_markup=ReplyKeyboardRemove())
-    await send_start_screen(message.bot, message.chat.id)
+    await send_start_screen(message.bot, message.chat.id, state)

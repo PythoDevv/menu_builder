@@ -18,6 +18,9 @@ K_START_TYPE = "start_type"
 K_START_FILE = "start_file_id"
 K_START_TEXT = "start_text"
 K_ASK_PHONE = "ask_phone"
+K_SUB_TYPE = "sub_type"
+K_SUB_FILE = "sub_file_id"
+K_SUB_TEXT = "sub_text"
 
 
 # ============================================================================ USERS
@@ -402,6 +405,31 @@ async def delete_start_message() -> None:
     await set_setting(K_START_TYPE, None)
     await set_setting(K_START_FILE, None)
     await set_setting(K_START_TEXT, None)
+
+
+async def get_sub_message() -> Optional[dict]:
+    """Admin qo'ygan majburiy obuna xabari. Qo'yilmagan bo'lsa None (standart ishlatiladi)."""
+    type_ = await get_setting(K_SUB_TYPE)
+    if not type_:
+        return None
+    return {
+        "type": type_,
+        "file_id": await get_setting(K_SUB_FILE),
+        "text_html": await get_setting(K_SUB_TEXT),
+    }
+
+
+async def set_sub_message(type_: str, file_id: Optional[str], text_html: Optional[str]) -> None:
+    await set_setting(K_SUB_TYPE, type_)
+    await set_setting(K_SUB_FILE, file_id)
+    await set_setting(K_SUB_TEXT, text_html)
+
+
+async def delete_sub_message() -> None:
+    """Standart matnga qaytaradi."""
+    await set_setting(K_SUB_TYPE, None)
+    await set_setting(K_SUB_FILE, None)
+    await set_setting(K_SUB_TEXT, None)
 
 
 async def is_phone_required() -> bool:

@@ -1,9 +1,9 @@
 from html import escape
 from typing import Optional
 
-from aiogram import Bot, F
+from aiogram import F
 from aiogram.fsm.context import FSMContext
-from aiogram.types import CallbackQuery, InlineKeyboardMarkup, Message
+from aiogram.types import Message
 
 from db.queries import (
     add_content,
@@ -11,7 +11,6 @@ from db.queries import (
     count_contents,
     delete_content,
     delete_item,
-    get_content,
     get_contents,
     get_item,
     get_item_path,
@@ -20,13 +19,37 @@ from db.queries import (
     rename_item,
     toggle_item,
 )
-from handlers.admin.common import admin_router, edit_or_send
-from handlers.admin.states import MenuSG
+from handlers.admin.common import (
+    KEY_NODE,
+    NOT_COMMAND,
+    PICK_TEXT,
+    admin_router,
+    pick_label,
+    save_labels,
+)
+from handlers.admin.states import MenuSG, PanelSG
 from keyboards.admin_kb import (
+    BTN_BACK,
+    BTN_CNT_ADD,
+    BTN_CNT_DONE,
+    BTN_CONTENT,
+    BTN_DELETE,
+    BTN_MENU,
+    BTN_MN_ADD,
+    BTN_MN_DOWN,
+    BTN_MN_HIDE,
+    BTN_MN_RENAME,
+    BTN_MN_SHOW,
+    BTN_MN_UP,
+    BTN_NO,
+    BTN_VIEW,
+    BTN_YES_DELETE,
     cancel_kb,
-    content_add_done_kb,
+    confirm_delete_kb,
+    content_add_kb,
+    content_item_label,
     contents_kb,
-    menu_delete_kb,
+    menu_item_label,
     menu_node_kb,
 )
 from utils.content import extract_content, send_content
@@ -44,71 +67,77 @@ ADD_CONTENT_TEXT = (
 )
 
 
-def _parse_node(raw: str) -> Optional[int]:
-    return None if raw == "root" else int(raw)
+async def _node_id(state: FSMContext) -> Optional[int]:
+    return (await state.get_data()).get(KEY_NODE)
 
 
-async def _build_node(item_id: Optional[int]) -> tuple[str, InlineKeyboardMarkup]:
-    item = await get_item(item_id) if item_id is not None else None
-    parent_for_children = item.id if item else None
-    children = await get_items(parent_for_children)
-    content_count = await count_contents(item.id) if item else 0
+# --------------------------------------------------------------------- ekranlar
+async def show_node(message: Message, state: FSMContext, node_id: Optional[int]) -> None:
+    item = await get_item(node_id) if node_id is not None else None
+    if item is None:
+        node_id = None
+
+    children = await get_items(node_id)
+    content_count = await count_contents(node_id) if node_id is not None else 0
+    labels = {menu_item_label(c, i): c.id for i, c in enumerate(children, start=1)}
 
     path = await get_item_path(item.id) if item else []
     crumb = " › ".join(escape(p.title) for p in path)
     lines = ["🗂 <b>Menyu tugmalari</b>", "", "🏠 Bosh menyu" + (f" › {crumb}" if crumb else "")]
-
     if item:
-        state = "👁 ko'rinadi" if item.is_active else "🚫 yashirin"
         lines.append("")
         lines.append(f"📎 Kontent: <b>{content_count}</b> ta")
-        lines.append(f"Holat: {state}")
-
+        lines.append(f"Holat: {'👁 ko‘rinadi' if item.is_active else '🚫 yashirin'}")
     lines.append("")
     lines.append(f"Ichki tugmalar: <b>{len(children)}</b> ta")
     lines.append("<i>Tugma ustiga bosing — ichiga kirasiz.</i>")
 
-    return "\n".join(lines), menu_node_kb(item, children, content_count)
+    await state.set_state(MenuSG.node)
+    await state.update_data({KEY_NODE: node_id})
+    await save_labels(state, labels)
+    await message.answer(
+        "\n".join(lines), reply_markup=menu_node_kb(list(labels), item, content_count)
+    )
 
 
-async def _open_node(callback: CallbackQuery, item_id: Optional[int]) -> None:
-    text, kb = await _build_node(item_id)
-    await edit_or_send(callback, text, kb)
-
-
-async def _send_node(bot: Bot, chat_id: int, item_id: Optional[int]) -> None:
-    text, kb = await _build_node(item_id)
-    await bot.send_message(chat_id, text, reply_markup=kb)
-
-
-# ------------------------------------------------------------------------ ochish
-@router.callback_query(F.data.startswith("mn:open:"))
-async def cb_open(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.clear()
-    item_id = _parse_node(callback.data.split(":")[2])
-    if item_id is not None and await get_item(item_id) is None:
-        await callback.answer("Bu tugma o'chirilgan", show_alert=True)
-        await _open_node(callback, None)
+async def show_contents(message: Message, state: FSMContext, item_id: Optional[int]) -> None:
+    item = await get_item(item_id) if item_id is not None else None
+    if item is None:
+        await show_node(message, state, None)
         return
-    await _open_node(callback, item_id)
-    await callback.answer()
+
+    contents = await get_contents(item_id)
+    labels = {content_item_label(c, i): c.id for i, c in enumerate(contents, start=1)}
+    await state.set_state(MenuSG.contents)
+    await state.update_data({KEY_NODE: item_id})
+    await save_labels(state, labels)
+    await message.answer(
+        f"📎 <b>{escape(item.title)}</b> — kontentlar\n\n"
+        + (
+            "Ro'yxatdagi tugmani bossangiz — o'chadi."
+            if contents
+            else "Hozircha kontent yo'q."
+        ),
+        reply_markup=contents_kb(list(labels)),
+    )
+
+
+@router.message(PanelSG.home, F.text == BTN_MENU)
+async def open_root(message: Message, state: FSMContext) -> None:
+    await show_node(message, state, None)
 
 
 # ----------------------------------------------------------------- tugma qo'shish
-@router.callback_query(F.data.startswith("mn:add:"))
-async def cb_add(callback: CallbackQuery, state: FSMContext) -> None:
-    parent_id = _parse_node(callback.data.split(":")[2])
+@router.message(MenuSG.node, F.text == BTN_MN_ADD)
+async def ask_title(message: Message, state: FSMContext) -> None:
     await state.set_state(MenuSG.waiting_title)
-    await state.update_data(parent_id=parent_id)
-    await edit_or_send(
-        callback,
+    await message.answer(
         f"➕ Yangi tugma nomini yuboring (max {TITLE_LIMIT} belgi):",
-        cancel_kb(),
+        reply_markup=cancel_kb(),
     )
-    await callback.answer()
 
 
-@router.message(MenuSG.waiting_title)
+@router.message(MenuSG.waiting_title, NOT_COMMAND)
 async def add_title(message: Message, state: FSMContext) -> None:
     title = (message.text or "").strip()
     if not title or len(title) > TITLE_LIMIT:
@@ -117,26 +146,24 @@ async def add_title(message: Message, state: FSMContext) -> None:
             reply_markup=cancel_kb(),
         )
         return
-    data = await state.get_data()
-    parent_id = data.get("parent_id")
+    parent_id = await _node_id(state)
     await add_item(parent_id, title)
-    await state.clear()
     await message.answer("✅ Tugma qo'shildi")
-    await _send_node(message.bot, message.chat.id, parent_id)
+    await show_node(message, state, parent_id)
 
 
 # ------------------------------------------------------------------ nomni o'zgart
-@router.callback_query(F.data.startswith("mn:ren:"))
-async def cb_rename(callback: CallbackQuery, state: FSMContext) -> None:
-    item_id = int(callback.data.split(":")[2])
+@router.message(MenuSG.node, F.text == BTN_MN_RENAME)
+async def ask_rename(message: Message, state: FSMContext) -> None:
+    if await _node_id(state) is None:
+        await show_node(message, state, None)
+        return
     await state.set_state(MenuSG.waiting_rename)
-    await state.update_data(item_id=item_id)
-    await edit_or_send(callback, "✏️ Yangi nomni yuboring:", cancel_kb())
-    await callback.answer()
+    await message.answer("✏️ Yangi nomni yuboring:", reply_markup=cancel_kb())
 
 
-@router.message(MenuSG.waiting_rename)
-async def rename_title(message: Message, state: FSMContext) -> None:
+@router.message(MenuSG.waiting_rename, NOT_COMMAND)
+async def rename(message: Message, state: FSMContext) -> None:
     title = (message.text or "").strip()
     if not title or len(title) > TITLE_LIMIT:
         await message.answer(
@@ -144,139 +171,145 @@ async def rename_title(message: Message, state: FSMContext) -> None:
             reply_markup=cancel_kb(),
         )
         return
-    data = await state.get_data()
-    item_id = data["item_id"]
-    await rename_item(item_id, title)
-    await state.clear()
-    await message.answer("✅ Nom o'zgartirildi")
-    await _send_node(message.bot, message.chat.id, item_id)
+    item_id = await _node_id(state)
+    if item_id is not None:
+        await rename_item(item_id, title)
+        await message.answer("✅ Nom o'zgartirildi")
+    await show_node(message, state, item_id)
 
 
 # ------------------------------------------------------------- yashirish / tartib
-@router.callback_query(F.data.startswith("mn:tog:"))
-async def cb_toggle(callback: CallbackQuery) -> None:
-    item_id = int(callback.data.split(":")[2])
-    await toggle_item(item_id)
-    await callback.answer("✅ O'zgartirildi")
-    await _open_node(callback, item_id)
+@router.message(MenuSG.node, F.text.in_({BTN_MN_HIDE, BTN_MN_SHOW}))
+async def toggle(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    if item_id is not None:
+        await toggle_item(item_id)
+        await message.answer("✅ O'zgartirildi")
+    await show_node(message, state, item_id)
 
 
-@router.callback_query(F.data.startswith("mn:up:"))
-async def cb_up(callback: CallbackQuery) -> None:
-    item_id = int(callback.data.split(":")[2])
-    await move_item(item_id, -1)
-    await callback.answer("⬆️")
-    await _open_node(callback, item_id)
-
-
-@router.callback_query(F.data.startswith("mn:down:"))
-async def cb_down(callback: CallbackQuery) -> None:
-    item_id = int(callback.data.split(":")[2])
-    await move_item(item_id, +1)
-    await callback.answer("⬇️")
-    await _open_node(callback, item_id)
+@router.message(MenuSG.node, F.text.in_({BTN_MN_UP, BTN_MN_DOWN}))
+async def move(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    if item_id is not None:
+        await move_item(item_id, -1 if message.text == BTN_MN_UP else +1)
+        await message.answer("✅ Tartib o'zgartirildi")
+    await show_node(message, state, item_id)
 
 
 # ---------------------------------------------------------------------- o'chirish
-@router.callback_query(F.data.startswith("mn:del:"))
-async def cb_delete_ask(callback: CallbackQuery) -> None:
-    item_id = int(callback.data.split(":")[2])
-    item = await get_item(item_id)
+@router.message(MenuSG.node, F.text == BTN_DELETE)
+async def delete_ask(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    item = await get_item(item_id) if item_id is not None else None
     if item is None:
-        await callback.answer("Topilmadi", show_alert=True)
+        await show_node(message, state, None)
         return
-    await edit_or_send(
-        callback,
+    await state.set_state(MenuSG.confirm_delete)
+    await message.answer(
         f"🗑 <b>{escape(item.title)}</b> o'chirilsinmi?\n\n"
         "⚠️ Ichidagi barcha tugmalar va kontentlar ham o'chadi.",
-        menu_delete_kb(item_id),
+        reply_markup=confirm_delete_kb(),
     )
-    await callback.answer()
 
 
-@router.callback_query(F.data.startswith("mn:delok:"))
-async def cb_delete(callback: CallbackQuery) -> None:
-    item_id = int(callback.data.split(":")[2])
-    item = await get_item(item_id)
+@router.message(MenuSG.confirm_delete, F.text == BTN_YES_DELETE)
+async def delete_ok(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    item = await get_item(item_id) if item_id is not None else None
     parent_id = item.parent_id if item else None
-    await delete_item(item_id)
-    await callback.answer("🗑 O'chirildi")
-    await _open_node(callback, parent_id)
+    if item_id is not None:
+        await delete_item(item_id)
+        await message.answer("🗑 O'chirildi")
+    await show_node(message, state, parent_id)
 
 
-# ----------------------------------------------------------------------- KONTENT
-async def _show_contents(callback: CallbackQuery, item_id: int) -> None:
-    item = await get_item(item_id)
-    if item is None:
-        await _open_node(callback, None)
+@router.message(MenuSG.confirm_delete, F.text == BTN_NO)
+async def delete_no(message: Message, state: FSMContext) -> None:
+    await show_node(message, state, await _node_id(state))
+
+
+# ------------------------------------------------------------------------- orqaga
+@router.message(MenuSG.node, F.text == BTN_BACK)
+async def go_up(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    item = await get_item(item_id) if item_id is not None else None
+    await show_node(message, state, item.parent_id if item else None)
+
+
+@router.message(MenuSG.node, F.text.startswith(BTN_CONTENT))
+async def open_contents(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    if item_id is None:
+        await show_node(message, state, None)
         return
-    contents = await get_contents(item_id)
-    text = (
-        f"📎 <b>{escape(item.title)}</b> — kontentlar\n\n"
-        + (
-            "Ro'yxatdagi tugmani bossangiz — o'chadi."
-            if contents
-            else "Hozircha kontent yo'q."
-        )
-    )
-    await edit_or_send(callback, text, contents_kb(item_id, contents))
+    await show_contents(message, state, item_id)
 
 
-@router.callback_query(F.data.startswith("mn:cnt:"))
-async def cb_contents(callback: CallbackQuery, state: FSMContext) -> None:
-    await state.clear()
-    await _show_contents(callback, int(callback.data.split(":")[2]))
-    await callback.answer()
+@router.message(MenuSG.node)
+async def pick_child(message: Message, state: FSMContext) -> None:
+    child_id = await pick_label(state, message.text)
+    if child_id is None:
+        await message.answer(PICK_TEXT)
+        return
+    await show_node(message, state, child_id)
 
 
-@router.callback_query(F.data.startswith("mn:cadd:"))
-async def cb_content_add(callback: CallbackQuery, state: FSMContext) -> None:
-    item_id = int(callback.data.split(":")[2])
+# ------------------------------------------------------------------------ KONTENT
+@router.message(MenuSG.contents, F.text == BTN_CNT_ADD)
+async def ask_content(message: Message, state: FSMContext) -> None:
     await state.set_state(MenuSG.waiting_content)
-    await state.update_data(item_id=item_id)
-    await edit_or_send(callback, ADD_CONTENT_TEXT, content_add_done_kb(item_id))
-    await callback.answer()
+    await message.answer(ADD_CONTENT_TEXT, reply_markup=content_add_kb())
 
 
-@router.message(MenuSG.waiting_content)
+@router.message(MenuSG.contents, F.text == BTN_VIEW)
+async def preview(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    contents = await get_contents(item_id) if item_id is not None else []
+    if not contents:
+        await message.answer("❗️ Kontent yo'q")
+        return
+    await message.answer("👇 Foydalanuvchi shu ko'rinishda ko'radi:")
+    for content in contents:
+        await send_content(message.bot, message.chat.id, content)
+    await show_contents(message, state, item_id)
+
+
+@router.message(MenuSG.contents, F.text == BTN_BACK)
+async def contents_back(message: Message, state: FSMContext) -> None:
+    await show_node(message, state, await _node_id(state))
+
+
+@router.message(MenuSG.contents)
+async def delete_content_btn(message: Message, state: FSMContext) -> None:
+    content_id = await pick_label(state, message.text)
+    if content_id is None:
+        await message.answer(PICK_TEXT)
+        return
+    item_id = await _node_id(state)
+    await delete_content(content_id)
+    await message.answer("🗑 O'chirildi")
+    await show_contents(message, state, item_id)
+
+
+@router.message(MenuSG.waiting_content, F.text == BTN_CNT_DONE)
+async def content_done(message: Message, state: FSMContext) -> None:
+    await show_contents(message, state, await _node_id(state))
+
+
+@router.message(MenuSG.waiting_content, NOT_COMMAND)
 async def content_received(message: Message, state: FSMContext) -> None:
     data = extract_content(message)
     if data is None:
         await message.answer("❗️ Bu turdagi kontent qo'llab-quvvatlanmaydi.")
         return
-    item_id = (await state.get_data())["item_id"]
+    item_id = await _node_id(state)
+    if item_id is None:
+        await show_node(message, state, None)
+        return
     await add_content(item_id, data["type"], data["file_id"], data["text_html"])
     total = await count_contents(item_id)
     await message.answer(
         f"✅ Saqlandi. Jami: <b>{total}</b> ta.\nYana yuborishingiz mumkin.",
-        reply_markup=content_add_done_kb(item_id),
+        reply_markup=content_add_kb(),
     )
-
-
-@router.callback_query(F.data.startswith("mn:cdel:"))
-async def cb_content_delete(callback: CallbackQuery) -> None:
-    content_id = int(callback.data.split(":")[2])
-    content = await get_content(content_id)
-    if content is None:
-        await callback.answer("Topilmadi", show_alert=True)
-        return
-    item_id = content.menu_item_id
-    await delete_content(content_id)
-    await callback.answer("🗑 O'chirildi")
-    await _show_contents(callback, item_id)
-
-
-@router.callback_query(F.data.startswith("mn:cprev:"))
-async def cb_content_preview(callback: CallbackQuery) -> None:
-    item_id = int(callback.data.split(":")[2])
-    contents = await get_contents(item_id)
-    if not contents:
-        await callback.answer("Kontent yo'q", show_alert=True)
-        return
-    await callback.answer("👁 Yuborilmoqda...")
-    await callback.bot.send_message(
-        callback.message.chat.id, "👇 Foydalanuvchi shu ko'rinishda ko'radi:"
-    )
-    for content in contents:
-        await send_content(callback.bot, callback.message.chat.id, content)
-    await _send_node(callback.bot, callback.message.chat.id, item_id)

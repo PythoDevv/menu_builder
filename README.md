@@ -2,6 +2,8 @@
 
 Admin panelidan boshqariladigan menyu-bot. aiogram 3 + PostgreSQL + SQLAlchemy, polling rejimida.
 
+Botdagi barcha tugmalar **reply (pastdagi) klaviatura** — xabar ostidagi inline tugmalar ishlatilmaydi.
+
 ## Imkoniyatlar
 
 - **Adminlar** — paneldan telegram ID raqami orqali qo'shiladi/o'chiriladi. `.env` dagilar asosiy admin bo'lib qoladi.
@@ -56,6 +58,8 @@ fayl tashlang (nomi bo'yicha tartib bilan bajariladi).
 ## Admin panel
 
 `/admin` — `.env` dagi `ADMINS` va paneldan qo'shilgan adminlar uchun.
+Paneldan chiqish — **🚪 Chiqish** (yoki `/start`), shundan keyin admin ham
+oddiy foydalanuvchi menyusini ko'radi.
 
 | Bo'lim | Nima qiladi |
 |---|---|
@@ -72,6 +76,10 @@ fayl tashlang (nomi bo'yicha tartib bilan bajariladi).
 
 - Kanal qo'shishdan oldin botni o'sha kanalga **admin** qiling (yopiq kanalda "Invite Users via Link" huquqi ham kerak — zayafkali havola shu orqali yaratiladi).
 - Yopiq kanalda so'rovni ushlash uchun bot admin bo'lishi shart, aks holda `chat_join_request` kelmaydi.
+- Reply tugmaga havola (URL) qo'yib bo'lmaydi, shuning uchun obuna ekranida kanal
+  havolalari xabar matnida beriladi, pastda esa faqat **✅ Tekshirish** tugmasi turadi.
+- Admin qaysi ekranda turgani FSM holatida saqlanadi (xotirada). Bot qayta ishga
+  tushsa panel bosh sahifadan boshlanadi — `/admin` bosilsa kifoya.
 
 ## Struktura
 
@@ -82,7 +90,7 @@ config.py          — .env sozlamalari
 db/                — modellar va barcha so'rovlar
 migrations/        — .sql migratsiyalar
 handlers/          — foydalanuvchi va admin handlerlari
-keyboards/         — inline tugmalar
+keyboards/         — reply (pastdagi) tugmalar
 middlewares/       — foydalanuvchini yozish, obuna va telefon tekshiruvi
 utils/             — kontent, obuna logikasi, excel, cron
 exports/users.xlsx — kunlik yangilanadigan fayl

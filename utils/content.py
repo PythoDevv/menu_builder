@@ -1,11 +1,18 @@
 """Kontentni xabardan olish va foydalanuvchiga qayta yuborish."""
 
-from typing import Optional
+from typing import Optional, Union
 
 from aiogram import Bot
-from aiogram.types import InlineKeyboardMarkup, Message
+from aiogram.types import (
+    InlineKeyboardMarkup,
+    Message,
+    ReplyKeyboardMarkup,
+    ReplyKeyboardRemove,
+)
 
 from db.models import Content
+
+Markup = Union[InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove]
 
 TYPE_LABELS = {
     "text": "📝 Matn",
@@ -49,7 +56,7 @@ async def send_content(
     bot: Bot,
     chat_id: int,
     content: Content,
-    reply_markup: Optional[InlineKeyboardMarkup] = None,
+    reply_markup: Optional[Markup] = None,
 ) -> None:
     """Saqlangan kontentni o'sha holicha (file_id + HTML) yuboradi."""
     t = content.type
@@ -80,7 +87,7 @@ async def send_raw_content(
     bot: Bot,
     chat_id: int,
     data: dict,
-    reply_markup: Optional[InlineKeyboardMarkup] = None,
+    reply_markup: Optional[Markup] = None,
 ) -> None:
     """extract_content() qaytargan dict yoki start-xabar dictini yuboradi."""
 
