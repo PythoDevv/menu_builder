@@ -7,7 +7,12 @@ FSM ma'lumotida saqlanadi (handlers/admin/common.py).
 
 from typing import Optional, Sequence
 
-from aiogram.types import KeyboardButton, ReplyKeyboardMarkup
+from aiogram.types import (
+    InlineKeyboardButton,
+    InlineKeyboardMarkup,
+    KeyboardButton,
+    ReplyKeyboardMarkup,
+)
 
 from db.models import Admin, Channel, Content, MenuItem
 from utils.content import content_label
@@ -148,6 +153,28 @@ def channel_one_kb(ch: Channel) -> ReplyKeyboardMarkup:
 
 def channel_type_kb() -> ReplyKeyboardMarkup:
     return _kb([[BTN_CH_PUBLIC], [BTN_CH_PRIVATE], [BTN_CANCEL]], "Turini tanlang")
+
+
+# Bot kanalga admin qilinganda o'sha adminga tushadigan so'rov — inline,
+# chunki u admin panelning istalgan ekranida (yoki umuman tashqarisida) keladi
+# va reply klaviaturani buzmasligi kerak.
+CB_NEW_CH_ADD = "newch:add"
+CB_NEW_CH_SKIP = "newch:skip"
+
+
+def new_channel_kb(chat_id: int) -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(
+                    text="✅ Ha, qo'shilsin", callback_data=f"{CB_NEW_CH_ADD}:{chat_id}"
+                ),
+                InlineKeyboardButton(
+                    text="❌ Yo'q", callback_data=f"{CB_NEW_CH_SKIP}:{chat_id}"
+                ),
+            ]
+        ]
+    )
 
 
 # ------------------------------------------------------------------------- MENYU

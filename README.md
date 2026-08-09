@@ -2,12 +2,14 @@
 
 Admin panelidan boshqariladigan menyu-bot. aiogram 3 + PostgreSQL + SQLAlchemy, polling rejimida.
 
-Botdagi barcha tugmalar **reply (pastdagi) klaviatura** — xabar ostidagi inline tugmalar ishlatilmaydi.
+Menyu va admin panel tugmalari — **reply (pastdagi) klaviatura**. Faqat majburiy obuna
+ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 
 ## Imkoniyatlar
 
 - **Adminlar** — paneldan telegram ID raqami orqali qo'shiladi/o'chiriladi. `.env` dagilar asosiy admin bo'lib qoladi.
 - **Obuna tekshiruvi** — ochiq va yopiq (qo'shilish so'rovi) kanallar. Zayafka tashlagan odamdan qayta so'ralmaydi.
+- **Obuna xabari** — majburiy obuna ekranidagi post admin paneldan almashtiriladi: matn, rasm, video, fayl (`file_id` bilan). Qo'yilmagan bo'lsa standart matn chiqadi. Kanal tugmalari va **✅ Tekshirish** xabar ostiga avtomatik qo'shiladi.
 - **Start xabar** — admin paneldan qo'shiladi / o'zgartiriladi / o'chiriladi. Qo'yilmagan bo'lsa ko'rsatilmaydi.
 - **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga kontent (rasm/video/fayl/matn) biriktiriladi.
 - **Kontent** — `file_id` + HTML holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi).
@@ -65,19 +67,40 @@ oddiy foydalanuvchi menyusini ko'radi.
 |---|---|
 | 👮 Adminlar | ID raqami orqali admin qo'shish / adminlikdan olish |
 | 📢 Kanallar | Qo'shish / o'chirish / yoqish-o'chirish. Bot kanalda **admin** bo'lishi shart. |
+| 🆕 Avtomatik so'rov | Bot kanalga admin qilinsa, **admin qilgan odamning o'ziga** "qo'shilsinmi?" so'rovi keladi (pastda) |
 | 🗂 Menyu tugmalari | Tugma qo'shish, nomini o'zgartirish, tartiblash, yashirish, o'chirish, kontent biriktirish |
 | ✏️ Start xabar | Ko'rish / o'zgartirish / o'chirish |
+| 📌 Obuna xabari | Majburiy obuna postini qo'yish (matn/rasm/video), ko'rish, standartga qaytarish |
 | ☎️ Telefon so'rash | ON / OFF |
 | 📨 Xabar yuborish | Hamma faol foydalanuvchiga |
 | 📊 Excel | Faylni olish yoki qo'lda yangilash |
 | 👥 Statistika | Jami / faol / bugun / 7 kun |
 
+## Kanalni avtomatik qo'shish
+
+Bot biror kanalga **admin** qilinganda `my_chat_member` keladi va bot shu zahoti
+so'rov yuboradi: *"Bot falon kanalda admin qilindi. Majburiy obuna ro'yxatiga
+qo'shilsinmi?"* — **✅ Ha** / **❌ Yo'q** tugmalari bilan.
+
+- So'rov **faqat botni admin qilgan odamga** boradi va u ham **tasdiqlangan admin**
+  (`.env` dagi `ADMINS` yoki paneldan qo'shilgan) bo'lsagina. Boshqa adminlarga
+  hech narsa yuborilmaydi. Admin bo'lmagan odam botni kanalga qo'shsa — hech kimga
+  bildirishnoma ketmaydi.
+- Tasdiqlansa kanal turi **avtomatik** aniqlanadi: `@username` bor bo'lsa — 📢 ochiq,
+  bo'lmasa — 🔒 yopiq (zayafkali havola o'sha yerda ochiladi).
+- Kanal ro'yxatda allaqachon bo'lsa yoki botning huquqlari o'zgargan bo'lsa
+  (admin → admin), so'rov qayta yuborilmaydi.
+- Tugmani faqat admin bosa oladi; bosilgandan keyin bot kanalda hali ham admin
+  ekanligi qayta tekshiriladi.
+- Turi noto'g'ri aniqlangan bo'lsa: 📢 Kanallar → kanalni o'chirib, qo'lda qo'shing.
+
 ## Muhim
 
 - Kanal qo'shishdan oldin botni o'sha kanalga **admin** qiling (yopiq kanalda "Invite Users via Link" huquqi ham kerak — zayafkali havola shu orqali yaratiladi).
 - Yopiq kanalda so'rovni ushlash uchun bot admin bo'lishi shart, aks holda `chat_join_request` kelmaydi.
-- Reply tugmaga havola (URL) qo'yib bo'lmaydi, shuning uchun obuna ekranida kanal
-  havolalari xabar matnida beriladi, pastda esa faqat **✅ Tekshirish** tugmasi turadi.
+- Obuna xabari `settings` jadvalida `sub_type` / `sub_file_id` / `sub_text` kalitlarida
+  saqlanadi — media `file_id` bilan, matn esa HTML formatlashi bilan. Foydalanuvchiga
+  admin qanday yuborgan bo'lsa, o'sha holicha ko'rsatiladi.
 - Admin qaysi ekranda turgani FSM holatida saqlanadi (xotirada). Bot qayta ishga
   tushsa panel bosh sahifadan boshlanadi — `/admin` bosilsa kifoya.
 
@@ -90,8 +113,8 @@ config.py          — .env sozlamalari
 db/                — modellar va barcha so'rovlar
 migrations/        — .sql migratsiyalar
 handlers/          — foydalanuvchi va admin handlerlari
-keyboards/         — reply (pastdagi) tugmalar
+keyboards/         — reply tugmalar (+ obuna ekrani uchun inline)
 middlewares/       — foydalanuvchini yozish, obuna va telefon tekshiruvi
-utils/             — kontent, obuna logikasi, excel, cron
+utils/             — kontent, kanal, obuna logikasi, standart matnlar, excel, cron
 exports/users.xlsx — kunlik yangilanadigan fayl
 ```

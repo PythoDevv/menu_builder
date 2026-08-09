@@ -34,6 +34,7 @@ from keyboards.admin_kb import (
     channels_kb,
     confirm_delete_kb,
 )
+from utils.channels import is_bot_admin, resolve_invite_link
 from utils.subscription import clear_cache
 
 router = admin_router()
@@ -177,13 +178,7 @@ async def add_channel_step(message: Message, state: FSMContext) -> None:
         )
         return
 
-    try:
-        me = await message.bot.get_chat_member(chat.id, message.bot.id)
-        is_admin = me.status in ("administrator", "creator")
-    except TelegramAPIError:
-        is_admin = False
-
-    if not is_admin:
+    if not await is_bot_admin(message.bot, chat.id):
         await message.answer(
             "❗️ Bot bu kanalda admin emas. Avval admin qiling, so'ng qayta urinib ko'ring.",
             reply_markup=cancel_kb(),
@@ -209,18 +204,9 @@ async def add_channel_type(message: Message, state: FSMContext) -> None:
     data = await state.get_data()
     chat_id = data["chat_id"]
     username = data.get("username")
-    invite_link = data.get("invite_link")
-
-    if is_private or not username:
-        try:
-            link = await message.bot.create_chat_invite_link(
-                chat_id,
-                name="Bot obuna",
-                creates_join_request=is_private,
-            )
-            invite_link = link.invite_link
-        except TelegramAPIError:
-            pass  # eski havoladan foydalanamiz
+    invite_link = await resolve_invite_link(
+        message.bot, chat_id, username, data.get("invite_link"), is_private
+    )
 
     if not username and not invite_link:
         await message.answer(
