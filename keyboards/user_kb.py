@@ -15,11 +15,13 @@ from aiogram.types import (
 )
 
 from db.models import Channel, MenuItem
+from utils.referral import share_url
 
 BTN_BACK = "⬅️ Orqaga"
 BTN_HOME = "🏠 Bosh menyu"
 BTN_CHECK_SUB = "✅ Tekshirish"
 BTN_PHONE = "📱 Raqamni yuborish"
+BTN_SHARE = "📤 Do'stlarga yuborish"
 
 CB_CHECK_SUB = "check_sub"
 
@@ -68,6 +70,16 @@ def subscribe_kb(channels: list[Channel]) -> InlineKeyboardMarkup:
         rows.append([InlineKeyboardButton(text=f"{prefix} {ch.title}", url=url)])
     rows.append([InlineKeyboardButton(text=BTN_CHECK_SUB, callback_data=CB_CHECK_SUB)])
     return InlineKeyboardMarkup(inline_keyboard=rows)
+
+
+def share_kb(link: str) -> InlineKeyboardMarkup:
+    """Taklif havolasini ulashish — inline, chunki reply tugmaga URL qo'yilmaydi.
+
+    Menyu klaviaturasi joyida qoladi: xabar inline tugma bilan yuboriladi.
+    """
+    return InlineKeyboardMarkup(
+        inline_keyboard=[[InlineKeyboardButton(text=BTN_SHARE, url=share_url(link))]]
+    )
 
 
 def phone_kb() -> ReplyKeyboardMarkup:

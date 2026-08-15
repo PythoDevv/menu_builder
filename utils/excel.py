@@ -13,12 +13,22 @@ from openpyxl.styles import Alignment, Font, PatternFill
 from openpyxl.utils import get_column_letter
 
 from config import EXPORT_FILE
-from db.queries import TZ, get_all_users
+from db.queries import TZ, get_all_users, get_referral_counts
 
 logger = logging.getLogger(__name__)
 
-HEADERS = ["№", "Telegram ID", "Ism", "Username", "Telefon", "Holat", "Ro'yxatdan o'tgan"]
-WIDTHS = [6, 16, 28, 20, 18, 12, 22]
+HEADERS = [
+    "№",
+    "Telegram ID",
+    "Ism",
+    "Username",
+    "Telefon",
+    "Holat",
+    "Takliflari",
+    "Kim taklif qilgan",
+    "Ro'yxatdan o'tgan",
+]
+WIDTHS = [6, 16, 28, 20, 18, 12, 12, 20, 22]
 
 
 def _write(rows: list[list], path: Path) -> None:
@@ -62,6 +72,7 @@ def _write(rows: list[list], path: Path) -> None:
 
 async def build_excel() -> Path:
     users = await get_all_users()
+    referrals = await get_referral_counts()
     rows = []
     for i, u in enumerate(users, start=1):
         created = u.created_at.astimezone(TZ).strftime("%Y-%m-%d %H:%M") if u.created_at else ""
@@ -73,6 +84,8 @@ async def build_excel() -> Path:
                 f"@{u.username}" if u.username else "",
                 u.phone or "",
                 "Faol" if u.is_active else "Bloklagan",
+                referrals.get(u.tg_id, 0),
+                u.referred_by or "",
                 created,
             ]
         )

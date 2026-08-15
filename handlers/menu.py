@@ -10,12 +10,15 @@ from typing import Optional
 
 from aiogram import F, Router
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import LinkPreviewOptions, Message
 
 from db.models import MenuItem
-from db.queries import get_contents, get_item, get_items
-from keyboards.user_kb import BTN_BACK, BTN_HOME, Keyboard, menu_kb
+from db.queries import get_contents, get_item, get_items, get_ref_text, get_referral_count
+from keyboards.user_kb import BTN_BACK, BTN_HOME, Keyboard, menu_kb, share_kb
+from utils.admins import is_admin
 from utils.content import send_content
+from utils.referral import ref_link, render_ref_text
+from utils.texts import DEFAULT_REF_TEXT
 
 router = Router()
 
@@ -74,6 +77,30 @@ async def open_node(message: Message, state: FSMContext, node_id: Optional[int])
     await message.answer(text, reply_markup=kb)
 
 
+async def is_locked(message: Message, item: MenuItem) -> bool:
+    """Taklif sharti bajarilmagan bo'lsa — shart matnini yuboradi va True qaytaradi.
+
+    Adminlar uchun shart tekshirilmaydi (o'z botini sinab ko'rishi uchun).
+    """
+    need = item.required_referrals or 0
+    user_id = message.from_user.id
+    if need <= 0 or is_admin(user_id):
+        return False
+
+    count = await get_referral_count(user_id)
+    if count >= need:
+        return False
+
+    link = await ref_link(message.bot, user_id)
+    template = await get_ref_text() or DEFAULT_REF_TEXT
+    await message.answer(
+        render_ref_text(template, title=item.title, need=need, count=count, link=link),
+        reply_markup=share_kb(link),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    )
+    return True
+
+
 async def _find_child(parent_id: Optional[int], title: str) -> Optional[MenuItem]:
     for item in await get_items(parent_id, active_only=True):
         if item.title == title:
@@ -111,6 +138,10 @@ async def navigate(message: Message, state: FSMContext) -> None:
 
     if target is None:
         await message.answer(PICK_TEXT, reply_markup=await node_kb(node_id))
+        return
+
+    # taklif sharti — bo'lim ham, kontent ham shu tekshiruvdan keyin ochiladi
+    if await is_locked(message, target):
         return
 
     if await get_items(target.id, active_only=True):

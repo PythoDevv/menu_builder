@@ -13,6 +13,7 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 - **Start xabar** — admin paneldan qo'shiladi / o'zgartiriladi / o'chiriladi. Qo'yilmagan bo'lsa ko'rsatilmaydi.
 - **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga kontent (rasm/video/fayl/matn) biriktiriladi.
 - **Kontent** — `file_id` + HTML holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi).
+- **Taklif (referal) sharti** — tugma faqat N ta odam taklif qilgandan keyin ochiladi. Shart tugma qo'shilayotganda so'raladi, keyin ham o'zgartiriladi. Shart bajarilmaganda chiqadigan matn admin paneldan sozlanadi.
 - **Telefon so'rash** — admin paneldan yoqiladi/o'chiriladi. Bir marta olingan raqam qayta so'ralmaydi.
 - **Hammaga xabar** — bloklaganlar avtomatik belgilanadi.
 - **Excel** — `exports/users.xlsx`, har kuni cron bilan yangilanadi (yangi fayl ochilmaydi).
@@ -68,13 +69,62 @@ oddiy foydalanuvchi menyusini ko'radi.
 | 👮 Adminlar | ID raqami orqali admin qo'shish / adminlikdan olish |
 | 📢 Kanallar | Qo'shish / o'chirish / yoqish-o'chirish. Bot kanalda **admin** bo'lishi shart. |
 | 🆕 Avtomatik so'rov | Bot kanalga admin qilinsa, **admin qilgan odamning o'ziga** "qo'shilsinmi?" so'rovi keladi (pastda) |
-| 🗂 Menyu tugmalari | Tugma qo'shish, nomini o'zgartirish, tartiblash, yashirish, o'chirish, kontent biriktirish |
+| 🗂 Menyu tugmalari | Tugma qo'shish, nomini o'zgartirish, tartiblash, yashirish, o'chirish, kontent biriktirish, **taklif sharti** |
 | ✏️ Start xabar | Ko'rish / o'zgartirish / o'chirish |
 | 📌 Obuna xabari | Majburiy obuna postini qo'yish (matn/rasm/video), ko'rish, standartga qaytarish |
+| ✍️ Taklif matni | Taklif sharti bajarilmaganda chiqadigan matn: ko'rish, o'zgartirish, standartga qaytarish |
 | ☎️ Telefon so'rash | ON / OFF |
 | 📨 Xabar yuborish | Hamma faol foydalanuvchiga |
 | 📊 Excel | Faylni olish yoki qo'lda yangilash |
 | 👥 Statistika | Jami / faol / bugun / 7 kun |
+
+## Taklif (referal) sharti
+
+Tugmani "yopiq" qilib qo'yish mumkin: foydalanuvchi belgilangan sonda odam taklif
+qilmaguncha tugma ichidagi kontent (yoki ichki bo'lim) ochilmaydi.
+
+**Yangi tugma qo'shganda** bot nomini so'ragandan keyin: *"Bu tugma odam taklif
+qilgandan keyin ochilsinmi?"* — **✅ Ha** / **❌ Yo'q**.
+
+- **❌ Yo'q** — son umuman so'ralmaydi, tugma hammaga ochiq (`required_referrals = 0`).
+- **✅ Ha** — necha kishi kerakligi so'raladi. Faqat **0 dan katta** butun son qabul
+  qilinadi (1 … 10000). `0`, manfiy son yoki harf yozilsa saqlanmaydi va qayta so'raladi.
+
+**Keyin o'zgartirish**: 🗂 Menyu tugmalari → tugmaning ichiga kiring →
+**👥 Taklif sharti** → ➕ Qo'shish / ✏️ O'zgartirish / 🚫 Shartni olib tashlash.
+Ro'yxatda shartli tugmalar `🔒5` belgisi bilan ko'rinadi.
+
+**Foydalanuvchi tomonida**: shartli tugma bosilganda kontent o'rniga
+**✍️ Taklif matni** bo'limidagi matn va uning shaxsiy havolasi chiqadi
+(ostida **📤 Do'stlarga yuborish** tugmasi bilan). Talab bajarilgach tugma
+o'z-o'zidan ochiladi — hech narsani qayta bosish shart emas.
+
+Matnda ishlatiladigan o'rinbosarlar:
+
+| Belgi | Ma'nosi |
+|---|---|
+| `{title}` | tugma nomi |
+| `{need}` | kerakli taklif soni |
+| `{count}` | foydalanuvchi taklif qilgan son |
+| `{left}` | yana nechta kerak |
+| `{link}` | foydalanuvchining shaxsiy havolasi |
+
+`{link}` yozilmasa, havola xabar oxiriga avtomatik qo'shiladi.
+
+**Qanday sanaladi**
+
+- Havola: `https://t.me/<bot>?start=ref<tg_id>`.
+- Taklif **faqat yangi odam** botga birinchi marta kirganda hisoblanadi. Botda
+  allaqachon bor odam boshqa havoladan kirsa — qayta hisoblanmaydi.
+- O'zini o'zi taklif qilish va botda bo'lmagan ID ishlamaydi.
+- Payload obuna/telefon tekshiruvidan **oldin** o'qiladi, shuning uchun foydalanuvchi
+  avval kanalga obuna bo'lishi kerak bo'lsa ham taklif yo'qolmaydi. Odam
+  `/start` bosishi bilan sanaladi (obunani kutmaydi).
+- Taklif qilgan odamga darhol xabar boradi: *"🎉 Yangi taklif! Jami: N ta"*.
+- Adminlar uchun shart tekshirilmaydi — ular tugmani doim ocha oladi. Foydalanuvchi
+  nimani ko'rishini **✍️ Taklif matni → 👁 Ko'rish** orqali tekshirish mumkin.
+- Kim nechta odam taklif qilgani: **👥 Statistika** (umumiy son + eng faol 5 kishi)
+  va **📊 Excel** (`Takliflari` / `Kim taklif qilgan` ustunlari).
 
 ## Kanalni avtomatik qo'shish
 
@@ -101,6 +151,9 @@ qo'shilsinmi?"* — **✅ Ha** / **❌ Yo'q** tugmalari bilan.
 - Obuna xabari `settings` jadvalida `sub_type` / `sub_file_id` / `sub_text` kalitlarida
   saqlanadi — media `file_id` bilan, matn esa HTML formatlashi bilan. Foydalanuvchiga
   admin qanday yuborgan bo'lsa, o'sha holicha ko'rsatiladi.
+- Taklif matni `settings` jadvalidagi `ref_text` kalitida turadi; taklif soni
+  `menu_items.required_referrals`, kim kimni taklif qilgani `users.referred_by`
+  ustunida. Eski bazada bu ustunlar `python migrate.py` (002) bilan qo'shiladi.
 - Admin qaysi ekranda turgani FSM holatida saqlanadi (xotirada). Bot qayta ishga
   tushsa panel bosh sahifadan boshlanadi — `/admin` bosilsa kifoya.
 
@@ -114,7 +167,7 @@ db/                — modellar va barcha so'rovlar
 migrations/        — .sql migratsiyalar
 handlers/          — foydalanuvchi va admin handlerlari
 keyboards/         — reply tugmalar (+ obuna ekrani uchun inline)
-middlewares/       — foydalanuvchini yozish, obuna va telefon tekshiruvi
-utils/             — kontent, kanal, obuna logikasi, standart matnlar, excel, cron
+middlewares/       — foydalanuvchini yozish (+ taklif payloadi), obuna va telefon tekshiruvi
+utils/             — kontent, kanal, obuna, taklif logikasi, standart matnlar, excel, cron
 exports/users.xlsx — kunlik yangilanadigan fayl
 ```

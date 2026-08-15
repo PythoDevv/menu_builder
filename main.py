@@ -10,6 +10,7 @@ from config import BOT_TOKEN
 from db.base import close_db, init_db
 from handlers import fallback, join_request, menu, start
 from handlers.admin import admins, broadcast, channel_events, channels, export, menu_items, panel
+from handlers.admin import referral as admin_referral
 from handlers.admin import settings as admin_settings
 from middlewares.sub_mw import PhoneMiddleware, SubscriptionMiddleware
 from middlewares.user_mw import UserMiddleware
@@ -53,6 +54,7 @@ async def main() -> None:
         channel_events.router,  # bot kanalga admin qilinganda tasdiq so'rovi
         menu_items.router,
         admin_settings.router,
+        admin_referral.router,
         broadcast.router,
         export.router,
         panel.fallback_router,

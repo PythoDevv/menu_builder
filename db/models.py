@@ -25,6 +25,8 @@ class User(Base):
     full_name: Mapped[str] = mapped_column(String(255), default="")
     username: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     phone: Mapped[Optional[str]] = mapped_column(String(32), nullable=True)
+    # kim taklif qilgan (taklif havolasidagi tg_id). Faqat yangi kelganda yoziladi.
+    referred_by: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True, index=True)
     # False -> botni bloklagan
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     created_at: Mapped[datetime] = mapped_column(
@@ -92,6 +94,8 @@ class MenuItem(Base):
     title: Mapped[str] = mapped_column(String(64))
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    # Tugmani ochish uchun kerakli taklif soni. 0 -> shartsiz ochiladi.
+    required_referrals: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
 
 class Content(Base):

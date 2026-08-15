@@ -34,6 +34,19 @@ class MenuSG(StatesGroup):
     waiting_title = State()
     waiting_rename = State()
     waiting_content = State()
+    # taklif sharti: yangi tugma qo'shishda so'raladi va keyin ham o'zgartiriladi
+    ask_ref = State()
+    waiting_ref_count = State()
+    ref = State()
+    waiting_ref_edit = State()
+
+
+class RefTextSG(StatesGroup):
+    """Taklif sharti bajarilmaganda chiqadigan matn."""
+
+    show = State()
+    confirm_reset = State()
+    waiting_text = State()
 
 
 class StartSG(StatesGroup):
@@ -70,6 +83,7 @@ ALL_STATES = (
     *MenuSG.__all_states__,
     *StartSG.__all_states__,
     *SubSG.__all_states__,
+    *RefTextSG.__all_states__,
     *PhoneSG.__all_states__,
     *BroadcastSG.__all_states__,
     *ExcelSG.__all_states__,

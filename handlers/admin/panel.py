@@ -1,11 +1,13 @@
 """Admin panelning bosh sahifasi va barcha ekranlarda ishlaydigan tugmalar."""
 
+from html import escape
+
 from aiogram import F
 from aiogram.filters import Command, StateFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
 
-from db.queries import get_stats
+from db.queries import get_stats, get_top_referrers
 from handlers.admin.common import (
     HOME_TEXT,
     NOT_COMMAND,
@@ -49,16 +51,30 @@ async def btn_exit(message: Message, state: FSMContext) -> None:
 @router.message(PanelSG.home, F.text == BTN_STATS)
 async def btn_stats(message: Message) -> None:
     s = await get_stats()
-    await message.answer(
-        "👥 <b>Statistika</b>\n\n"
-        f"Jami: <b>{s['total']}</b> ta\n"
-        f"Faol: <b>{s['active']}</b> ta\n"
-        f"Bloklaganlar: <b>{s['total'] - s['active']}</b> ta\n"
-        f"Raqam qoldirgan: <b>{s['with_phone']}</b> ta\n\n"
-        f"Bugun qo'shilgan: <b>{s['today']}</b> ta\n"
+    lines = [
+        "👥 <b>Statistika</b>",
+        "",
+        f"Jami: <b>{s['total']}</b> ta",
+        f"Faol: <b>{s['active']}</b> ta",
+        f"Bloklaganlar: <b>{s['total'] - s['active']}</b> ta",
+        f"Raqam qoldirgan: <b>{s['with_phone']}</b> ta",
+        "",
+        f"Bugun qo'shilgan: <b>{s['today']}</b> ta",
         f"7 kunda: <b>{s['week']}</b> ta",
-        reply_markup=admin_home_kb(),
-    )
+        "",
+        f"🔗 Taklif orqali kelgan: <b>{s['referred']}</b> ta",
+        f"👤 Odam taklif qilganlar: <b>{s['inviters']}</b> ta",
+    ]
+
+    top = await get_top_referrers()
+    if top:
+        lines.append("")
+        lines.append("🏆 <b>Eng ko'p taklif qilganlar</b>")
+        for i, (user, count) in enumerate(top, start=1):
+            name = user.full_name or (f"@{user.username}" if user.username else str(user.tg_id))
+            lines.append(f"{i}. {escape(name)} — <b>{count}</b> ta")
+
+    await message.answer("\n".join(lines), reply_markup=admin_home_kb())
 
 
 @fallback_router.message(StateFilter(*ALL_STATES), NOT_COMMAND)

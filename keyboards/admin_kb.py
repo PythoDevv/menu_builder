@@ -39,6 +39,7 @@ BTN_BROADCAST = "📨 Xabar yuborish"
 BTN_EXCEL = "📊 Excel"
 BTN_STATS = "👥 Statistika"
 BTN_ADMINS = "👮 Adminlar"
+BTN_REF_TEXT = "✍️ Taklif matni"
 
 # ---------------------------------------------------------------------- kanallar
 BTN_CH_ADD = "➕ Kanal qo'shish"
@@ -58,6 +59,13 @@ BTN_MN_DOWN = "⬇️ Pastga"
 BTN_CONTENT = "📎 Kontent"  # yoniga soni qo'shiladi: "📎 Kontent (3)"
 BTN_CNT_ADD = "➕ Kontent qo'shish"
 BTN_CNT_DONE = "✅ Tugatish"
+
+# ------------------------------------------------------------------ taklif sharti
+BTN_MN_REF = "👥 Taklif sharti"  # yoniga soni qo'shiladi: "👥 Taklif sharti: 5 ta"
+BTN_REF_YES = "✅ Ha"
+BTN_REF_NO = "❌ Yo'q"
+BTN_REF_CLEAR = "🚫 Shartni olib tashlash"
+BTN_REF_RESET = "♻️ Standartga qaytarish"
 
 # ------------------------------------------------------- start / obuna xabari
 BTN_ST_EDIT = "✏️ O'zgartirish"
@@ -96,9 +104,9 @@ def admin_home_kb() -> ReplyKeyboardMarkup:
         [
             [BTN_CHANNELS, BTN_MENU],
             [BTN_START_MSG, BTN_SUB_MSG],
-            [BTN_PHONE, BTN_BROADCAST],
-            [BTN_EXCEL, BTN_STATS],
-            [BTN_ADMINS],
+            [BTN_PHONE, BTN_REF_TEXT],
+            [BTN_BROADCAST, BTN_EXCEL],
+            [BTN_STATS, BTN_ADMINS],
             [BTN_EXIT],
         ],
         "Bo'limni tanlang",
@@ -180,11 +188,16 @@ def new_channel_kb(chat_id: int) -> InlineKeyboardMarkup:
 # ------------------------------------------------------------------------- MENYU
 def menu_item_label(item: MenuItem, index: int) -> str:
     mark = "" if item.is_active else "🚫 "
-    return f"{index}. {mark}{item.title}"
+    lock = f"🔒{item.required_referrals} " if item.required_referrals else ""
+    return f"{index}. {mark}{lock}{item.title}"
 
 
 def content_button(count: int) -> str:
     return f"{BTN_CONTENT} ({count})"
+
+
+def ref_button(count: int) -> str:
+    return f"{BTN_MN_REF}: {count} ta" if count else f"{BTN_MN_REF}: yo'q"
 
 
 def menu_node_kb(
@@ -195,10 +208,34 @@ def menu_node_kb(
     if item is None:
         rows.append([BTN_HOME])
     else:
-        rows.append([content_button(content_count)])
+        rows.append([content_button(content_count), ref_button(item.required_referrals)])
         rows.append([BTN_MN_RENAME, BTN_MN_HIDE if item.is_active else BTN_MN_SHOW])
         rows.append([BTN_MN_UP, BTN_MN_DOWN, BTN_DELETE])
         rows.append([BTN_BACK, BTN_HOME])
+    return _kb(rows)
+
+
+def ref_ask_kb() -> ReplyKeyboardMarkup:
+    """Yangi tugma qo'shilayotganda: taklif sharti kerakmi?"""
+    return _kb([[BTN_REF_YES, BTN_REF_NO], [BTN_CANCEL]], "Ha yoki Yo'q")
+
+
+def item_ref_kb(has_ref: bool) -> ReplyKeyboardMarkup:
+    """Bitta tugmaning taklif sharti ekrani."""
+    rows = [[BTN_ST_EDIT if has_ref else BTN_ST_ADD]]
+    if has_ref:
+        rows.append([BTN_REF_CLEAR])
+    rows.append([BTN_BACK, BTN_HOME])
+    return _kb(rows)
+
+
+# -------------------------------------------------------------------- TAKLIF MATNI
+def ref_text_kb(custom: bool) -> ReplyKeyboardMarkup:
+    """custom — admin o'z matnini qo'yganmi (yo'q bo'lsa standart ishlaydi)."""
+    rows = [[BTN_ST_EDIT if custom else BTN_ST_ADD], [BTN_VIEW]]
+    if custom:
+        rows.append([BTN_REF_RESET])
+    rows.append([BTN_HOME])
     return _kb(rows)
 
 

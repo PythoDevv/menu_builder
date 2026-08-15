@@ -17,6 +17,7 @@ from db.queries import (
     get_items,
     move_item,
     rename_item,
+    set_item_referrals,
     toggle_item,
 )
 from handlers.admin.common import (
@@ -38,10 +39,16 @@ from keyboards.admin_kb import (
     BTN_MN_ADD,
     BTN_MN_DOWN,
     BTN_MN_HIDE,
+    BTN_MN_REF,
     BTN_MN_RENAME,
     BTN_MN_SHOW,
     BTN_MN_UP,
     BTN_NO,
+    BTN_REF_CLEAR,
+    BTN_REF_NO,
+    BTN_REF_YES,
+    BTN_ST_ADD,
+    BTN_ST_EDIT,
     BTN_VIEW,
     BTN_YES_DELETE,
     cancel_kb,
@@ -49,14 +56,41 @@ from keyboards.admin_kb import (
     content_add_kb,
     content_item_label,
     contents_kb,
+    item_ref_kb,
     menu_item_label,
     menu_node_kb,
+    ref_ask_kb,
 )
 from utils.content import extract_content, send_content
 
 router = admin_router()
 
 TITLE_LIMIT = 60
+
+#: Taklif sharti uchun eng katta qiymat — xato terilgan raqamdan saqlaydi
+REF_LIMIT = 10_000
+
+#: Yangi tugma nomi taklif sharti so'ralayotgan paytda shu yerda turadi
+KEY_TITLE = "new_title"
+
+ASK_REF_TEXT = (
+    "👥 <b>Taklif sharti</b>\n\n"
+    "«{title}» tugmasi <b>odam taklif qilgandan keyin</b> ochilsinmi?\n\n"
+    "✅ <b>Ha</b> — foydalanuvchi belgilangan sonda odam taklif qilmaguncha "
+    "tugma ochilmaydi.\n"
+    "❌ <b>Yo'q</b> — tugma hammaga ochiq bo'ladi."
+)
+
+ASK_COUNT_TEXT = (
+    "🔢 <b>Nechta odam taklif qilishi kerak?</b>\n\n"
+    f"0 dan katta butun son yuboring (1 dan {REF_LIMIT} gacha).\n"
+    "Masalan: <code>5</code>"
+)
+
+BAD_COUNT_TEXT = (
+    "❗️ Faqat <b>0 dan katta</b> butun son yuboring.\n"
+    f"1 dan {REF_LIMIT} gacha. Masalan: <code>5</code>"
+)
 
 ADD_CONTENT_TEXT = (
     "📎 <b>Kontent qo'shish</b>\n\n"
@@ -88,6 +122,11 @@ async def show_node(message: Message, state: FSMContext, node_id: Optional[int])
         lines.append("")
         lines.append(f"📎 Kontent: <b>{content_count}</b> ta")
         lines.append(f"Holat: {'👁 ko‘rinadi' if item.is_active else '🚫 yashirin'}")
+        lines.append(
+            f"👥 Taklif sharti: <b>{item.required_referrals}</b> ta odam"
+            if item.required_referrals
+            else "👥 Taklif sharti: yo'q"
+        )
     lines.append("")
     lines.append(f"Ichki tugmalar: <b>{len(children)}</b> ta")
     lines.append("<i>Tugma ustiga bosing — ichiga kirasiz.</i>")
@@ -146,10 +185,70 @@ async def add_title(message: Message, state: FSMContext) -> None:
             reply_markup=cancel_kb(),
         )
         return
-    parent_id = await _node_id(state)
-    await add_item(parent_id, title)
-    await message.answer("✅ Tugma qo'shildi")
+    # nomi olindi — endi taklif sharti kerakmi, deb so'raymiz
+    await state.update_data({KEY_TITLE: title})
+    await state.set_state(MenuSG.ask_ref)
+    await message.answer(
+        ASK_REF_TEXT.format(title=escape(title)), reply_markup=ref_ask_kb()
+    )
+
+
+async def _create_item(message: Message, state: FSMContext, required: int) -> None:
+    data = await state.get_data()
+    title = (data.get(KEY_TITLE) or "").strip()
+    parent_id = data.get(KEY_NODE)
+    if not title:
+        await show_node(message, state, parent_id)
+        return
+    await add_item(parent_id, title, required)
+    await state.update_data({KEY_TITLE: None})
+    if required:
+        await message.answer(
+            f"✅ Tugma qo'shildi.\n👥 Taklif sharti: <b>{required}</b> ta odam."
+        )
+    else:
+        await message.answer("✅ Tugma qo'shildi")
     await show_node(message, state, parent_id)
+
+
+@router.message(MenuSG.ask_ref, F.text == BTN_REF_NO)
+async def add_without_ref(message: Message, state: FSMContext) -> None:
+    await _create_item(message, state, 0)
+
+
+@router.message(MenuSG.ask_ref, F.text == BTN_REF_YES)
+async def ask_ref_count(message: Message, state: FSMContext) -> None:
+    await state.set_state(MenuSG.waiting_ref_count)
+    await message.answer(ASK_COUNT_TEXT, reply_markup=cancel_kb())
+
+
+@router.message(MenuSG.ask_ref, NOT_COMMAND)
+async def ask_ref_again(message: Message, state: FSMContext) -> None:
+    await message.answer(
+        "❗️ <b>✅ Ha</b> yoki <b>❌ Yo'q</b> tugmasini tanlang.",
+        reply_markup=ref_ask_kb(),
+    )
+
+
+def _parse_count(text: Optional[str]) -> Optional[int]:
+    """0 dan katta butun son bo'lsa o'zini, aks holda None qaytaradi.
+
+    Manfiy son ham, 0 ham, harf ham qabul qilinmaydi.
+    """
+    raw = (text or "").strip()
+    if not raw.isdigit():
+        return None
+    count = int(raw)
+    return count if 0 < count <= REF_LIMIT else None
+
+
+@router.message(MenuSG.waiting_ref_count, NOT_COMMAND)
+async def add_with_ref(message: Message, state: FSMContext) -> None:
+    count = _parse_count(message.text)
+    if count is None:
+        await message.answer(BAD_COUNT_TEXT, reply_markup=cancel_kb())
+        return
+    await _create_item(message, state, count)
 
 
 # ------------------------------------------------------------------ nomni o'zgart
@@ -246,6 +345,15 @@ async def open_contents(message: Message, state: FSMContext) -> None:
     await show_contents(message, state, item_id)
 
 
+@router.message(MenuSG.node, F.text.startswith(BTN_MN_REF))
+async def open_ref(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    if item_id is None:
+        await show_node(message, state, None)
+        return
+    await show_ref(message, state, item_id)
+
+
 @router.message(MenuSG.node)
 async def pick_child(message: Message, state: FSMContext) -> None:
     child_id = await pick_label(state, message.text)
@@ -313,3 +421,65 @@ async def content_received(message: Message, state: FSMContext) -> None:
         f"✅ Saqlandi. Jami: <b>{total}</b> ta.\nYana yuborishingiz mumkin.",
         reply_markup=content_add_kb(),
     )
+
+
+# ------------------------------------------------------------------ TAKLIF SHARTI
+async def show_ref(message: Message, state: FSMContext, item_id: Optional[int]) -> None:
+    item = await get_item(item_id) if item_id is not None else None
+    if item is None:
+        await show_node(message, state, None)
+        return
+
+    need = item.required_referrals
+    if need:
+        info = (
+            f"Hozir: <b>{need}</b> ta odam taklif qilish kerak.\n\n"
+            "Foydalanuvchi shuncha odam taklif qilmaguncha tugma ochilmaydi — "
+            "o'rniga <b>✍️ Taklif matni</b> bo'limidagi matn chiqadi."
+        )
+    else:
+        info = (
+            "Hozir: <b>shart yo'q</b> — tugma hammaga ochiq.\n\n"
+            "Shart qo'ysangiz, foydalanuvchi belgilangan sonda odam "
+            "taklif qilmaguncha tugma ochilmaydi."
+        )
+
+    await state.set_state(MenuSG.ref)
+    await state.update_data({KEY_NODE: item_id})
+    await message.answer(
+        f"👥 <b>Taklif sharti</b> — {escape(item.title)}\n\n{info}",
+        reply_markup=item_ref_kb(bool(need)),
+    )
+
+
+@router.message(MenuSG.ref, F.text.in_({BTN_ST_EDIT, BTN_ST_ADD}))
+async def ask_ref_edit(message: Message, state: FSMContext) -> None:
+    await state.set_state(MenuSG.waiting_ref_edit)
+    await message.answer(ASK_COUNT_TEXT, reply_markup=cancel_kb())
+
+
+@router.message(MenuSG.waiting_ref_edit, NOT_COMMAND)
+async def save_ref(message: Message, state: FSMContext) -> None:
+    count = _parse_count(message.text)
+    if count is None:
+        await message.answer(BAD_COUNT_TEXT, reply_markup=cancel_kb())
+        return
+    item_id = await _node_id(state)
+    if item_id is not None:
+        await set_item_referrals(item_id, count)
+        await message.answer(f"✅ Taklif sharti: <b>{count}</b> ta odam")
+    await show_ref(message, state, item_id)
+
+
+@router.message(MenuSG.ref, F.text == BTN_REF_CLEAR)
+async def clear_ref(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    if item_id is not None:
+        await set_item_referrals(item_id, 0)
+        await message.answer("🚫 Shart olib tashlandi — tugma hammaga ochiq.")
+    await show_ref(message, state, item_id)
+
+
+@router.message(MenuSG.ref, F.text == BTN_BACK)
+async def ref_back(message: Message, state: FSMContext) -> None:
+    await show_node(message, state, await _node_id(state))

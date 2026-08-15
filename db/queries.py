@@ -21,17 +21,33 @@ K_ASK_PHONE = "ask_phone"
 K_SUB_TYPE = "sub_type"
 K_SUB_FILE = "sub_file_id"
 K_SUB_TEXT = "sub_text"
+K_REF_TEXT = "ref_text"
 
 
 # ============================================================================ USERS
-async def get_or_create_user(tg_id: int, full_name: str, username: Optional[str]) -> User:
+async def get_or_create_user(
+    tg_id: int, full_name: str, username: Optional[str], referrer_id: Optional[int] = None
+) -> tuple[User, Optional[int]]:
+    """(user, taklif_hisoblangan_odam_tg_id) qaytaradi.
+
+    Taklif faqat foydalanuvchi birinchi marta yozilayotganda hisoblanadi:
+    eski foydalanuvchi boshqa havoladan kirsa ham qayta yozilmaydi.
+    """
     async with session_maker() as s:
         user = await s.scalar(select(User).where(User.tg_id == tg_id))
         if user is None:
-            user = User(tg_id=tg_id, full_name=full_name, username=username)
+            referred_by = None
+            if referrer_id is not None and referrer_id != tg_id:
+                # taklif qilgan odam ham botning foydalanuvchisi bo'lishi kerak
+                exists = await s.scalar(select(User.id).where(User.tg_id == referrer_id))
+                referred_by = referrer_id if exists else None
+            user = User(
+                tg_id=tg_id, full_name=full_name, username=username, referred_by=referred_by
+            )
             s.add(user)
             await s.commit()
-        elif (
+            return user, referred_by
+        if (
             user.full_name != full_name
             or user.username != username
             or not user.is_active
@@ -40,7 +56,7 @@ async def get_or_create_user(tg_id: int, full_name: str, username: Optional[str]
             user.username = username
             user.is_active = True
             await s.commit()
-        return user
+        return user, None
 
 
 async def get_user(tg_id: int) -> Optional[User]:
@@ -86,13 +102,63 @@ async def get_stats() -> dict:
         with_phone = await s.scalar(
             select(func.count(User.id)).where(User.phone.is_not(None))
         )
+        referred = await s.scalar(
+            select(func.count(User.id)).where(User.referred_by.is_not(None))
+        )
+        inviters = await s.scalar(
+            select(func.count(func.distinct(User.referred_by))).where(
+                User.referred_by.is_not(None)
+            )
+        )
     return {
         "total": total or 0,
         "active": active or 0,
         "today": today or 0,
         "week": week or 0,
         "with_phone": with_phone or 0,
+        "referred": referred or 0,
+        "inviters": inviters or 0,
     }
+
+
+# ====================================================================== REFERRALLAR
+async def get_referral_count(tg_id: int) -> int:
+    """Shu odam nechta odamni taklif qilgan."""
+    async with session_maker() as s:
+        return await s.scalar(
+            select(func.count(User.id)).where(User.referred_by == tg_id)
+        ) or 0
+
+
+async def get_referral_counts() -> dict[int, int]:
+    """{taklif qilgan tg_id: nechta} — Excel va statistika uchun."""
+    async with session_maker() as s:
+        rows = await s.execute(
+            select(User.referred_by, func.count(User.id))
+            .where(User.referred_by.is_not(None))
+            .group_by(User.referred_by)
+        )
+        return {tg_id: count for tg_id, count in rows}
+
+
+async def get_top_referrers(limit: int = 5) -> list[tuple[User, int]]:
+    """Eng ko'p odam taklif qilganlar."""
+    async with session_maker() as s:
+        rows = await s.execute(
+            select(User.referred_by, func.count(User.id).label("cnt"))
+            .where(User.referred_by.is_not(None))
+            .group_by(User.referred_by)
+            .order_by(func.count(User.id).desc())
+            .limit(limit)
+        )
+        pairs = list(rows)
+        if not pairs:
+            return []
+        ids = [tg_id for tg_id, _ in pairs]
+        users = {
+            u.tg_id: u for u in await s.scalars(select(User).where(User.tg_id.in_(ids)))
+        }
+        return [(users[tg_id], count) for tg_id, count in pairs if tg_id in users]
 
 
 # =========================================================================== ADMINS
@@ -234,14 +300,32 @@ async def get_item(item_id: int) -> Optional[MenuItem]:
         return await s.get(MenuItem, item_id)
 
 
-async def add_item(parent_id: Optional[int], title: str) -> MenuItem:
+async def add_item(
+    parent_id: Optional[int], title: str, required_referrals: int = 0
+) -> MenuItem:
     async with session_maker() as s:
         cond = MenuItem.parent_id.is_(None) if parent_id is None else MenuItem.parent_id == parent_id
         last = await s.scalar(select(func.coalesce(func.max(MenuItem.position), 0)).where(cond))
-        item = MenuItem(parent_id=parent_id, title=title, position=(last or 0) + 1)
+        item = MenuItem(
+            parent_id=parent_id,
+            title=title,
+            position=(last or 0) + 1,
+            required_referrals=max(required_referrals, 0),
+        )
         s.add(item)
         await s.commit()
         return item
+
+
+async def set_item_referrals(item_id: int, count: int) -> None:
+    """0 -> shart olib tashlanadi."""
+    async with session_maker() as s:
+        await s.execute(
+            update(MenuItem)
+            .where(MenuItem.id == item_id)
+            .values(required_referrals=max(count, 0))
+        )
+        await s.commit()
 
 
 async def rename_item(item_id: int, title: str) -> None:
@@ -430,6 +514,20 @@ async def delete_sub_message() -> None:
     await set_setting(K_SUB_TYPE, None)
     await set_setting(K_SUB_FILE, None)
     await set_setting(K_SUB_TEXT, None)
+
+
+async def get_ref_text() -> Optional[str]:
+    """Admin qo'ygan taklif matni. Qo'yilmagan bo'lsa None (standart ishlatiladi)."""
+    return await get_setting(K_REF_TEXT)
+
+
+async def set_ref_text(text_html: str) -> None:
+    await set_setting(K_REF_TEXT, text_html)
+
+
+async def delete_ref_text() -> None:
+    """Standart matnga qaytaradi."""
+    await set_setting(K_REF_TEXT, None)
 
 
 async def is_phone_required() -> bool:
