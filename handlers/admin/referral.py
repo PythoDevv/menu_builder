@@ -5,9 +5,11 @@ ishlatilgani uchun rasm/video qabul qilinmaydi. Qo'yilmagan bo'lsa
 `utils.texts.DEFAULT_REF_TEXT` ishlatiladi.
 """
 
+import re
 from html import escape
 
 from aiogram import F
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import LinkPreviewOptions, Message
 
@@ -27,7 +29,7 @@ from keyboards.admin_kb import (
     ref_text_kb,
 )
 from keyboards.user_kb import share_kb
-from utils.referral import PLACEHOLDERS, ref_link, render_ref_text
+from utils.referral import ref_link, render_ref_text
 from utils.texts import DEFAULT_REF_TEXT
 
 router = admin_router()
@@ -45,8 +47,10 @@ PLACEHOLDER_HELP = (
 
 EDIT_TEXT = (
     "✍️ <b>Taklif matni</b>\n\n"
-    "Yangi matnni yuboring (faqat matn).\n"
-    "Formatlash (qalin, kursiv, havola) o'zgarmasdan saqlanadi.\n\n"
+    "Yangi matnni yuboring (faqat matn). Ikki xil yozish mumkin:\n"
+    "• Telegramning o'z formatlashi bilan (qalin, kursiv, havola);\n"
+    "• yoki HTML teglari bilan: <code>&lt;b&gt;qalin&lt;/b&gt;</code> "
+    "(pastdagi matndan nusxa olsangiz — o'sha usul).\n\n"
     f"{PLACEHOLDER_HELP}\n\n"
     "⚠️ <b>📤 Do'stlarga yuborish</b> tugmasi xabar ostiga avtomatik qo'shiladi."
 )
@@ -127,6 +131,29 @@ async def reset_no(message: Message, state: FSMContext) -> None:
     await show(message, state)
 
 
+#: `<b>`, `</i>`, `<a href="...">` — HTML tegiga o'xshash bo'lak
+TAG_RE = re.compile(r"</?[a-zA-Z][^>]*>")
+
+#: nusxa olingan matn shu turdagi entity bilan keladi (monospace blok)
+CODE_ENTITIES = {"code", "pre"}
+
+
+def _template_source(message: Message) -> str:
+    """Admin xabaridan shablonni oladi.
+
+    Ikkala yozish usuli ham ishlashi kerak:
+    1) Telegram formatlashi (Ctrl+B, havola qo'yish) -> `html_text` HTML ga o'giradi.
+    2) HTML teglari qo'lda yozilgan yoki yuqoridagi monospace blokdan nusxa
+       olingan -> matn o'sha holicha olinadi. Bu yerda `html_text` ishlatilsa,
+       teglar `&lt;b&gt;` bo'lib qolib, foydalanuvchiga teg ko'rinib qolardi.
+    """
+    text = message.text or ""
+    only_code = all(e.type in CODE_ENTITIES for e in (message.entities or []))
+    if only_code and TAG_RE.search(text):
+        return text
+    return message.html_text
+
+
 @router.message(RefTextSG.waiting_text, NOT_COMMAND)
 async def save_text(message: Message, state: FSMContext) -> None:
     if not message.text:
@@ -143,10 +170,34 @@ async def save_text(message: Message, state: FSMContext) -> None:
         )
         return
 
-    await set_ref_text(message.html_text)
-    missing = [p for p in PLACEHOLDERS if p not in message.text]
+    template = _template_source(message)
+    link = await ref_link(message.bot, message.from_user.id)
+    rendered = render_ref_text(
+        template, title=SAMPLE_TITLE, need=SAMPLE_NEED, count=SAMPLE_COUNT, link=link
+    )
+
+    # Buzuq HTML bilan saqlab qo'ysak, xabar foydalanuvchiga umuman yetib bormaydi —
+    # shuning uchun avval o'zimizga yuborib ko'ramiz.
+    await message.answer("👇 Foydalanuvchi shu ko'rinishda ko'radi:")
+    try:
+        await message.answer(
+            rendered,
+            reply_markup=share_kb(link),
+            link_preview_options=LinkPreviewOptions(is_disabled=True),
+        )
+    except TelegramBadRequest:
+        await message.answer(
+            "❗️ Matn <b>saqlanmadi</b>: HTML teglari xato (ochilgan teg yopilmagan "
+            "yoki qo'llab-quvvatlanmaydi).\n\n"
+            "Qayta yuboring — yoki teglarni umuman yozmasdan, Telegramning o'z "
+            "formatlashidan (qalin, kursiv) foydalaning.",
+            reply_markup=cancel_kb(),
+        )
+        return
+
+    await set_ref_text(template)
     await message.answer("✅ Taklif matni saqlandi")
-    if "{link}" in missing:
+    if "{link}" not in template:
         await message.answer(
             "ℹ️ Matnda <code>{link}</code> yo'q — havola xabar oxiriga "
             "avtomatik qo'shib yuboriladi."
