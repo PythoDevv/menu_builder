@@ -65,6 +65,10 @@ class PhoneSG(StatesGroup):
     show = State()
 
 
+class LayoutSG(StatesGroup):
+    show = State()
+
+
 class BroadcastSG(StatesGroup):
     waiting_message = State()
     confirm = State()
@@ -85,6 +89,7 @@ ALL_STATES = (
     *SubSG.__all_states__,
     *RefTextSG.__all_states__,
     *PhoneSG.__all_states__,
+    *LayoutSG.__all_states__,
     *BroadcastSG.__all_states__,
     *ExcelSG.__all_states__,
 )

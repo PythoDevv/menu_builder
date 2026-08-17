@@ -4,7 +4,7 @@ Menyu — reply (pastdagi) tugmalar.
 Majburiy obuna — inline: reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 """
 
-from typing import Sequence, Union
+from typing import Optional, Sequence, Union
 
 from aiogram.types import (
     InlineKeyboardButton,
@@ -26,23 +26,54 @@ BTN_MY_POINTS = "🏆 Ballarim"
 
 CB_CHECK_SUB = "check_sub"
 
-# Shu belgidan qisqa nomlar bir qatorga ikkitadan joylashtiriladi
-SHORT_TITLE = 18
+# Shu kenglikkacha bo'lgan nomlar juftlanadi, uzunlari alohida qatorda qoladi.
+# Tor telefonlarda ham sig'sin desangiz — 16-18 ga tushiring.
+SHORT_TITLE = 20
+
+#: Menyu ustunlari soni (admin paneldan boshqariladi)
+COLUMNS_ONE = 1
+COLUMNS_TWO = 2
+DEFAULT_COLUMNS = COLUMNS_TWO
 
 Keyboard = Union[ReplyKeyboardMarkup, ReplyKeyboardRemove]
 
 
-def _rows(titles: Sequence[str]) -> list[list[KeyboardButton]]:
-    per_row = 2 if titles and all(len(t) <= SHORT_TITLE for t in titles) else 1
-    return [
-        [KeyboardButton(text=t) for t in titles[i : i + per_row]]
-        for i in range(0, len(titles), per_row)
-    ]
+def title_width(text: str) -> int:
+    """Taxminiy ko'rinish kengligi: emoji va belgilar ikki harf joyini egallaydi."""
+    return sum(2 if ord(ch) > 0x2000 else 1 for ch in text)
 
 
-def menu_kb(children: list[MenuItem], is_root: bool) -> Keyboard:
+def _rows(titles: Sequence[str], columns: int) -> list[list[KeyboardButton]]:
+    """Qisqa nomlarni ikkitadan juftlaydi, uzunlarini yolg'iz qoldiradi.
+
+    Tartib buzilmaydi: uzun nom uchragan joyda kutib turgan qisqa nom
+    o'z qatoriga chiqariladi.
+    """
+    rows: list[list[str]] = []
+    pending: Optional[str] = None
+
+    for title in titles:
+        if columns < COLUMNS_TWO or title_width(title) > SHORT_TITLE:
+            if pending is not None:
+                rows.append([pending])
+                pending = None
+            rows.append([title])
+        elif pending is None:
+            pending = title
+        else:
+            rows.append([pending, title])
+            pending = None
+
+    if pending is not None:
+        rows.append([pending])
+    return [[KeyboardButton(text=t) for t in row] for row in rows]
+
+
+def menu_kb(
+    children: list[MenuItem], is_root: bool, columns: int = DEFAULT_COLUMNS
+) -> Keyboard:
     """Menyu tugmalari. Ildizda 'Orqaga' kerak emas, 'Ballarim' esa faqat ildizda bor."""
-    rows = _rows([c.title for c in children])
+    rows = _rows([c.title for c in children], columns)
     if is_root:
         rows.append([KeyboardButton(text=BTN_MY_POINTS)])
     else:

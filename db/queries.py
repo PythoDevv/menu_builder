@@ -22,6 +22,7 @@ K_SUB_TYPE = "sub_type"
 K_SUB_FILE = "sub_file_id"
 K_SUB_TEXT = "sub_text"
 K_REF_TEXT = "ref_text"
+K_MENU_COLUMNS = "menu_columns"
 
 
 # ============================================================================ USERS
@@ -528,6 +529,18 @@ async def set_ref_text(text_html: str) -> None:
 async def delete_ref_text() -> None:
     """Standart matnga qaytaradi."""
     await set_setting(K_REF_TEXT, None)
+
+
+async def get_menu_columns() -> int:
+    """Menyu tugmalari qatorda nechtadan chiqishi: 1 yoki 2 (standart — 2)."""
+    return 2 if (await get_setting(K_MENU_COLUMNS, "2")) == "2" else 1
+
+
+async def set_menu_columns(columns: int) -> int:
+    """Saqlangan qiymatni qaytaradi (2 dan boshqasi — bitta ustun)."""
+    value = 2 if columns == 2 else 1
+    await set_setting(K_MENU_COLUMNS, str(value))
+    return value
 
 
 async def is_phone_required() -> bool:

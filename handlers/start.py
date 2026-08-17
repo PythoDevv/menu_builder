@@ -6,7 +6,7 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
-from db.queries import get_items, get_start_message, set_phone
+from db.queries import get_items, get_menu_columns, get_start_message, set_phone
 from handlers.menu import EMPTY_TEXT, KEY_NODE, MENU_TEXT
 from keyboards.user_kb import CB_CHECK_SUB, menu_kb, phone_kb
 from utils.content import send_raw_content
@@ -21,7 +21,7 @@ async def send_start_screen(bot: Bot, chat_id: int, state: FSMContext) -> None:
 
     start_msg = await get_start_message()
     items = await get_items(None, active_only=True)
-    kb = menu_kb(items, is_root=True)
+    kb = menu_kb(items, is_root=True, columns=await get_menu_columns())
 
     if start_msg:
         await send_raw_content(bot, chat_id, start_msg, reply_markup=kb)

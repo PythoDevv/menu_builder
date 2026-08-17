@@ -12,6 +12,7 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 - **Obuna xabari** — majburiy obuna ekranidagi post admin paneldan almashtiriladi: matn, rasm, video, fayl (`file_id` bilan). Qo'yilmagan bo'lsa standart matn chiqadi. Kanal tugmalari va **✅ Tekshirish** xabar ostiga avtomatik qo'shiladi.
 - **Start xabar** — admin paneldan qo'shiladi / o'zgartiriladi / o'chiriladi. Qo'yilmagan bo'lsa ko'rsatilmaydi.
 - **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga kontent (rasm/video/fayl/matn) biriktiriladi.
+- **Menyu ko'rinishi** — tugmalar qatorda **bittadan** yoki **ikkitadan** chiqishi admin paneldan tanlanadi. Ikkitadan rejimida nomi uzun tugma qatorni o'zi egallaydi (matni siqilib ketmaydi).
 - **Kontent** — `file_id` + HTML holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi).
 - **Taklif (referal) sharti** — tugma faqat N ta odam taklif qilgandan keyin ochiladi. Shart tugma qo'shilayotganda so'raladi, keyin ham o'zgartiriladi. Shart bajarilmaganda chiqadigan matn admin paneldan sozlanadi.
 - **Telefon so'rash** — admin paneldan yoqiladi/o'chiriladi. Bir marta olingan raqam qayta so'ralmaydi.
@@ -74,6 +75,7 @@ oddiy foydalanuvchi menyusini ko'radi.
 | 📌 Obuna xabari | Majburiy obuna postini qo'yish (matn/rasm/video), ko'rish, standartga qaytarish |
 | ✍️ Taklif matni | Taklif sharti bajarilmaganda chiqadigan matn: ko'rish, o'zgartirish, standartga qaytarish |
 | ☎️ Telefon so'rash | ON / OFF |
+| 🧩 Menyu ko'rinishi | Tugmalar 1 tadan yoki 2 tadan chiqishi + namunani ko'rish |
 | 📨 Xabar yuborish | Hamma faol foydalanuvchiga |
 | 📊 Excel | Faylni olish yoki qo'lda yangilash |
 | 👥 Statistika | Jami / faol / bugun / 7 kun |
@@ -158,6 +160,9 @@ qo'shilsinmi?"* — **✅ Ha** / **❌ Yo'q** tugmalari bilan.
 - Taklif matni `settings` jadvalidagi `ref_text` kalitida turadi; taklif soni
   `menu_items.required_referrals`, kim kimni taklif qilgani `users.referred_by`
   ustunida. Eski bazada bu ustunlar `python migrate.py` (002) bilan qo'shiladi.
+- Menyu ko'rinishi `settings` jadvalida `menu_columns` kalitida saqlanadi (`1` yoki `2`,
+  standart — `2`). Yangi migratsiya kerak emas. Juftlash chegarasi —
+  `keyboards/user_kb.py` dagi `SHORT_TITLE` (emoji ikki belgi hisoblanadi).
 - Admin qaysi ekranda turgani FSM holatida saqlanadi (xotirada). Bot qayta ishga
   tushsa panel bosh sahifadan boshlanadi — `/admin` bosilsa kifoya.
 

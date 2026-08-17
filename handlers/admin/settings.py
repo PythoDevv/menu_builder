@@ -1,3 +1,5 @@
+from html import escape
+
 from aiogram import F
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message
@@ -6,17 +8,23 @@ from db.queries import (
     delete_start_message,
     delete_sub_message,
     get_channels,
+    get_items,
+    get_menu_columns,
     get_start_message,
     get_sub_message,
     is_phone_required,
+    set_menu_columns,
     set_start_message,
     set_sub_message,
     toggle_phone_required,
 )
 from handlers.admin.common import NOT_COMMAND, admin_router
-from handlers.admin.states import PanelSG, PhoneSG, StartSG, SubSG
+from handlers.admin.states import LayoutSG, PanelSG, PhoneSG, StartSG, SubSG
 from keyboards.admin_kb import (
     BTN_DELETE,
+    BTN_LAYOUT,
+    BTN_LT_ONE,
+    BTN_LT_TWO,
     BTN_NO,
     BTN_OFF,
     BTN_ON,
@@ -30,11 +38,12 @@ from keyboards.admin_kb import (
     BTN_YES_DELETE,
     cancel_kb,
     confirm_delete_kb,
+    layout_kb,
     phone_settings_kb,
     start_msg_kb,
     sub_msg_kb,
 )
-from keyboards.user_kb import subscribe_kb
+from keyboards.user_kb import SHORT_TITLE, menu_kb, subscribe_kb, title_width
 from utils.content import TYPE_LABELS, extract_content, send_raw_content
 from utils.texts import DEFAULT_SUB_MESSAGE
 
@@ -232,3 +241,65 @@ async def toggle_phone(message: Message, state: FSMContext) -> None:
     enabled = await toggle_phone_required()
     await message.answer("✅ O'zgartirildi")
     await show_phone(message, state, enabled)
+
+
+# ------------------------------------------------------------- menyu ko'rinishi
+async def show_layout(message: Message, state: FSMContext, columns: int) -> None:
+    if columns == 2:
+        hint = (
+            "Qisqa nomli tugmalar bir qatorga <b>ikkitadan</b> joylashadi.\n"
+            f"Nomi uzun bo'lsa (taxminan {SHORT_TITLE} belgidan katta) — "
+            "o'sha tugma qatorni <b>o'zi egallaydi</b>, matni kesilib qolmaydi."
+        )
+    else:
+        hint = "Har bir tugma alohida qatorda, butun kenglikda chiqadi."
+
+    await state.set_state(LayoutSG.show)
+    await message.answer(
+        "🧩 <b>Menyu ko'rinishi</b>\n\n"
+        f"Holat: <b>{'2️⃣ ikkitadan' if columns == 2 else '1️⃣ bittadan'}</b>\n\n"
+        f"{hint}\n\n"
+        "Bu sozlama foydalanuvchi ko'radigan menyuga tegishli.",
+        reply_markup=layout_kb(),
+    )
+
+
+@router.message(PanelSG.home, F.text == BTN_LAYOUT)
+async def open_layout(message: Message, state: FSMContext) -> None:
+    await show_layout(message, state, await get_menu_columns())
+
+
+@router.message(LayoutSG.show, F.text.in_({BTN_LT_ONE, BTN_LT_TWO}))
+async def choose_layout(message: Message, state: FSMContext) -> None:
+    columns = await set_menu_columns(1 if message.text == BTN_LT_ONE else 2)
+    await message.answer("✅ Saqlandi")
+    await show_layout(message, state, columns)
+
+
+@router.message(LayoutSG.show, F.text == BTN_VIEW)
+async def preview_layout(message: Message, state: FSMContext) -> None:
+    """Asosiy menyuni haqiqiy klaviatura sifatida ko'rsatadi."""
+    columns = await get_menu_columns()
+    items = await get_items(None, active_only=True)
+    if not items:
+        await message.answer("❗️ Asosiy menyuda faol tugma yo'q")
+        return
+
+    long_titles = [i.title for i in items if title_width(i.title) > SHORT_TITLE]
+    note = (
+        "\n\nℹ️ Nomi uzunligi uchun alohida qator olganlar: "
+        + ", ".join(f"<b>{escape(t)}</b>" for t in long_titles)
+        if columns == 2 and long_titles
+        else ""
+    )
+    await message.answer(
+        f"👇 Foydalanuvchi asosiy menyuni shunday ko'radi:{note}\n\n"
+        "Istalgan tugmani bossangiz sozlamaga qaytasiz.",
+        reply_markup=menu_kb(items, is_root=True, columns=columns),
+    )
+
+
+@router.message(LayoutSG.show, NOT_COMMAND)
+async def back_from_preview(message: Message, state: FSMContext) -> None:
+    """Namunadagi tugma bosilsa — sozlama ekraniga qaytamiz."""
+    await show_layout(message, state, await get_menu_columns())

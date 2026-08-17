@@ -13,7 +13,14 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import LinkPreviewOptions, Message
 
 from db.models import MenuItem
-from db.queries import get_contents, get_item, get_items, get_ref_text, get_referral_count
+from db.queries import (
+    get_contents,
+    get_item,
+    get_items,
+    get_menu_columns,
+    get_ref_text,
+    get_referral_count,
+)
 from keyboards.user_kb import BTN_BACK, BTN_HOME, BTN_MY_POINTS, Keyboard, menu_kb, share_kb
 from utils.admins import is_admin
 from utils.content import send_content
@@ -43,7 +50,7 @@ async def current_node_id(state: FSMContext) -> Optional[int]:
 
 async def node_kb(node_id: Optional[int]) -> Keyboard:
     children = await get_items(node_id, active_only=True)
-    return menu_kb(children, is_root=node_id is None)
+    return menu_kb(children, is_root=node_id is None, columns=await get_menu_columns())
 
 
 async def _send_contents(message: Message, item_id: int, kb: Keyboard) -> None:
@@ -63,7 +70,7 @@ async def open_node(message: Message, state: FSMContext, node_id: Optional[int])
     """Bo'lim ichiga kiradi: kontentini yuboradi va ichki tugmalarini ko'rsatadi."""
     await state.update_data({KEY_NODE: node_id})
     children = await get_items(node_id, active_only=True)
-    kb = menu_kb(children, is_root=node_id is None)
+    kb = menu_kb(children, is_root=node_id is None, columns=await get_menu_columns())
 
     if node_id is not None and await get_contents(node_id):
         await _send_contents(message, node_id, kb)

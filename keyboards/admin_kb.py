@@ -40,6 +40,7 @@ BTN_EXCEL = "📊 Excel"
 BTN_STATS = "👥 Statistika"
 BTN_ADMINS = "👮 Adminlar"
 BTN_REF_TEXT = "✍️ Taklif matni"
+BTN_LAYOUT = "🧩 Menyu ko'rinishi"
 
 # ---------------------------------------------------------------------- kanallar
 BTN_CH_ADD = "➕ Kanal qo'shish"
@@ -71,6 +72,10 @@ BTN_REF_RESET = "♻️ Standartga qaytarish"
 BTN_ST_EDIT = "✏️ O'zgartirish"
 BTN_ST_ADD = "➕ Qo'shish"
 BTN_SUB_RESET = "♻️ Standartga qaytarish"
+
+# ------------------------------------------------------------- menyu ko'rinishi
+BTN_LT_ONE = "1️⃣ Bittadan"
+BTN_LT_TWO = "2️⃣ Ikkitadan"
 
 # ---------------------------------------------------------------------- broadcast
 BTN_BC_SEND = "✅ Yuborish"
@@ -107,6 +112,7 @@ def admin_home_kb() -> ReplyKeyboardMarkup:
             [BTN_PHONE, BTN_REF_TEXT],
             [BTN_BROADCAST, BTN_EXCEL],
             [BTN_STATS, BTN_ADMINS],
+            [BTN_LAYOUT],
             [BTN_EXIT],
         ],
         "Bo'limni tanlang",
@@ -278,6 +284,12 @@ def sub_msg_kb(custom: bool) -> ReplyKeyboardMarkup:
 # ------------------------------------------------------------------------ TELEFON
 def phone_settings_kb(enabled: bool) -> ReplyKeyboardMarkup:
     return _kb([[BTN_OFF if enabled else BTN_ON], [BTN_HOME]])
+
+
+# ----------------------------------------------------------------- MENYU KO'RINISHI
+def layout_kb() -> ReplyKeyboardMarkup:
+    """Ikkala variant ham turadi; qaysi biri faolligi xabar matnida yoziladi."""
+    return _kb([[BTN_LT_ONE, BTN_LT_TWO], [BTN_VIEW], [BTN_HOME]], "Ko'rinishni tanlang")
 
 
 # ---------------------------------------------------------------------- BROADCAST
