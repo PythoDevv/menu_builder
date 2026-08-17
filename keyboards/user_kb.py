@@ -22,6 +22,7 @@ BTN_HOME = "🏠 Bosh menyu"
 BTN_CHECK_SUB = "✅ Tekshirish"
 BTN_PHONE = "📱 Raqamni yuborish"
 BTN_SHARE = "📤 Do'stlarga yuborish"
+BTN_MY_POINTS = "🏆 Ballarim"
 
 CB_CHECK_SUB = "check_sub"
 
@@ -40,9 +41,11 @@ def _rows(titles: Sequence[str]) -> list[list[KeyboardButton]]:
 
 
 def menu_kb(children: list[MenuItem], is_root: bool) -> Keyboard:
-    """Menyu tugmalari. Ildizda 'Orqaga' kerak emas."""
+    """Menyu tugmalari. Ildizda 'Orqaga' kerak emas, 'Ballarim' esa faqat ildizda bor."""
     rows = _rows([c.title for c in children])
-    if not is_root:
+    if is_root:
+        rows.append([KeyboardButton(text=BTN_MY_POINTS)])
+    else:
         rows.append([KeyboardButton(text=BTN_BACK), KeyboardButton(text=BTN_HOME)])
     if not rows:
         return ReplyKeyboardRemove()

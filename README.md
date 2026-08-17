@@ -99,6 +99,10 @@ Ro'yxatda shartli tugmalar `🔒5` belgisi bilan ko'rinadi.
 (ostida **📤 Do'stlarga yuborish** tugmasi bilan). Talab bajarilgach tugma
 o'z-o'zidan ochiladi — hech narsani qayta bosish shart emas.
 
+Bundan tashqari, asosiy menyu tagida doimiy **🏆 Ballarim** tugmasi bor —
+hech qanday shartli tugmaga bog'liq bo'lmasdan, istalgan vaqtda taklif
+qilinganlar sonini va shaxsiy havolani ko'rsatadi.
+
 Matnda ishlatiladigan o'rinbosarlar:
 
 | Belgi | Ma'nosi |

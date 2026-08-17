@@ -14,7 +14,7 @@ from aiogram.types import LinkPreviewOptions, Message
 
 from db.models import MenuItem
 from db.queries import get_contents, get_item, get_items, get_ref_text, get_referral_count
-from keyboards.user_kb import BTN_BACK, BTN_HOME, Keyboard, menu_kb, share_kb
+from keyboards.user_kb import BTN_BACK, BTN_HOME, BTN_MY_POINTS, Keyboard, menu_kb, share_kb
 from utils.admins import is_admin
 from utils.content import send_content
 from utils.referral import ref_link, render_ref_text
@@ -121,6 +121,22 @@ async def go_back(message: Message, state: FSMContext) -> None:
         item = await get_item(node_id)
         parent_id = item.parent_id if item else None
     await open_node(message, state, parent_id)
+
+
+@router.message(F.text == BTN_MY_POINTS)
+async def my_points(message: Message) -> None:
+    """Doimiy 'Ballarim' tugmasi — shartli tugma bosilishini kutmasdan ham ko'rinadi."""
+    user_id = message.from_user.id
+    count = await get_referral_count(user_id)
+    link = await ref_link(message.bot, user_id)
+    await message.answer(
+        "🏆 <b>Ballaringiz</b>\n\n"
+        f"Siz taklif qilgan odamlar soni: <b>{count}</b> ta\n\n"
+        "Do'stlaringizni shu havola orqali taklif qiling:\n"
+        f"{link}",
+        reply_markup=share_kb(link),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    )
 
 
 @router.message(F.text)
