@@ -27,8 +27,9 @@ BTN_MY_POINTS = "🏆 Ballarim"
 CB_CHECK_SUB = "check_sub"
 
 # Shu kenglikkacha bo'lgan nomlar juftlanadi, uzunlari alohida qatorda qoladi.
-# Tor telefonlarda ham sig'sin desangiz — 16-18 ga tushiring.
-SHORT_TITLE = 20
+# O'rta/katta nomlar uchun 2 ustunli menu ko'rinishini saqlab qolish uchun
+# chegara biroz kengaytirildi; aks holda ko'p sarlavhalar bir qatorga sig'maydi.
+SHORT_TITLE = 30
 
 #: Menyu ustunlari soni (admin paneldan boshqariladi)
 COLUMNS_ONE = 1
