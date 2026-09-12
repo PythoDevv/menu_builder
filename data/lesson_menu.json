@@ -1,0 +1,1292 @@
+{
+  "schema_version": 1,
+  "export_folder": "ChatExport_2026-09-12",
+  "group_size": 3,
+  "parents": [
+    {
+      "title": "📹 Shayx Alijon qori darslari",
+      "sections": [
+        {
+          "title": "📚 Muallimi soniy videodarslari",
+          "items": [
+            {
+              "title": "🎬 1–3-darslar",
+              "contents": [
+                {
+                  "number": 1,
+                  "title": "Alifbo",
+                  "type": "video",
+                  "file": "video_files/1. Alifbo tg.mp4",
+                  "source_message_id": 105,
+                  "caption_html": "<b>1-dars</b> — Alifbo"
+                },
+                {
+                  "number": 2,
+                  "title": "Maxrajlar",
+                  "type": "video",
+                  "file": "video_files/2 tg.mp4",
+                  "source_message_id": 106,
+                  "caption_html": "<b>2-dars</b> — Maxrajlar"
+                },
+                {
+                  "number": 3,
+                  "title": "Harakatlar",
+                  "type": "video",
+                  "file": "video_files/3. Harakatlar tg.mp4",
+                  "source_message_id": 107,
+                  "caption_html": "<b>3-dars</b> — Harakatlar"
+                }
+              ]
+            },
+            {
+              "title": "🎬 4–6-darslar",
+              "contents": [
+                {
+                  "number": 4,
+                  "title": "Harakatlar",
+                  "type": "video",
+                  "file": "video_files/ز .4 harfi tg.mp4",
+                  "source_message_id": 108,
+                  "caption_html": "<b>4-dars</b> — Harakatlar"
+                },
+                {
+                  "number": 5,
+                  "title": "م harfi",
+                  "type": "video",
+                  "file": "video_files/5 tg.mp4",
+                  "source_message_id": 109,
+                  "caption_html": "<b>5-dars</b> — م harfi"
+                },
+                {
+                  "number": 6,
+                  "title": "ت harfi",
+                  "type": "video",
+                  "file": "video_files/6. ت tg.mp4",
+                  "source_message_id": 110,
+                  "caption_html": "<b>6-dars</b> — ت harfi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 7–9-darslar",
+              "contents": [
+                {
+                  "number": 7,
+                  "title": "ن harfi",
+                  "type": "video",
+                  "file": "video_files/7 dars tg.mp4",
+                  "source_message_id": 111,
+                  "caption_html": "<b>7-dars</b> — ن harfi"
+                },
+                {
+                  "number": 8,
+                  "title": "ي harfi",
+                  "type": "video",
+                  "file": "video_files/8 dars tg.mp4",
+                  "source_message_id": 112,
+                  "caption_html": "<b>8-dars</b> — ي harfi"
+                },
+                {
+                  "number": 9,
+                  "title": "ب harfi",
+                  "type": "video",
+                  "file": "video_files/9 dars tg.mp4",
+                  "source_message_id": 113,
+                  "caption_html": "<b>9-dars</b> — ب harfi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 10–12-darslar",
+              "contents": [
+                {
+                  "number": 10,
+                  "title": "ك harfi",
+                  "type": "video",
+                  "file": "video_files/10 dars tg.mp4",
+                  "source_message_id": 114,
+                  "caption_html": "<b>10-dars</b> — ك harfi"
+                },
+                {
+                  "number": 11,
+                  "title": "ل harfi",
+                  "type": "video",
+                  "file": "video_files/11 Dars tg.mp4",
+                  "source_message_id": 115,
+                  "caption_html": "<b>11-dars</b> — ل harfi"
+                },
+                {
+                  "number": 12,
+                  "title": "و harfi",
+                  "type": "video",
+                  "file": "video_files/12 dars tg.mp4",
+                  "source_message_id": 116,
+                  "caption_html": "<b>12-dars</b> — و harfi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 13–15-darslar",
+              "contents": [
+                {
+                  "number": 13,
+                  "title": "ه harfi",
+                  "type": "video",
+                  "file": "video_files/13 dars tg.mp4",
+                  "source_message_id": 117,
+                  "caption_html": "<b>13-dars</b> — ه harfi"
+                },
+                {
+                  "number": 14,
+                  "title": "ف harfi",
+                  "type": "video",
+                  "file": "video_files/14 Dars tg.mp4",
+                  "source_message_id": 118,
+                  "caption_html": "<b>14-dars</b> — ف harfi"
+                },
+                {
+                  "number": 15,
+                  "title": "ق harfi",
+                  "type": "video",
+                  "file": "video_files/15 Dars tg.mp4",
+                  "source_message_id": 119,
+                  "caption_html": "<b>15-dars</b> — ق harfi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 16–18-darslar",
+              "contents": [
+                {
+                  "number": 16,
+                  "title": "ش harfi",
+                  "type": "video",
+                  "file": "video_files/16 dars tg.mp4",
+                  "source_message_id": 120,
+                  "caption_html": "<b>16-dars</b> — ش harfi"
+                },
+                {
+                  "number": 17,
+                  "title": "س harfi",
+                  "type": "video",
+                  "file": "video_files/17 Dars tg.mp4",
+                  "source_message_id": 121,
+                  "caption_html": "<b>17-dars</b> — س harfi"
+                },
+                {
+                  "number": 18,
+                  "title": "ث harfi",
+                  "type": "video",
+                  "file": "video_files/18 Dars tg.mp4",
+                  "source_message_id": 122,
+                  "caption_html": "<b>18-dars</b> — ث harfi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 19–21-darslar",
+              "contents": [
+                {
+                  "number": 19,
+                  "title": "ص harfi",
+                  "type": "video",
+                  "file": "video_files/19 dars tg.mp4",
+                  "source_message_id": 123,
+                  "caption_html": "<b>19-dars</b> — ص harfi"
+                },
+                {
+                  "number": 20,
+                  "title": "ط harfi",
+                  "type": "video",
+                  "file": "video_files/20 Dars tg.mp4",
+                  "source_message_id": 124,
+                  "caption_html": "<b>20-dars</b> — ط harfi"
+                },
+                {
+                  "number": 21,
+                  "title": "ج harfi",
+                  "type": "video",
+                  "file": "video_files/21 dars tg.mp4",
+                  "source_message_id": 125,
+                  "caption_html": "<b>21-dars</b> — ج harfi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 22–24-darslar",
+              "contents": [
+                {
+                  "number": 22,
+                  "title": "خ harfi",
+                  "type": "video",
+                  "file": "video_files/video_1@17-11-2022_14-18-36.mp4",
+                  "source_message_id": 126,
+                  "caption_html": "<b>22-dars</b> — خ harfi"
+                },
+                {
+                  "number": 23,
+                  "title": "ح harfi",
+                  "type": "video",
+                  "file": "video_files/IMG_7392.MP4",
+                  "source_message_id": 127,
+                  "caption_html": "<b>23-dars</b> — ح harfi"
+                },
+                {
+                  "number": 24,
+                  "title": "غ harfi",
+                  "type": "video",
+                  "file": "video_files/IMG_7393.MP4",
+                  "source_message_id": 128,
+                  "caption_html": "<b>24-dars</b> — غ harfi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 25–27-darslar",
+              "contents": [
+                {
+                  "number": 25,
+                  "title": "ع harfi",
+                  "type": "video",
+                  "file": "video_files/IMG_7400.MP4",
+                  "source_message_id": 129,
+                  "caption_html": "<b>25-dars</b> — ع harfi"
+                },
+                {
+                  "number": 26,
+                  "title": "د harfi",
+                  "type": "video",
+                  "file": "video_files/IMG_7412.MP4",
+                  "source_message_id": 130,
+                  "caption_html": "<b>26-dars</b> — د harfi"
+                },
+                {
+                  "number": 27,
+                  "title": "ض harfi",
+                  "type": "video",
+                  "file": "video_files/IMG_7420.MP4",
+                  "source_message_id": 131,
+                  "caption_html": "<b>27-dars</b> — ض harfi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 28–30-darslar",
+              "contents": [
+                {
+                  "number": 28,
+                  "title": "ذ harfi",
+                  "type": "video",
+                  "file": "video_files/IMG_7428.MP4",
+                  "source_message_id": 132,
+                  "caption_html": "<b>28-dars</b> — ذ harfi"
+                },
+                {
+                  "number": 29,
+                  "title": "ظ harfi",
+                  "type": "video",
+                  "file": "video_files/IMG_7431.MP4",
+                  "source_message_id": 133,
+                  "caption_html": "<b>29-dars</b> — ظ harfi"
+                },
+                {
+                  "number": 30,
+                  "title": "Mad tabiiy",
+                  "type": "video",
+                  "file": "video_files/IMG_7445.MP4",
+                  "source_message_id": 134,
+                  "caption_html": "<b>30-dars</b> — Mad tabiiy"
+                }
+              ]
+            },
+            {
+              "title": "🎬 31–33-darslar",
+              "contents": [
+                {
+                  "number": 31,
+                  "title": "Tashdidli xarflar",
+                  "type": "video",
+                  "file": "video_files/IMG_7448.MP4",
+                  "source_message_id": 135,
+                  "caption_html": "<b>31-dars</b> — Tashdidli xarflar"
+                },
+                {
+                  "number": 32,
+                  "title": "Tanvinli tashdid",
+                  "type": "video",
+                  "file": "video_files/IMG_7450.MP4",
+                  "source_message_id": 136,
+                  "caption_html": "<b>32-dars</b> — Tanvinli tashdid"
+                },
+                {
+                  "number": 33,
+                  "title": "Xamza",
+                  "type": "video",
+                  "file": "video_files/IMG_7455.MP4",
+                  "source_message_id": 137,
+                  "caption_html": "<b>33-dars</b> — Xamza"
+                }
+              ]
+            },
+            {
+              "title": "🎬 34–36-darslar",
+              "contents": [
+                {
+                  "number": 34,
+                  "title": "Ta marbuta (ة)",
+                  "type": "video",
+                  "file": "video_files/IMG_7460.MP4",
+                  "source_message_id": 138,
+                  "caption_html": "<b>34-dars</b> — Ta marbuta (ة)"
+                },
+                {
+                  "number": 35,
+                  "title": "Muqaddar alif",
+                  "type": "video",
+                  "file": "video_files/IMG_7471.MP4",
+                  "source_message_id": 139,
+                  "caption_html": "<b>35-dars</b> — Muqaddar alif"
+                },
+                {
+                  "number": 36,
+                  "title": "Muqaddar ي va و",
+                  "type": "video",
+                  "file": "video_files/IMG_7476.MP4",
+                  "source_message_id": 140,
+                  "caption_html": "<b>36-dars</b> — Muqaddar ي va و"
+                }
+              ]
+            },
+            {
+              "title": "🎬 37–39-darslar",
+              "contents": [
+                {
+                  "number": 37,
+                  "title": "ي li aliflar",
+                  "type": "video",
+                  "file": "video_files/IMG_7484.MP4",
+                  "source_message_id": 141,
+                  "caption_html": "<b>37-dars</b> — ي li aliflar"
+                },
+                {
+                  "number": 38,
+                  "title": "Yozuvda bo'lib o'kilmaydigan xarflar",
+                  "type": "video",
+                  "file": "video_files/IMG_7488.MP4",
+                  "source_message_id": 142,
+                  "caption_html": "<b>38-dars</b> — Yozuvda bo&#x27;lib o&#x27;kilmaydigan xarflar"
+                },
+                {
+                  "number": 39,
+                  "title": "Kamariyya xarflari va vasliya xamzasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7499.MP4",
+                  "source_message_id": 143,
+                  "caption_html": "<b>39-dars</b> — Kamariyya xarflari va vasliya xamzasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 40–42-darslar",
+              "contents": [
+                {
+                  "number": 40,
+                  "title": "Shamsiya xarflari",
+                  "type": "video",
+                  "file": "video_files/IMG_7514.MP4",
+                  "source_message_id": 144,
+                  "caption_html": "<b>40-dars</b> — Shamsiya xarflari"
+                },
+                {
+                  "number": 41,
+                  "title": "Kamariya, shamsiya xarflari va vasliya xarflari",
+                  "type": "video",
+                  "file": "video_files/IMG_7520.MP4",
+                  "source_message_id": 145,
+                  "caption_html": "<b>41-dars</b> — Kamariya, shamsiya xarflari va vasliya xarflari"
+                },
+                {
+                  "number": 42,
+                  "title": "Kalimalar sungida tuxtash koidalari",
+                  "type": "video",
+                  "file": "video_files/IMG_7523.MP4",
+                  "source_message_id": 146,
+                  "caption_html": "<b>42-dars</b> — Kalimalar sungida tuxtash koidalari"
+                }
+              ]
+            },
+            {
+              "title": "🎬 43–45-darslar",
+              "contents": [
+                {
+                  "number": 43,
+                  "title": "So'z so'ngida madlik kalimalarga to'xtash",
+                  "type": "video",
+                  "file": "video_files/IMG_7530.MP4",
+                  "source_message_id": 147,
+                  "caption_html": "<b>43-dars</b> — So&#x27;z so&#x27;ngida madlik kalimalarga to&#x27;xtash"
+                },
+                {
+                  "number": 44,
+                  "title": "Idg'om qoidasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7541.MP4",
+                  "source_message_id": 148,
+                  "caption_html": "<b>44-dars</b> — Idg&#x27;om qoidasi"
+                },
+                {
+                  "number": 45,
+                  "title": "Iqlob qoidasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7547.MP4",
+                  "source_message_id": 149,
+                  "caption_html": "<b>45-dars</b> — Iqlob qoidasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 46–48-darslar",
+              "contents": [
+                {
+                  "number": 46,
+                  "title": "Alloh lafzi o'qilish qoidasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7549.MP4",
+                  "source_message_id": 150,
+                  "caption_html": "<b>46-dars</b> — Alloh lafzi o&#x27;qilish qoidasi"
+                },
+                {
+                  "number": 47,
+                  "title": "Iymon kalimalari",
+                  "type": "video",
+                  "file": "video_files/IMG_7557.MP4",
+                  "source_message_id": 151,
+                  "caption_html": "<b>47-dars</b> — Iymon kalimalari"
+                },
+                {
+                  "number": 48,
+                  "title": "Fotixa surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7567.MP4",
+                  "source_message_id": 152,
+                  "caption_html": "<b>48-dars</b> — Fotixa surasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 49–51-darslar",
+              "contents": [
+                {
+                  "number": 49,
+                  "title": "Baqara surasi (1-5)",
+                  "type": "video",
+                  "file": "video_files/IMG_7572.MP4",
+                  "source_message_id": 153,
+                  "caption_html": "<b>49-dars</b> — Baqara surasi (1-5)"
+                },
+                {
+                  "number": 50,
+                  "title": "Shams surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7587.MP4",
+                  "source_message_id": 154,
+                  "caption_html": "<b>50-dars</b> — Shams surasi"
+                },
+                {
+                  "number": 51,
+                  "title": "Layl surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7595.MP4",
+                  "source_message_id": 155,
+                  "caption_html": "<b>51-dars</b> — Layl surasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 52–54-darslar",
+              "contents": [
+                {
+                  "number": 52,
+                  "title": "Sharx surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7648.MP4",
+                  "source_message_id": 156,
+                  "caption_html": "<b>52-dars</b> — Sharx surasi"
+                },
+                {
+                  "number": 53,
+                  "title": "Tiyn surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7658.MP4",
+                  "source_message_id": 157,
+                  "caption_html": "<b>53-dars</b> — Tiyn surasi"
+                },
+                {
+                  "number": 54,
+                  "title": "Alaq surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7671.MP4",
+                  "source_message_id": 158,
+                  "caption_html": "<b>54-dars</b> — Alaq surasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 55–57-darslar",
+              "contents": [
+                {
+                  "number": 55,
+                  "title": "Qadr surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7681.MP4",
+                  "source_message_id": 159,
+                  "caption_html": "<b>55-dars</b> — Qadr surasi"
+                },
+                {
+                  "number": 56,
+                  "title": "Bayyina surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7687.MP4",
+                  "source_message_id": 160,
+                  "caption_html": "<b>56-dars</b> — Bayyina surasi"
+                },
+                {
+                  "number": 57,
+                  "title": "Zalzala surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7693.MP4",
+                  "source_message_id": 161,
+                  "caption_html": "<b>57-dars</b> — Zalzala surasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 58–60-darslar",
+              "contents": [
+                {
+                  "number": 58,
+                  "title": "Adiyat surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7695.MP4",
+                  "source_message_id": 162,
+                  "caption_html": "<b>58-dars</b> — Adiyat surasi"
+                },
+                {
+                  "number": 59,
+                  "title": "Qoria surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7704.MP4",
+                  "source_message_id": 163,
+                  "caption_html": "<b>59-dars</b> — Qoria surasi"
+                },
+                {
+                  "number": 60,
+                  "title": "Takasur surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7706.MP4",
+                  "source_message_id": 164,
+                  "caption_html": "<b>60-dars</b> — Takasur surasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 61–63-darslar",
+              "contents": [
+                {
+                  "number": 61,
+                  "title": "Asr surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7711.MP4",
+                  "source_message_id": 165,
+                  "caption_html": "<b>61-dars</b> — Asr surasi"
+                },
+                {
+                  "number": 62,
+                  "title": "Xumaza surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7715.MP4",
+                  "source_message_id": 166,
+                  "caption_html": "<b>62-dars</b> — Xumaza surasi"
+                },
+                {
+                  "number": 63,
+                  "title": "Fil surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7727.MP4",
+                  "source_message_id": 167,
+                  "caption_html": "<b>63-dars</b> — Fil surasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 64–66-darslar",
+              "contents": [
+                {
+                  "number": 64,
+                  "title": "Quraysh surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7730.MP4",
+                  "source_message_id": 168,
+                  "caption_html": "<b>64-dars</b> — Quraysh surasi"
+                },
+                {
+                  "number": 65,
+                  "title": "Maa’un surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7733.MP4",
+                  "source_message_id": 169,
+                  "caption_html": "<b>65-dars</b> — Maa’un surasi"
+                },
+                {
+                  "number": 66,
+                  "title": "Kavsar surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7740.MP4",
+                  "source_message_id": 170,
+                  "caption_html": "<b>66-dars</b> — Kavsar surasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 67–69-darslar",
+              "contents": [
+                {
+                  "number": 67,
+                  "title": "Kafirun surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7745.MP4",
+                  "source_message_id": 171,
+                  "caption_html": "<b>67-dars</b> — Kafirun surasi"
+                },
+                {
+                  "number": 68,
+                  "title": "Nasr surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7753.MP4",
+                  "source_message_id": 172,
+                  "caption_html": "<b>68-dars</b> — Nasr surasi"
+                },
+                {
+                  "number": 69,
+                  "title": "Masad surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7761.MP4",
+                  "source_message_id": 173,
+                  "caption_html": "<b>69-dars</b> — Masad surasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 70–72-darslar",
+              "contents": [
+                {
+                  "number": 70,
+                  "title": "Ixlos surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7767.MP4",
+                  "source_message_id": 174,
+                  "caption_html": "<b>70-dars</b> — Ixlos surasi"
+                },
+                {
+                  "number": 71,
+                  "title": "Falaq surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7833.MP4",
+                  "source_message_id": 175,
+                  "caption_html": "<b>71-dars</b> — Falaq surasi"
+                },
+                {
+                  "number": 72,
+                  "title": "Nas surasi",
+                  "type": "video",
+                  "file": "video_files/IMG_7855.MP4",
+                  "source_message_id": 176,
+                  "caption_html": "<b>72-dars</b> — Nas surasi"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "title": "🎙 Tajvid savol-javoblari",
+          "items": [
+            {
+              "title": "🎬 1–3-darslar",
+              "contents": [
+                {
+                  "number": 1,
+                  "title": "Muqaddima",
+                  "type": "video",
+                  "file": "video_files/1-son muqaddima AlQuranga tg.mp4",
+                  "source_message_id": 178,
+                  "caption_html": "<b>1-dars</b> — Muqaddima"
+                },
+                {
+                  "number": 2,
+                  "title": "Ishmom va ravm qoidasi",
+                  "type": "video",
+                  "file": "video_files/2-son ishmom va ravm. alquranga tg.mp4",
+                  "source_message_id": 179,
+                  "caption_html": "<b>2-dars</b> — Ishmom va ravm qoidasi"
+                },
+                {
+                  "number": 3,
+                  "title": "Imola qoidasi",
+                  "type": "video",
+                  "file": "video_files/3-son imola qoidasi. alquranuzga tg.mp4",
+                  "source_message_id": 180,
+                  "caption_html": "<b>3-dars</b> — Imola qoidasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 4–6-darslar",
+              "contents": [
+                {
+                  "number": 4,
+                  "title": "(ه) harfi maxraji",
+                  "type": "video",
+                  "file": "video_files/4-son ha harfi mahraji tg.mp4",
+                  "source_message_id": 181,
+                  "caption_html": "<b>4-dars</b> — (ه) harfi maxraji"
+                },
+                {
+                  "number": 5,
+                  "title": "Tafxim va tarqiq harflariga oid qoidalar",
+                  "type": "video",
+                  "file": "video_files/5-son Tafxim va tarqiq harflarga oid ba‘zi qoidalar tg.mp4",
+                  "source_message_id": 182,
+                  "caption_html": "<b>5-dars</b> — Tafxim va tarqiq harflariga oid qoidalar"
+                },
+                {
+                  "number": 6,
+                  "title": "Oyatning oxirida vaqf qilishga oid qoidalar",
+                  "type": "video",
+                  "file": "video_files/6-son Oyatning oxirida vaqf qilishga oid qoidalar tg.mp4",
+                  "source_message_id": 183,
+                  "caption_html": "<b>6-dars</b> — Oyatning oxirida vaqf qilishga oid qoidalar"
+                }
+              ]
+            },
+            {
+              "title": "🎬 7–9-darslar",
+              "contents": [
+                {
+                  "number": 7,
+                  "title": "Arab harflarining talaffuzidagi ba'zi xatolar",
+                  "type": "video",
+                  "file": "video_files/7-son Arab harflarning talaffuzidagi ba‘zi xatolar tg.mp4",
+                  "source_message_id": 184,
+                  "caption_html": "<b>7-dars</b> — Arab harflarining talaffuzidagi ba&#x27;zi xatolar"
+                },
+                {
+                  "number": 8,
+                  "title": "( ر ) harfidagi takrir sifati haqida",
+                  "type": "video",
+                  "file": "video_files/8-son takrir tg.mp4",
+                  "source_message_id": 185,
+                  "caption_html": "<b>8-dars</b> — ( ر ) harfidagi takrir sifati haqida"
+                },
+                {
+                  "number": 9,
+                  "title": "Isti'oza\"ga oid qoidalar",
+                  "type": "video",
+                  "file": "video_files/9-son istioza tg.mp4",
+                  "source_message_id": 186,
+                  "caption_html": "<b>9-dars</b> — Isti&#x27;oza&quot;ga oid qoidalar"
+                }
+              ]
+            },
+            {
+              "title": "🎬 10–12-darslar",
+              "contents": [
+                {
+                  "number": 10,
+                  "title": "Alloh\"- lafzi jalola bilan bog'liq qoida",
+                  "type": "video",
+                  "file": "video_files/10-son jalola tg.mp4",
+                  "source_message_id": 187,
+                  "caption_html": "<b>10-dars</b> — Alloh&quot;- lafzi jalola bilan bog&#x27;liq qoida"
+                },
+                {
+                  "number": 11,
+                  "title": "Fotiha\" surasini dastlabki uch oyatini qo'shib o'qish hukmi",
+                  "type": "video",
+                  "file": "video_files/11-son tg.mp4",
+                  "source_message_id": 188,
+                  "caption_html": "<b>11-dars</b> — Fotiha&quot; surasini dastlabki uch oyatini qo&#x27;shib o&#x27;qish hukmi"
+                },
+                {
+                  "number": 12,
+                  "title": "Arab harflarining mahraji va talaffuzi haqida batafsil",
+                  "type": "video",
+                  "file": "video_files/12-son tg.mp4",
+                  "source_message_id": 189,
+                  "caption_html": "<b>12-dars</b> — Arab harflarining mahraji va talaffuzi haqida batafsil"
+                }
+              ]
+            },
+            {
+              "title": "🎬 13–15-darslar",
+              "contents": [
+                {
+                  "number": 13,
+                  "title": "Til mahrajlari haqida",
+                  "type": "video",
+                  "file": "video_files/13-son tg.mp4",
+                  "source_message_id": 190,
+                  "caption_html": "<b>13-dars</b> — Til mahrajlari haqida"
+                },
+                {
+                  "number": 14,
+                  "title": "Arab harflarining umumiy maxrajlari",
+                  "type": "video",
+                  "file": "video_files/14-son tg.mp4",
+                  "source_message_id": 191,
+                  "caption_html": "<b>14-dars</b> — Arab harflarining umumiy maxrajlari"
+                },
+                {
+                  "number": 15,
+                  "title": "Og‘iz bo‘shlig‘idan chiqadigan harflar maxraji",
+                  "type": "video",
+                  "file": "video_files/15-son tg.mp4",
+                  "source_message_id": 192,
+                  "caption_html": "<b>15-dars</b> — Og‘iz bo‘shlig‘idan chiqadigan harflar maxraji"
+                }
+              ]
+            },
+            {
+              "title": "🎬 16–18-darslar",
+              "contents": [
+                {
+                  "number": 16,
+                  "title": "Halqumdan chiqadigan harflar maxraji",
+                  "type": "video",
+                  "file": "video_files/16-son tg.mp4",
+                  "source_message_id": 193,
+                  "caption_html": "<b>16-dars</b> — Halqumdan chiqadigan harflar maxraji"
+                },
+                {
+                  "number": 17,
+                  "title": "Halqum o'rtasidan chiqadigan harflar maxraji",
+                  "type": "video",
+                  "file": "video_files/17-son tg.mp4",
+                  "source_message_id": 194,
+                  "caption_html": "<b>17-dars</b> — Halqum o&#x27;rtasidan chiqadigan harflar maxraji"
+                },
+                {
+                  "number": 18,
+                  "title": "Til maxrajlari",
+                  "type": "video",
+                  "file": "video_files/18-son tg.mp4",
+                  "source_message_id": 195,
+                  "caption_html": "<b>18-dars</b> — Til maxrajlari"
+                }
+              ]
+            },
+            {
+              "title": "🎬 19–21-darslar",
+              "contents": [
+                {
+                  "number": 19,
+                  "title": "Til maxrajlari davomi",
+                  "type": "video",
+                  "file": "video_files/19-son TG1.mp4",
+                  "source_message_id": 196,
+                  "caption_html": "<b>19-dars</b> — Til maxrajlari davomi"
+                },
+                {
+                  "number": 20,
+                  "title": "ض harfi maxraji haqida batafsil",
+                  "type": "video",
+                  "file": "video_files/20-son tg.mp4",
+                  "source_message_id": 197,
+                  "caption_html": "<b>20-dars</b> — ض harfi maxraji haqida batafsil"
+                },
+                {
+                  "number": 21,
+                  "title": "ل harfini to'g'ri talafuz qilish",
+                  "type": "video",
+                  "file": "video_files/21-son tg.mp4",
+                  "source_message_id": 198,
+                  "caption_html": "<b>21-dars</b> — ل harfini to&#x27;g&#x27;ri talafuz qilish"
+                }
+              ]
+            },
+            {
+              "title": "🎬 22–24-darslar",
+              "contents": [
+                {
+                  "number": 22,
+                  "title": "ن va ر harflari maxrajlari haqida",
+                  "type": "video",
+                  "file": "video_files/22-son tg.mp4",
+                  "source_message_id": 199,
+                  "caption_html": "<b>22-dars</b> — ن va ر harflari maxrajlari haqida"
+                },
+                {
+                  "number": 23,
+                  "title": "Til uchidan chiqadigan harflar maxraji",
+                  "type": "video",
+                  "file": "video_files/23-son tg.mp4",
+                  "source_message_id": 200,
+                  "caption_html": "<b>23-dars</b> — Til uchidan chiqadigan harflar maxraji"
+                },
+                {
+                  "number": 24,
+                  "title": "Til uchidan chiqadigan harflar maxraji 2-qism",
+                  "type": "video",
+                  "file": "video_files/24-son tg.mp4",
+                  "source_message_id": 202,
+                  "caption_html": "<b>24-dars</b> — Til uchidan chiqadigan harflar maxraji 2-qism"
+                }
+              ]
+            },
+            {
+              "title": "🎬 25–27-darslar",
+              "contents": [
+                {
+                  "number": 25,
+                  "title": "و va ب harflarini to‘g‘ri talaffuz qilish haqida",
+                  "type": "video",
+                  "file": "video_files/25-son tg.mp4",
+                  "source_message_id": 203,
+                  "caption_html": "<b>25-dars</b> — و va ب harflarini to‘g‘ri talaffuz qilish haqida"
+                },
+                {
+                  "number": 26,
+                  "title": "Mim harfi maxraji",
+                  "type": "video",
+                  "file": "video_files/26-sontg.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>26-dars</b> — Mim harfi maxraji"
+                },
+                {
+                  "number": 27,
+                  "title": "G'unna haqida",
+                  "type": "video",
+                  "file": "video_files/27-son tg.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>27-dars</b> — G&#x27;unna haqida"
+                }
+              ]
+            },
+            {
+              "title": "🎬 28-dars",
+              "contents": [
+                {
+                  "number": 28,
+                  "title": "Tartil, hadr va tahqiq haqida tushuncha",
+                  "type": "video",
+                  "file": "video_files/28-son tg.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>28-dars</b> — Tartil, hadr va tahqiq haqida tushuncha"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "title": "📹 Jahongir qori darslari",
+      "sections": [
+        {
+          "title": "📚 Tajvid fani",
+          "items": [
+            {
+              "title": "🎬 1–3-darslar",
+              "contents": [
+                {
+                  "number": 1,
+                  "title": "Lahn ta'rifi, qismlari va hukmi",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_1_dars_Lahn_ta_rifi_qismlari_va_hukmi.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>1-dars</b> — Lahn ta&#x27;rifi, qismlari va hukmi"
+                },
+                {
+                  "number": 2,
+                  "title": "Isti'oza va basmalaning holatlari",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_2_dars_Isti_oza_va_basmalaning_holatlari.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>2-dars</b> — Isti&#x27;oza va basmalaning holatlari"
+                },
+                {
+                  "number": 3,
+                  "title": "Qur'on qiroatida tezlik darajalari",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_3_Dars_Qur_on_qiroatida_tezlik_darajalari.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>3-dars</b> — Qur&#x27;on qiroatida tezlik darajalari"
+                }
+              ]
+            },
+            {
+              "title": "🎬 4–6-darslar",
+              "contents": [
+                {
+                  "number": 4,
+                  "title": "Harflarning sifatlari",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_4_Dars_Harflarning_sifatlari.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>4-dars</b> — Harflarning sifatlari"
+                },
+                {
+                  "number": 5,
+                  "title": "Rahova, shidda va bayniya sifatlari",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_5_dars_Rahova_shidda.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>5-dars</b> — Rahova, shidda va bayniya sifatlari"
+                },
+                {
+                  "number": 6,
+                  "title": "Iste'lo, istefola, infitoh va itboq tovushlari",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_6_dars_Iste_lo_va_is.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>6-dars</b> — Iste&#x27;lo, istefola, infitoh va itboq tovushlari"
+                }
+              ]
+            },
+            {
+              "title": "🎬 7–9-darslar",
+              "contents": [
+                {
+                  "number": 7,
+                  "title": "Sukunli nun va tanvin: izhor qoidasi",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_7_dars_Sukunli_nun_va_tanvin_izhor_qoidasi.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>7-dars</b> — Sukunli nun va tanvin: izhor qoidasi"
+                },
+                {
+                  "number": 8,
+                  "title": "Sukunli nun va tanvin: idg'om qoidasi",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_8_Dars_Sukunli_nun_va_tanvin_idg_om_qoidasi.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>8-dars</b> — Sukunli nun va tanvin: idg&#x27;om qoidasi"
+                },
+                {
+                  "number": 9,
+                  "title": "Sukunli nun va tanvin: iqlob qoidasi",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_9_Dars_Sukunli_nun_va_tanvin_iqlob_qoidasi.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>9-dars</b> — Sukunli nun va tanvin: iqlob qoidasi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 10–12-darslar",
+              "contents": [
+                {
+                  "number": 10,
+                  "title": "Sukunli nun va tanvin: ixfo qoidasi",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_10_Dars_Sukunli_nun_va_tanvin_ixfo_qoidasi.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>10-dars</b> — Sukunli nun va tanvin: ixfo qoidasi"
+                },
+                {
+                  "number": 11,
+                  "title": "Sukunli mim qoidasi",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_11_Dars_Sukunli_mim_qoidasi.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>11-dars</b> — Sukunli mim qoidasi"
+                },
+                {
+                  "number": 12,
+                  "title": "Tashdidli nun va mim, g'unna",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_12_Dars_Tashdidli_nu.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>12-dars</b> — Tashdidli nun va mim, g&#x27;unna"
+                }
+              ]
+            },
+            {
+              "title": "🎬 13–15-darslar",
+              "contents": [
+                {
+                  "number": 13,
+                  "title": "Sukunli lom qoidasi",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_13_Dars_Sukunli_Lom_qoidasi.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>13-dars</b> — Sukunli lom qoidasi"
+                },
+                {
+                  "number": 14,
+                  "title": "Ro harfining holati",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_14_Dars_RO_harfining_holati.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>14-dars</b> — Ro harfining holati"
+                },
+                {
+                  "number": 15,
+                  "title": "Mad: qismlari, turlari va hukmi",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_15_Dars_Mad_qismlari_turlari_va_hukmi.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>15-dars</b> — Mad: qismlari, turlari va hukmi"
+                }
+              ]
+            },
+            {
+              "title": "🎬 16–18-darslar",
+              "contents": [
+                {
+                  "number": 16,
+                  "title": "Badal mad",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_16_Dars_Badal_mad.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>16-dars</b> — Badal mad"
+                },
+                {
+                  "number": 17,
+                  "title": "Mad muttasil",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_17_Dars_Mad_muttasil.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>17-dars</b> — Mad muttasil"
+                },
+                {
+                  "number": 18,
+                  "title": "Mad sila",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_18_Dars_Mad_sila.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>18-dars</b> — Mad sila"
+                }
+              ]
+            },
+            {
+              "title": "🎬 19–21-darslar",
+              "contents": [
+                {
+                  "number": 19,
+                  "title": "Mad lozim",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_19_Dars_Mad_lozim.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>19-dars</b> — Mad lozim"
+                },
+                {
+                  "number": 20,
+                  "title": "Mad oriz",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_20_Dars_Mad_oriz.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>20-dars</b> — Mad oriz"
+                },
+                {
+                  "number": 21,
+                  "title": "Mad lin",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_21_Dars_Mad_lin.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>21-dars</b> — Mad lin"
+                }
+              ]
+            },
+            {
+              "title": "🎬 22–24-darslar",
+              "contents": [
+                {
+                  "number": 22,
+                  "title": "Madning darajalari",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_22_Dars_Madning_darajalari.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>22-dars</b> — Madning darajalari"
+                },
+                {
+                  "number": 23,
+                  "title": "Idg'om mutamasilayn va mutajonisayn",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_23_Dars_Idg_om_mutamasilayn_mutajonisayn.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>23-dars</b> — Idg&#x27;om mutamasilayn va mutajonisayn"
+                },
+                {
+                  "number": 24,
+                  "title": "Idg'om mutoqoribayn",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_24_Dars_Idg_om_mutoqoribayn.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>24-dars</b> — Idg&#x27;om mutoqoribayn"
+                }
+              ]
+            },
+            {
+              "title": "🎬 25–27-darslar",
+              "contents": [
+                {
+                  "number": 25,
+                  "title": "Ziddi yo'q sifatlar",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_25_Dars_Ziddi_yo_q_sifatlar.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>25-dars</b> — Ziddi yo&#x27;q sifatlar"
+                },
+                {
+                  "number": 26,
+                  "title": "Vaqf va ibtido",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_26_dars_vaqf_va_ibtido.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>26-dars</b> — Vaqf va ibtido"
+                },
+                {
+                  "number": 27,
+                  "title": "Joiz vaqf",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_27_Dars_Joiz_vaqf.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>27-dars</b> — Joiz vaqf"
+                }
+              ]
+            },
+            {
+              "title": "🎬 28–30-darslar",
+              "contents": [
+                {
+                  "number": 28,
+                  "title": "Nojoiz vaqf",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_28_dars_Nojoiz_vaqf.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>28-dars</b> — Nojoiz vaqf"
+                },
+                {
+                  "number": 29,
+                  "title": "Ibtido",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_29_dars_Ibtido.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>29-dars</b> — Ibtido"
+                },
+                {
+                  "number": 30,
+                  "title": "Ravm, ishmom va sukun",
+                  "type": "video",
+                  "file": "video_files/Tajvid_fani_30_dars_Ravm_ishmom_va_sukun.135.mp4",
+                  "source_message_id": null,
+                  "caption_html": "<b>30-dars</b> — Ravm, ishmom va sukun"
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

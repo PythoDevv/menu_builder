@@ -40,6 +40,26 @@ python main.py
 
 Jadvallar birinchi ishga tushishda avtomatik yaratiladi.
 
+## Root menyuni JSON'dan yuklash
+
+`data/root_menu.json` asosiy menyu tugmalari va ularning tartibini saqlaydi.
+Importer mavjud tugmalarni nomi/aliasi orqali topadi, yo'q tugmalarni yaratadi va
+ro'yxatda ko'rsatilmagan mavjud root tugmalarni oxiriga o'tkazadi. Ichki tugmalar va
+kontent o'chirilmaydi.
+
+Serverda avval natijani yozmasdan ko'ring, keyin bazaga qo'llang:
+
+```bash
+cd /root/menu_builder
+source venv/bin/activate
+python scripts/import_root_menu.py
+python scripts/import_root_menu.py --apply
+```
+
+Importer `.env` dagi `DB_URL` bazasidan foydalanadi. Bot tokeni bu jarayon uchun
+kerak emas. Bot ishlab turgan bo'lsa ham, keyingi ochilgan menyuda yangi tartib
+avtomatik ko'rinadi.
+
 ## Migratsiya (serverda yangilash)
 
 Bazada allaqachon ma'lumot bor bo'lsa, yangilashdan keyin migratsiyani qo'llash kerak:

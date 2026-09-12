@@ -1,0 +1,77 @@
+{
+  "schema_version": 1,
+  "description": "Root menu order. Content and child sections are imported separately.",
+  "items": [
+    {
+      "title": "📹 Shayx Alijon qori darslari",
+      "content_type": "video",
+      "aliases": ["Alijon qori darslari", "📹 Alijon qori darslari"]
+    },
+    {
+      "title": "📹 Jahongir qori darslari",
+      "content_type": "video",
+      "aliases": ["Jahongir qori darslari"]
+    },
+    {
+      "title": "📹 Shayx Muhammad domla. Tartil",
+      "content_type": "video",
+      "aliases": [
+        "Shayx Muhammad domla. Tartil",
+        "📹 Shayx Muhammad domla Tartil"
+      ]
+    },
+    {
+      "title": "📹 Munavvar ustoza. Tajvid",
+      "content_type": "video",
+      "aliases": ["Munavvar ustoza. Tajvid"]
+    },
+    {
+      "title": "📹 Hasanxon domla darslari",
+      "content_type": "video",
+      "aliases": ["Hasanxon domla darslari"]
+    },
+    {
+      "title": "📹 Ali Zoirov darslari",
+      "content_type": "video",
+      "aliases": ["Ali Zoirov darslari"]
+    },
+    {
+      "title": "📹 Yo'ldosh Ibrohim. Suralar",
+      "content_type": "video",
+      "aliases": [
+        "Yo'ldosh Ibrohim. Suralar",
+        "📹 Yo‘ldosh Ibrohim. Suralar",
+        "📹 Yo’ldosh Ibrohim. Suralar"
+      ]
+    },
+    {
+      "title": "📹 Ayman Suvayd. Maxraj darslari",
+      "content_type": "video",
+      "aliases": ["Ayman Suvayd. Maxraj darslari"]
+    },
+    {
+      "title": "📹 Tajweed in English",
+      "content_type": "video",
+      "aliases": ["Tajweed in English", "📹 Tajvid in English"]
+    },
+    {
+      "title": "📗 Muallim soniy. Pdf",
+      "content_type": "document",
+      "aliases": ["Muallim soniy. Pdf", "📗 Muallim soniy. PDF"]
+    },
+    {
+      "title": "📘 Tajvid. Pdf",
+      "content_type": "document",
+      "aliases": ["Tajvid. Pdf", "📘 Tajvid. PDF"]
+    },
+    {
+      "title": "📙 Qur'oni Karim. Pdf",
+      "content_type": "document",
+      "aliases": [
+        "Qur'oni Karim. Pdf",
+        "📙 Qur’oni Karim. Pdf",
+        "📙 Qur'oni Karim. PDF"
+      ]
+    }
+  ]
+}
