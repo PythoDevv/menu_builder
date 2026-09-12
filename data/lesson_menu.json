@@ -955,19 +955,19 @@
                 },
                 {
                   "number": 26,
-                  "title": "Mim harfi maxraji",
+                  "title": "م harfi maxraji",
                   "type": "video",
                   "file": "video_files/26-sontg.mp4",
-                  "source_message_id": null,
-                  "caption_html": "<b>26-dars</b> — Mim harfi maxraji"
+                  "source_message_id": 204,
+                  "caption_html": "<b>26-dars</b> — م harfi maxraji"
                 },
                 {
                   "number": 27,
-                  "title": "G'unna haqida",
+                  "title": "G'unna\" haqida",
                   "type": "video",
                   "file": "video_files/27-son tg.mp4",
-                  "source_message_id": null,
-                  "caption_html": "<b>27-dars</b> — G&#x27;unna haqida"
+                  "source_message_id": 205,
+                  "caption_html": "<b>27-dars</b> — G&#x27;unna&quot; haqida"
                 }
               ]
             },
