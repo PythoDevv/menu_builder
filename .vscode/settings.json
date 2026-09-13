@@ -4,6 +4,10 @@
         "/^cd /home/ilyos/bots/menu_builder && python3 - <<'PY'\nfrom keyboards\\.user_kb import _rows\nitems = \\[\n'📹 Shayx Alijon qori darslari',\n'📹 Jahongir qori darslari',\n'📹 Shayx Muhammad domla\\. Tartil',\n'📹 Munavvar ustoza\\. Tajvid',\n'📹 Hasanxon domla darslari',\n'📹 Ali Zoirov darslari',\n\"📹 Yo'ldosh Ibrohim\\. Suralar\",\n'📹 Ayman Suvayd\\. Maxraj darslari',\n'📹 Tajweed in English',\n'📗 Muallim soniy\\. Pdf',\n'📘 Tajvid\\. Pdf',\n\"📙 Qur'oni Karim\\. Pdf\",\n\\]\nrows = _rows\\(items, 2\\)\nprint\\('row_count=', len\\(rows\\)\\)\nfor row in rows:\n    print\\(\\[b\\.text for b in row\\]\\)\nPY$/": {
             "approve": true,
             "matchCommandLine": true
+        },
+        "/^python3 scripts/import_root_menu\\.py --apply$/": {
+            "approve": true,
+            "matchCommandLine": true
         }
     }
 }

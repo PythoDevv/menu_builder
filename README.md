@@ -60,6 +60,34 @@ Importer `.env` dagi `DB_URL` bazasidan foydalanadi. Bot tokeni bu jarayon uchun
 kerak emas. Bot ishlab turgan bo'lsa ham, keyingi ochilgan menyuda yangi tartib
 avtomatik ko'rinadi.
 
+## Dars submenyularini yuklash
+
+`data/lesson_menu.json` ichidagi submenyular videoni bazaga yoki serverga
+yuklamaydi. Har bir kontent uchun manba kanalning `chat_id` va eksport HTML'idagi
+`message_id` saqlanadi; foydalanuvchi tugmani bosganda bot Telegram'ning
+`copyMessage` metodi bilan xabarni nusxalaydi.
+
+Default dataset `ChatExport_2026-09-13` asosida tuzilgan: 12 ta asosiy menyu,
+401 ta noyob video va 61 ta PDF/hujjat. Kanalda takrorlangan bitta video xabari
+(`message_id=201`) qayta yuborilmasligi uchun ro'yxatga kiritilmagan.
+
+Bot manba kanal/guruhda a'zo bo'lishi, protected content o'chirilgan bo'lishi kerak.
+`.env` ga `SOURCE_CHAT_ID=-100...` kiriting. So'ng serverda:
+
+```bash
+python migrate.py
+python scripts/import_root_menu.py --apply
+python scripts/import_lesson_menu.py          # dry run
+python scripts/import_lesson_menu.py --apply
+supervisorctl restart menu_builder_bot
+```
+
+To'liq HTML eksportdan JSON'ni qayta yaratish kerak bo'lsa:
+
+```bash
+python scripts/build_lesson_menu_data.py /path/to/ChatExport_2026-09-13
+```
+
 ## Migratsiya (serverda yangilash)
 
 Bazada allaqachon ma'lumot bor bo'lsa, yangilashdan keyin migratsiyani qo'llash kerak:

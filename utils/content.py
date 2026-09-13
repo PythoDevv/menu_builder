@@ -58,10 +58,22 @@ async def send_content(
     content: Content,
     reply_markup: Optional[Markup] = None,
 ) -> None:
-    """Saqlangan kontentni o'sha holicha (file_id + HTML) yuboradi."""
+    """Saqlangan kontentni file_id yoki manba xabardan yuboradi."""
     t = content.type
     text = content.text_html
     fid = content.file_id
+    source_chat_id = getattr(content, "source_chat_id", None)
+    source_message_id = getattr(content, "source_message_id", None)
+
+    if source_chat_id is not None and source_message_id is not None:
+        await bot.copy_message(
+            chat_id=chat_id,
+            from_chat_id=source_chat_id,
+            message_id=source_message_id,
+            caption=text,
+            reply_markup=reply_markup,
+        )
+        return
 
     if t == "text":
         await bot.send_message(chat_id, text or "—", reply_markup=reply_markup)
