@@ -59,9 +59,6 @@ async def btn_stats(message: Message) -> None:
         f"Bloklaganlar: <b>{s['total'] - s['active']}</b> ta",
         f"Raqam qoldirgan: <b>{s['with_phone']}</b> ta",
         "",
-        f"Bugun qo'shilgan: <b>{s['today']}</b> ta",
-        f"7 kunda: <b>{s['week']}</b> ta",
-        "",
         f"🔗 Taklif orqali kelgan: <b>{s['referred']}</b> ta",
         f"👤 Odam taklif qilganlar: <b>{s['inviters']}</b> ta",
     ]

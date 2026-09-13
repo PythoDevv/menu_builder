@@ -104,6 +104,25 @@ supervisorctl restart menu_builder_bot
 `migrate.py` qaysi fayl qo'llanganini `schema_migrations` jadvalida saqlaydi —
 qayta ishga tushirsangiz bajarilgani takrorlanmaydi.
 
+## Foydalanuvchilarni JSON'dan import qilish
+
+Loyiha ildizidagi `users.json` quyidagi formatda bo'lishi kerak:
+
+```json
+[{"tg_id": 123456789, "full_name": "User Name", "username": "username"}]
+```
+
+Avval dry-run, keyin import:
+
+```bash
+python scripts/import_users.py
+python scripts/import_users.py --apply
+```
+
+Importer mavjud `tg_id`larni o'zgartirmaydi: ularning telefon, referral, aktivlik
+va boshqa production ma'lumotlari saqlanadi. Yangi foydalanuvchilar batch bilan
+qo'shiladi. `users.json` shaxsiy ma'lumot bo'lgani uchun Git tomonidan ignore qilinadi.
+
 Yangi migratsiya qo'shish uchun `migrations/` ichiga `002_...sql` ko'rinishida
 fayl tashlang (nomi bo'yicha tartib bilan bajariladi).
 
