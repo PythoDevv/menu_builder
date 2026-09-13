@@ -5,6 +5,7 @@ import argparse
 import html
 import json
 import re
+from html.parser import HTMLParser
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
@@ -17,6 +18,49 @@ MESSAGE_ID_RE = re.compile(
 )
 VIDEO_RE = re.compile(r'href="(video_files/[^"]+\.(?:mp4|MP4))"', re.I)
 TEXT_RE = re.compile(r'<div class="text">\s*(.*?)\s*</div>', re.S)
+
+
+class _CaptionHTMLParser(HTMLParser):
+    """Convert Telegram Desktop's HTML fragment to Telegram-safe HTML."""
+
+    ALLOWED_TAGS = {"b", "i", "u", "s", "code", "pre", "a"}
+
+    def __init__(self) -> None:
+        super().__init__(convert_charrefs=True)
+        self.parts: List[str] = []
+        self.open_tags: List[str] = []
+
+    def handle_starttag(self, tag: str, attrs: List[tuple[str, Optional[str]]]) -> None:
+        tag = {"strong": "b", "em": "i"}.get(tag, tag)
+        if tag == "br":
+            self.parts.append("\n")
+        elif tag in self.ALLOWED_TAGS:
+            if tag == "a":
+                href = dict(attrs).get("href")
+                if href:
+                    self.parts.append(f'<a href="{html.escape(href, quote=True)}">')
+                    self.open_tags.append(tag)
+            else:
+                self.parts.append(f"<{tag}>")
+                self.open_tags.append(tag)
+
+    def handle_endtag(self, tag: str) -> None:
+        tag = {"strong": "b", "em": "i"}.get(tag, tag)
+        if tag in self.open_tags:
+            self.parts.append(f"</{tag}>")
+            self.open_tags.remove(tag)
+
+    def handle_data(self, data: str) -> None:
+        self.parts.append(html.escape(data, quote=False))
+
+    def result(self) -> str:
+        return "".join(self.parts).strip()
+
+
+def caption_html(value: str) -> str:
+    parser = _CaptionHTMLParser()
+    parser.feed(value)
+    return parser.result()
 
 JAHONGIR_TOPICS = {
     1: "Lahn ta'rifi, qismlari va hukmi",
@@ -332,6 +376,7 @@ def parse_export_messages(html_file: Path) -> Dict[int, Dict[str, Any]]:
         result[int(message_match.group(1))] = {
             "type": media_type or "text",
             "text": clean_html_text(text_match.group(1)) if text_match else "",
+            "caption_html": caption_html(text_match.group(1)) if text_match else "",
             "file_title": clean_html_text(title_match.group(1)) if title_match else "",
             "file": html.unescape(href_match.group(1)) if href_match else None,
         }

@@ -11,6 +11,7 @@ from scripts.build_lesson_menu_data import (
     JAHONGIR_TOPICS,
     build_alijon_lessons,
     build_jahongir_lessons,
+    caption_html,
 )
 from utils.content import send_content
 
@@ -19,6 +20,17 @@ PROJECT_ROOT = Path(__file__).resolve().parents[1]
 
 
 class LessonSourceTests(unittest.TestCase):
+    def test_caption_html_is_safe_for_telegram(self) -> None:
+        value = (
+            '<a href="" onclick="bad()">#tag</a><br><strong>1-dars</strong> '
+            '<a href="https://example.com">manba</a>'
+        )
+
+        self.assertEqual(
+            '#tag\n<b>1-dars</b> <a href="https://example.com">manba</a>',
+            caption_html(value),
+        )
+
     def test_every_lesson_has_a_source_message_id(self) -> None:
         payload = json.loads(
             (PROJECT_ROOT / "data" / "lesson_menu.json").read_text(encoding="utf-8")
