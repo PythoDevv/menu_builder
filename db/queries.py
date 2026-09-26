@@ -329,6 +329,17 @@ async def set_item_referrals(item_id: int, count: int) -> None:
         await s.commit()
 
 
+async def set_item_style(item_id: int, style: Optional[str]) -> None:
+    """Telegram tugma uslubi. None -> oddiy ko'rinish."""
+    if style is not None and style not in {"primary", "success", "danger"}:
+        raise ValueError(f"Noto'g'ri tugma uslubi: {style}")
+    async with session_maker() as s:
+        await s.execute(
+            update(MenuItem).where(MenuItem.id == item_id).values(button_style=style)
+        )
+        await s.commit()
+
+
 async def rename_item(item_id: int, title: str) -> None:
     async with session_maker() as s:
         await s.execute(update(MenuItem).where(MenuItem.id == item_id).values(title=title))
@@ -406,7 +417,7 @@ async def get_contents(item_id: int) -> list[Content]:
             await s.scalars(
                 select(Content)
                 .where(Content.menu_item_id == item_id)
-                .order_by(Content.position, Content.id)
+                .order_by(Content.id)
             )
         )
 

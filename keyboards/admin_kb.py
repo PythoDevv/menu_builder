@@ -57,9 +57,29 @@ BTN_MN_SHOW = "👁 Ko'rsatish"
 BTN_MN_HIDE = "🚫 Yashirish"
 BTN_MN_UP = "⬆️ Yuqoriga"
 BTN_MN_DOWN = "⬇️ Pastga"
+BTN_MN_STYLE = "🎨 Tugma rangi"
 BTN_CONTENT = "📎 Kontent"  # yoniga soni qo'shiladi: "📎 Kontent (3)"
 BTN_CNT_ADD = "➕ Kontent qo'shish"
 BTN_CNT_DONE = "✅ Tugatish"
+
+BTN_STYLE_DEFAULT = "⚪️ Oddiy"
+BTN_STYLE_PRIMARY = "🔵 Ko'k"
+BTN_STYLE_SUCCESS = "🟢 Yashil"
+BTN_STYLE_DANGER = "🔴 Qizil"
+
+BUTTON_STYLE_OPTIONS = {
+    BTN_STYLE_DEFAULT: None,
+    BTN_STYLE_PRIMARY: "primary",
+    BTN_STYLE_SUCCESS: "success",
+    BTN_STYLE_DANGER: "danger",
+}
+
+BUTTON_STYLE_LABELS = {
+    None: "⚪️ Oddiy",
+    "primary": "🔵 Ko'k",
+    "success": "🟢 Yashil",
+    "danger": "🔴 Qizil",
+}
 
 # ------------------------------------------------------------------ taklif sharti
 BTN_MN_REF = "👥 Taklif sharti"  # yoniga soni qo'shiladi: "👥 Taklif sharti: 5 ta"
@@ -215,10 +235,26 @@ def menu_node_kb(
         rows.append([BTN_HOME])
     else:
         rows.append([content_button(content_count), ref_button(item.required_referrals)])
+        rows.append([BTN_MN_STYLE])
         rows.append([BTN_MN_RENAME, BTN_MN_HIDE if item.is_active else BTN_MN_SHOW])
         rows.append([BTN_MN_UP, BTN_MN_DOWN, BTN_DELETE])
         rows.append([BTN_BACK, BTN_HOME])
     return _kb(rows)
+
+
+def button_style_label(style: Optional[str]) -> str:
+    return BUTTON_STYLE_LABELS.get(style, BUTTON_STYLE_LABELS[None])
+
+
+def button_style_kb() -> ReplyKeyboardMarkup:
+    return _kb(
+        [
+            [BTN_STYLE_DEFAULT],
+            [BTN_STYLE_PRIMARY, BTN_STYLE_SUCCESS, BTN_STYLE_DANGER],
+            [BTN_BACK, BTN_HOME],
+        ],
+        "Tugma rangini tanlang",
+    )
 
 
 def ref_ask_kb() -> ReplyKeyboardMarkup:

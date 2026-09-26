@@ -43,37 +43,41 @@ def title_width(text: str) -> int:
     return sum(2 if ord(ch) > 0x2000 else 1 for ch in text)
 
 
-def _rows(titles: Sequence[str], columns: int) -> list[list[KeyboardButton]]:
+def _menu_button(item: MenuItem) -> KeyboardButton:
+    return KeyboardButton(text=item.title, style=item.button_style)
+
+
+def _rows(items: Sequence[MenuItem], columns: int) -> list[list[KeyboardButton]]:
     """Qisqa nomlarni ikkitadan juftlaydi, uzunlarini yolg'iz qoldiradi.
 
     Tartib buzilmaydi: uzun nom uchragan joyda kutib turgan qisqa nom
     o'z qatoriga chiqariladi.
     """
-    rows: list[list[str]] = []
-    pending: Optional[str] = None
+    rows: list[list[MenuItem]] = []
+    pending: Optional[MenuItem] = None
 
-    for title in titles:
-        if columns < COLUMNS_TWO or title_width(title) > SHORT_TITLE:
+    for item in items:
+        if columns < COLUMNS_TWO or title_width(item.title) > SHORT_TITLE:
             if pending is not None:
                 rows.append([pending])
                 pending = None
-            rows.append([title])
+            rows.append([item])
         elif pending is None:
-            pending = title
+            pending = item
         else:
-            rows.append([pending, title])
+            rows.append([pending, item])
             pending = None
 
     if pending is not None:
         rows.append([pending])
-    return [[KeyboardButton(text=t) for t in row] for row in rows]
+    return [[_menu_button(item) for item in row] for row in rows]
 
 
 def menu_kb(
     children: list[MenuItem], is_root: bool, columns: int = DEFAULT_COLUMNS
 ) -> Keyboard:
     """Menyu tugmalari. Ildizda 'Orqaga' kerak emas, 'Ballarim' esa faqat ildizda bor."""
-    rows = _rows([c.title for c in children], columns)
+    rows = _rows(children, columns)
     if is_root:
         rows.append([KeyboardButton(text=BTN_MY_POINTS)])
     else:

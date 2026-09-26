@@ -39,6 +39,7 @@ class MenuSG(StatesGroup):
     waiting_ref_count = State()
     ref = State()
     waiting_ref_edit = State()
+    style = State()
 
 
 class RefTextSG(StatesGroup):

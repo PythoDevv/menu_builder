@@ -96,6 +96,8 @@ class MenuItem(Base):
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
     # Tugmani ochish uchun kerakli taklif soni. 0 -> shartsiz ochiladi.
     required_referrals: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    # Telegram tugma uslubi: primary / success / danger. None -> oddiy.
+    button_style: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
 
 
 class Content(Base):

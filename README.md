@@ -13,7 +13,8 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 - **Start xabar** — admin paneldan qo'shiladi / o'zgartiriladi / o'chiriladi. Qo'yilmagan bo'lsa ko'rsatilmaydi.
 - **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga kontent (rasm/video/fayl/matn) biriktiriladi.
 - **Menyu ko'rinishi** — tugmalar qatorda **bittadan** yoki **ikkitadan** chiqishi admin paneldan tanlanadi. Ikkitadan rejimida nomi uzun tugma qatorni o'zi egallaydi (matni siqilib ketmaydi).
-- **Kontent** — `file_id` + HTML holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi).
+- **Kontent** — `file_id` + HTML holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi). Oddiy va premium stikerlar ham qo'llanadi.
+- **Tugma rangi** — har bir menyu tugmasi uchun oddiy, ko'k, yashil yoki qizil Telegram uslubini tanlash mumkin.
 - **Taklif (referal) sharti** — tugma faqat N ta odam taklif qilgandan keyin ochiladi. Shart tugma qo'shilayotganda so'raladi, keyin ham o'zgartiriladi. Shart bajarilmaganda chiqadigan matn admin paneldan sozlanadi.
 - **Telefon so'rash** — admin paneldan yoqiladi/o'chiriladi. Bir marta olingan raqam qayta so'ralmaydi.
 - **Hammaga xabar** — bloklaganlar avtomatik belgilanadi.
@@ -70,7 +71,7 @@ oddiy foydalanuvchi menyusini ko'radi.
 | 👮 Adminlar | ID raqami orqali admin qo'shish / adminlikdan olish |
 | 📢 Kanallar | Qo'shish / o'chirish / yoqish-o'chirish. Bot kanalda **admin** bo'lishi shart. |
 | 🆕 Avtomatik so'rov | Bot kanalga admin qilinsa, **admin qilgan odamning o'ziga** "qo'shilsinmi?" so'rovi keladi (pastda) |
-| 🗂 Menyu tugmalari | Tugma qo'shish, nomini o'zgartirish, tartiblash, yashirish, o'chirish, kontent biriktirish, **taklif sharti** |
+| 🗂 Menyu tugmalari | Tugma qo'shish, nomini/rangini o'zgartirish, tartiblash, yashirish, o'chirish, kontent biriktirish, **taklif sharti** |
 | ✏️ Start xabar | Ko'rish / o'zgartirish / o'chirish |
 | 📌 Obuna xabari | Majburiy obuna postini qo'yish (matn/rasm/video), ko'rish, standartga qaytarish |
 | ✍️ Taklif matni | Taklif sharti bajarilmaganda chiqadigan matn: ko'rish, o'zgartirish, standartga qaytarish |

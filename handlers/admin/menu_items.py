@@ -18,6 +18,7 @@ from db.queries import (
     move_item,
     rename_item,
     set_item_referrals,
+    set_item_style,
     toggle_item,
 )
 from handlers.admin.common import (
@@ -42,6 +43,7 @@ from keyboards.admin_kb import (
     BTN_MN_REF,
     BTN_MN_RENAME,
     BTN_MN_SHOW,
+    BTN_MN_STYLE,
     BTN_MN_UP,
     BTN_NO,
     BTN_REF_CLEAR,
@@ -51,6 +53,9 @@ from keyboards.admin_kb import (
     BTN_ST_EDIT,
     BTN_VIEW,
     BTN_YES_DELETE,
+    BUTTON_STYLE_OPTIONS,
+    button_style_kb,
+    button_style_label,
     cancel_kb,
     confirm_delete_kb,
     content_add_kb,
@@ -94,7 +99,8 @@ BAD_COUNT_TEXT = (
 
 ADD_CONTENT_TEXT = (
     "📎 <b>Kontent qo'shish</b>\n\n"
-    "Kerakli kontentni shu yerga yuboring — matn, rasm, video, fayl, audio...\n"
+    "Kerakli kontentni shu yerga yuboring — matn, rasm, video, fayl, audio, "
+    "stiker (premium ham)...\n"
     "Nechta bo'lsa ham ketma-ket yuborishingiz mumkin.\n\n"
     "Formatlash (qalin, kursiv, havola) o'zgarmasdan saqlanadi.\n"
     "Tugatgach <b>✅ Tugatish</b> tugmasini bosing."
@@ -122,6 +128,7 @@ async def show_node(message: Message, state: FSMContext, node_id: Optional[int])
         lines.append("")
         lines.append(f"📎 Kontent: <b>{content_count}</b> ta")
         lines.append(f"Holat: {'👁 ko‘rinadi' if item.is_active else '🚫 yashirin'}")
+        lines.append(f"🎨 Tugma rangi: <b>{button_style_label(item.button_style)}</b>")
         lines.append(
             f"👥 Taklif sharti: <b>{item.required_referrals}</b> ta odam"
             if item.required_referrals
@@ -294,6 +301,38 @@ async def move(message: Message, state: FSMContext) -> None:
         await move_item(item_id, -1 if message.text == BTN_MN_UP else +1)
         await message.answer("✅ Tartib o'zgartirildi")
     await show_node(message, state, item_id)
+
+
+# ------------------------------------------------------------------------- rang
+@router.message(MenuSG.node, F.text == BTN_MN_STYLE)
+async def show_style(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    item = await get_item(item_id) if item_id is not None else None
+    if item is None:
+        await show_node(message, state, None)
+        return
+    await state.set_state(MenuSG.style)
+    await message.answer(
+        f"🎨 <b>{escape(item.title)}</b> — tugma rangi\n\n"
+        f"Hozir: <b>{button_style_label(item.button_style)}</b>\n\n"
+        "Telegram ruxsat bergan ranglardan birini tanlang.",
+        reply_markup=button_style_kb(),
+    )
+
+
+@router.message(MenuSG.style, F.text.in_(set(BUTTON_STYLE_OPTIONS)))
+async def save_style(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    if item_id is not None:
+        style = BUTTON_STYLE_OPTIONS[message.text]
+        await set_item_style(item_id, style)
+        await message.answer(f"✅ Tugma rangi: <b>{button_style_label(style)}</b>")
+    await show_node(message, state, item_id)
+
+
+@router.message(MenuSG.style, F.text == BTN_BACK)
+async def style_back(message: Message, state: FSMContext) -> None:
+    await show_node(message, state, await _node_id(state))
 
 
 # ---------------------------------------------------------------------- o'chirish
