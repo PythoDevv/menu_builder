@@ -26,10 +26,6 @@ BTN_MY_POINTS = "🏆 Ballarim"
 
 CB_CHECK_SUB = "check_sub"
 
-# Shu kenglikkacha bo'lgan nomlar juftlanadi, uzunlari alohida qatorda qoladi.
-# Tor telefonlarda ham sig'sin desangiz — 16-18 ga tushiring.
-SHORT_TITLE = 20
-
 #: Menyu ustunlari soni (admin paneldan boshqariladi)
 COLUMNS_ONE = 1
 COLUMNS_TWO = 2
@@ -38,26 +34,17 @@ DEFAULT_COLUMNS = COLUMNS_TWO
 Keyboard = Union[ReplyKeyboardMarkup, ReplyKeyboardRemove]
 
 
-def title_width(text: str) -> int:
-    """Taxminiy ko'rinish kengligi: emoji va belgilar ikki harf joyini egallaydi."""
-    return sum(2 if ord(ch) > 0x2000 else 1 for ch in text)
-
-
 def _menu_button(item: MenuItem) -> KeyboardButton:
     return KeyboardButton(text=item.title, style=item.button_style)
 
 
 def _rows(items: Sequence[MenuItem], columns: int) -> list[list[KeyboardButton]]:
-    """Qisqa nomlarni ikkitadan juftlaydi, uzunlarini yolg'iz qoldiradi.
-
-    Tartib buzilmaydi: uzun nom uchragan joyda kutib turgan qisqa nom
-    o'z qatoriga chiqariladi.
-    """
+    """Tanlangan ustun soniga ko'ra tugmalarni qatorlarga joylaydi."""
     rows: list[list[MenuItem]] = []
     pending: Optional[MenuItem] = None
 
     for item in items:
-        if columns < COLUMNS_TWO or title_width(item.title) > SHORT_TITLE:
+        if columns < COLUMNS_TWO:
             if pending is not None:
                 rows.append([pending])
                 pending = None

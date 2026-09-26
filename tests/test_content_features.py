@@ -3,7 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 from db.models import MenuItem
-from keyboards.user_kb import COLUMNS_ONE, menu_kb
+from keyboards.user_kb import COLUMNS_ONE, COLUMNS_TWO, menu_kb
 from utils.content import extract_content, send_content
 
 
@@ -68,6 +68,21 @@ class MenuButtonStyleTest(unittest.TestCase):
 
         button = keyboard.keyboard[0][0]
         self.assertNotIn("style", button.model_dump(exclude_none=True))
+
+
+class MenuLayoutTest(unittest.TestCase):
+    def test_two_columns_pair_long_titles(self) -> None:
+        items = [
+            MenuItem(title="Birinchi uzun menyu tugmasi", position=1),
+            MenuItem(title="Ikkinchi uzun menyu tugmasi", position=2),
+        ]
+
+        keyboard = menu_kb(items, is_root=True, columns=COLUMNS_TWO)
+
+        self.assertEqual(
+            [button.text for button in keyboard.keyboard[0]],
+            [item.title for item in items],
+        )
 
 
 if __name__ == "__main__":

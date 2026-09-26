@@ -43,7 +43,7 @@ from keyboards.admin_kb import (
     start_msg_kb,
     sub_msg_kb,
 )
-from keyboards.user_kb import SHORT_TITLE, menu_kb, subscribe_kb, title_width
+from keyboards.user_kb import menu_kb, subscribe_kb
 from utils.content import TYPE_LABELS, extract_content, send_raw_content
 from utils.texts import DEFAULT_SUB_MESSAGE
 
@@ -246,11 +246,7 @@ async def toggle_phone(message: Message, state: FSMContext) -> None:
 # ------------------------------------------------------------- menyu ko'rinishi
 async def show_layout(message: Message, state: FSMContext, columns: int) -> None:
     if columns == 2:
-        hint = (
-            "Qisqa nomli tugmalar bir qatorga <b>ikkitadan</b> joylashadi.\n"
-            f"Nomi uzun bo'lsa (taxminan {SHORT_TITLE} belgidan katta) — "
-            "o'sha tugma qatorni <b>o'zi egallaydi</b>, matni kesilib qolmaydi."
-        )
+        hint = "Tugmalar bir qatorga <b>ikkitadan</b> joylashadi."
     else:
         hint = "Har bir tugma alohida qatorda, butun kenglikda chiqadi."
 
@@ -285,15 +281,8 @@ async def preview_layout(message: Message, state: FSMContext) -> None:
         await message.answer("❗️ Asosiy menyuda faol tugma yo'q")
         return
 
-    long_titles = [i.title for i in items if title_width(i.title) > SHORT_TITLE]
-    note = (
-        "\n\nℹ️ Nomi uzunligi uchun alohida qator olganlar: "
-        + ", ".join(f"<b>{escape(t)}</b>" for t in long_titles)
-        if columns == 2 and long_titles
-        else ""
-    )
     await message.answer(
-        f"👇 Foydalanuvchi asosiy menyuni shunday ko'radi:{note}\n\n"
+        "👇 Foydalanuvchi asosiy menyuni shunday ko'radi:\n\n"
         "Istalgan tugmani bossangiz sozlamaga qaytasiz.",
         reply_markup=menu_kb(items, is_root=True, columns=columns),
     )
