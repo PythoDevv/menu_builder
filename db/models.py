@@ -91,6 +91,8 @@ class MenuItem(Base):
     )
     title: Mapped[str] = mapped_column(String(64))
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
+    # 1 -> tugma alohida qatorda, 2 -> yonidagi boshqa 2-lik tugma bilan bir qatorda
+    buttons_per_row: Mapped[int] = mapped_column(Integer, default=2, server_default="2")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
 
 

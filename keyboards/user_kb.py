@@ -4,7 +4,7 @@ Menyu — reply (pastdagi) tugmalar.
 Majburiy obuna — inline: reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 """
 
-from typing import Sequence, Union
+from typing import Union
 
 from aiogram.types import (
     InlineKeyboardButton,
@@ -23,23 +23,32 @@ BTN_PHONE = "📱 Raqamni yuborish"
 
 CB_CHECK_SUB = "check_sub"
 
-# Shu belgidan qisqa nomlar bir qatorga ikkitadan joylashtiriladi
-SHORT_TITLE = 18
-
 Keyboard = Union[ReplyKeyboardMarkup, ReplyKeyboardRemove]
 
 
-def _rows(titles: Sequence[str]) -> list[list[KeyboardButton]]:
-    per_row = 2 if titles and all(len(t) <= SHORT_TITLE for t in titles) else 1
-    return [
-        [KeyboardButton(text=t) for t in titles[i : i + per_row]]
-        for i in range(0, len(titles), per_row)
-    ]
+def _menu_rows(children: list[MenuItem]) -> list[list[KeyboardButton]]:
+    """Faqat ketma-ket kelgan ikkita 2-lik tugmani bir qatorga joylaydi."""
+    rows: list[list[KeyboardButton]] = []
+    index = 0
+    while index < len(children):
+        item = children[index]
+        row = [KeyboardButton(text=item.title)]
+        next_item = children[index + 1] if index + 1 < len(children) else None
+        if (
+            item.buttons_per_row == 2
+            and next_item is not None
+            and next_item.buttons_per_row == 2
+        ):
+            row.append(KeyboardButton(text=next_item.title))
+            index += 1
+        rows.append(row)
+        index += 1
+    return rows
 
 
 def menu_kb(children: list[MenuItem], is_root: bool) -> Keyboard:
     """Menyu tugmalari. Ildizda 'Orqaga' kerak emas."""
-    rows = _rows([c.title for c in children])
+    rows = _menu_rows(children)
     if not is_root:
         rows.append([KeyboardButton(text=BTN_BACK), KeyboardButton(text=BTN_HOME)])
     if not rows:

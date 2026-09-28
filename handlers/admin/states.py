@@ -32,6 +32,7 @@ class MenuSG(StatesGroup):
     confirm_delete = State()
     contents = State()
     waiting_title = State()
+    waiting_layout = State()
     waiting_rename = State()
     waiting_content = State()
 

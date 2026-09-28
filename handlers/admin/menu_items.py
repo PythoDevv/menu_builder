@@ -17,6 +17,7 @@ from db.queries import (
     get_items,
     move_item,
     rename_item,
+    set_item_buttons_per_row,
     toggle_item,
 )
 from handlers.admin.common import (
@@ -38,8 +39,11 @@ from keyboards.admin_kb import (
     BTN_MN_ADD,
     BTN_MN_DOWN,
     BTN_MN_HIDE,
+    BTN_MN_LAYOUT,
+    BTN_MN_ONE,
     BTN_MN_RENAME,
     BTN_MN_SHOW,
+    BTN_MN_TWO,
     BTN_MN_UP,
     BTN_NO,
     BTN_VIEW,
@@ -50,6 +54,7 @@ from keyboards.admin_kb import (
     content_item_label,
     contents_kb,
     menu_item_label,
+    menu_layout_kb,
     menu_node_kb,
 )
 from utils.content import extract_content, send_content
@@ -57,6 +62,10 @@ from utils.content import extract_content, send_content
 router = admin_router()
 
 TITLE_LIMIT = 60
+KEY_PENDING_TITLE = "pending_menu_title"
+KEY_LAYOUT_ACTION = "menu_layout_action"
+LAYOUT_ADD = "add"
+LAYOUT_EDIT = "edit"
 
 ADD_CONTENT_TEXT = (
     "📎 <b>Kontent qo'shish</b>\n\n"
@@ -88,6 +97,7 @@ async def show_node(message: Message, state: FSMContext, node_id: Optional[int])
         lines.append("")
         lines.append(f"📎 Kontent: <b>{content_count}</b> ta")
         lines.append(f"Holat: {'👁 ko‘rinadi' if item.is_active else '🚫 yashirin'}")
+        lines.append(f"Qator ko'rinishi: <b>{item.buttons_per_row} tadan</b>")
     lines.append("")
     lines.append(f"Ichki tugmalar: <b>{len(children)}</b> ta")
     lines.append("<i>Tugma ustiga bosing — ichiga kirasiz.</i>")
@@ -146,10 +156,59 @@ async def add_title(message: Message, state: FSMContext) -> None:
             reply_markup=cancel_kb(),
         )
         return
-    parent_id = await _node_id(state)
-    await add_item(parent_id, title)
-    await message.answer("✅ Tugma qo'shildi")
-    await show_node(message, state, parent_id)
+    await state.update_data(
+        {KEY_PENDING_TITLE: title, KEY_LAYOUT_ACTION: LAYOUT_ADD}
+    )
+    await state.set_state(MenuSG.waiting_layout)
+    await message.answer(
+        "Tugmalar bir qatorda <b>1 tadan</b> yoki <b>2 tadan</b> chiqsinmi?\n\n"
+        "Standart: <b>2 tadan</b>.",
+        reply_markup=menu_layout_kb(),
+    )
+
+
+@router.message(MenuSG.node, F.text == BTN_MN_LAYOUT)
+async def ask_layout(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    if item_id is None:
+        await show_node(message, state, None)
+        return
+    await state.update_data({KEY_LAYOUT_ACTION: LAYOUT_EDIT})
+    await state.set_state(MenuSG.waiting_layout)
+    await message.answer(
+        "Tugmalar bir qatorda <b>1 tadan</b> yoki <b>2 tadan</b> chiqsinmi?",
+        reply_markup=menu_layout_kb(),
+    )
+
+
+@router.message(MenuSG.waiting_layout, F.text.in_({BTN_MN_ONE, BTN_MN_TWO}))
+async def save_layout(message: Message, state: FSMContext) -> None:
+    buttons_per_row = 1 if message.text == BTN_MN_ONE else 2
+    data = await state.get_data()
+    if data.get(KEY_LAYOUT_ACTION) == LAYOUT_ADD:
+        parent_id = data.get(KEY_NODE)
+        title = data.get(KEY_PENDING_TITLE)
+        if not title:
+            await show_node(message, state, parent_id)
+            return
+        await add_item(parent_id, title, buttons_per_row)
+        await message.answer("✅ Tugma qo'shildi")
+        await show_node(message, state, parent_id)
+        return
+
+    item_id = data.get(KEY_NODE)
+    if item_id is not None:
+        await set_item_buttons_per_row(item_id, buttons_per_row)
+        await message.answer("✅ Qator ko'rinishi o'zgartirildi")
+    await show_node(message, state, item_id)
+
+
+@router.message(MenuSG.waiting_layout, NOT_COMMAND)
+async def invalid_layout(message: Message) -> None:
+    await message.answer(
+        "❗️ 1 tadan yoki 2 tadan variantini tanlang.",
+        reply_markup=menu_layout_kb(),
+    )
 
 
 # ------------------------------------------------------------------ nomni o'zgart

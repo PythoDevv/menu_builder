@@ -51,6 +51,9 @@ BTN_CH_PRIVATE = "🔒 Yopiq (qo'shilish so'rovi)"
 # ------------------------------------------------------------------------- menyu
 BTN_MN_ADD = "➕ Tugma qo'shish"
 BTN_MN_RENAME = "✏️ Nomi"
+BTN_MN_LAYOUT = "↔️ Qator ko'rinishi"
+BTN_MN_ONE = "1 tadan"
+BTN_MN_TWO = "2 tadan (standart)"
 BTN_MN_SHOW = "👁 Ko'rsatish"
 BTN_MN_HIDE = "🚫 Yashirish"
 BTN_MN_UP = "⬆️ Yuqoriga"
@@ -196,10 +199,18 @@ def menu_node_kb(
         rows.append([BTN_HOME])
     else:
         rows.append([content_button(content_count)])
-        rows.append([BTN_MN_RENAME, BTN_MN_HIDE if item.is_active else BTN_MN_SHOW])
+        rows.append([BTN_MN_RENAME, BTN_MN_LAYOUT])
+        rows.append([BTN_MN_HIDE if item.is_active else BTN_MN_SHOW])
         rows.append([BTN_MN_UP, BTN_MN_DOWN, BTN_DELETE])
         rows.append([BTN_BACK, BTN_HOME])
     return _kb(rows)
+
+
+def menu_layout_kb() -> ReplyKeyboardMarkup:
+    return _kb(
+        [[BTN_MN_TWO, BTN_MN_ONE], [BTN_CANCEL]],
+        "Qator ko'rinishini tanlang",
+    )
 
 
 def contents_kb(labels: Sequence[str]) -> ReplyKeyboardMarkup:

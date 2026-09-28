@@ -11,7 +11,7 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 - **Obuna tekshiruvi** — ochiq va yopiq (qo'shilish so'rovi) kanallar. Zayafka tashlagan odamdan qayta so'ralmaydi.
 - **Obuna xabari** — majburiy obuna ekranidagi post admin paneldan almashtiriladi: matn, rasm, video, fayl (`file_id` bilan). Qo'yilmagan bo'lsa standart matn chiqadi. Kanal tugmalari va **✅ Tekshirish** xabar ostiga avtomatik qo'shiladi.
 - **Start xabar** — admin paneldan qo'shiladi / o'zgartiriladi / o'chiriladi. Qo'yilmagan bo'lsa ko'rsatilmaydi.
-- **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga kontent (rasm/video/fayl/matn) biriktiriladi.
+- **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga kontent (rasm/video/fayl/matn) va qatorda 1/2 tadan ko'rinish biriktiriladi.
 - **Kontent** — `file_id` + HTML holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi).
 - **Telefon so'rash** — admin paneldan yoqiladi/o'chiriladi. Bir marta olingan raqam qayta so'ralmaydi.
 - **Hammaga xabar** — bloklaganlar avtomatik belgilanadi.

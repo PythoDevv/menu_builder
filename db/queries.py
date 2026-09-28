@@ -234,11 +234,26 @@ async def get_item(item_id: int) -> Optional[MenuItem]:
         return await s.get(MenuItem, item_id)
 
 
-async def add_item(parent_id: Optional[int], title: str) -> MenuItem:
+async def add_item(
+    parent_id: Optional[int], title: str, buttons_per_row: int = 2
+) -> MenuItem:
+    if buttons_per_row not in (1, 2):
+        raise ValueError("buttons_per_row must be 1 or 2")
     async with session_maker() as s:
-        cond = MenuItem.parent_id.is_(None) if parent_id is None else MenuItem.parent_id == parent_id
-        last = await s.scalar(select(func.coalesce(func.max(MenuItem.position), 0)).where(cond))
-        item = MenuItem(parent_id=parent_id, title=title, position=(last or 0) + 1)
+        cond = (
+            MenuItem.parent_id.is_(None)
+            if parent_id is None
+            else MenuItem.parent_id == parent_id
+        )
+        last = await s.scalar(
+            select(func.coalesce(func.max(MenuItem.position), 0)).where(cond)
+        )
+        item = MenuItem(
+            parent_id=parent_id,
+            title=title,
+            position=(last or 0) + 1,
+            buttons_per_row=buttons_per_row,
+        )
         s.add(item)
         await s.commit()
         return item
@@ -247,6 +262,18 @@ async def add_item(parent_id: Optional[int], title: str) -> MenuItem:
 async def rename_item(item_id: int, title: str) -> None:
     async with session_maker() as s:
         await s.execute(update(MenuItem).where(MenuItem.id == item_id).values(title=title))
+        await s.commit()
+
+
+async def set_item_buttons_per_row(item_id: int, buttons_per_row: int) -> None:
+    if buttons_per_row not in (1, 2):
+        raise ValueError("buttons_per_row must be 1 or 2")
+    async with session_maker() as s:
+        await s.execute(
+            update(MenuItem)
+            .where(MenuItem.id == item_id)
+            .values(buttons_per_row=buttons_per_row)
+        )
         await s.commit()
 
 
