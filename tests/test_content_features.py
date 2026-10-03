@@ -2,10 +2,13 @@ import unittest
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+from aiogram.types import MessageEntity
+
 from db.models import MenuItem
 from keyboards.admin_kb import button_style_kb
 from keyboards.user_kb import COLUMNS_ONE, COLUMNS_TWO, menu_kb
-from utils.content import extract_content, send_content
+from utils.content import extract_button_text_and_icon, extract_content, send_content
+from utils.referral import render_my_points_text
 
 
 class PremiumStickerTest(unittest.TestCase):
@@ -101,6 +104,50 @@ class MenuButtonStyleTest(unittest.TestCase):
         button = keyboard.keyboard[0][0]
         self.assertEqual(button.text, "⭐ Mening natijam")
         self.assertEqual(button.model_dump(exclude_none=True)["style"], "primary")
+
+    def test_my_points_button_uses_custom_emoji_icon(self) -> None:
+        keyboard = menu_kb(
+            [],
+            is_root=True,
+            my_points_text="Ballarim",
+            my_points_icon_custom_emoji_id="premium-emoji-id",
+        )
+
+        button = keyboard.keyboard[0][0]
+        self.assertEqual(
+            button.model_dump(exclude_none=True)["icon_custom_emoji_id"],
+            "premium-emoji-id",
+        )
+
+    def test_custom_emoji_is_extracted_from_button_label(self) -> None:
+        message = SimpleNamespace(
+            text="🏆 Ballarim",
+            entities=[
+                MessageEntity(
+                    type="custom_emoji",
+                    offset=0,
+                    length=2,
+                    custom_emoji_id="premium-emoji-id",
+                )
+            ],
+        )
+
+        self.assertEqual(
+            extract_button_text_and_icon(message),
+            ("Ballarim", "premium-emoji-id"),
+        )
+
+    def test_my_points_template_replaces_count_and_link(self) -> None:
+        rendered = render_my_points_text(
+            "Ball: <b>{count}</b>\n{link}",
+            count=7,
+            link="https://t.me/example?start=ref1",
+        )
+
+        self.assertEqual(
+            rendered,
+            "Ball: <b>7</b>\nhttps://t.me/example?start=ref1",
+        )
 
 
 class MenuLayoutTest(unittest.TestCase):

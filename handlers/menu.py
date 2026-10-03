@@ -26,8 +26,8 @@ from db.queries import (
 from keyboards.user_kb import BTN_BACK, BTN_HOME, Keyboard, menu_kb, share_kb
 from utils.admins import is_admin
 from utils.content import send_content
-from utils.referral import ref_link, render_ref_text
-from utils.texts import DEFAULT_REF_TEXT
+from utils.referral import ref_link, render_my_points_text, render_ref_text
+from utils.texts import DEFAULT_MY_POINTS_MESSAGE, DEFAULT_REF_TEXT
 
 router = Router()
 
@@ -65,6 +65,9 @@ async def build_menu_kb(children: list[MenuItem], is_root: bool) -> Keyboard:
         my_points_enabled=bool(points["enabled"]) if points else True,
         my_points_text=str(points["text"]) if points else "",
         my_points_style=points["style"] if points else None,
+        my_points_icon_custom_emoji_id=(
+            points["icon_custom_emoji_id"] if points else None
+        ),
     )
 
 
@@ -157,11 +160,10 @@ async def my_points(message: Message) -> None:
     user_id = message.from_user.id
     count = await get_referral_count(user_id)
     link = await ref_link(message.bot, user_id)
+    settings = await get_my_points_settings()
+    template = str(settings["message"] or DEFAULT_MY_POINTS_MESSAGE)
     await message.answer(
-        "🏆 <b>Ballaringiz</b>\n\n"
-        f"Siz taklif qilgan odamlar soni: <b>{count}</b> ta\n\n"
-        "Do'stlaringizni shu havola orqali taklif qiling:\n"
-        f"{link}",
+        render_my_points_text(template, count=count, link=link),
         reply_markup=share_kb(link),
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )

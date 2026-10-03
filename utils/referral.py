@@ -68,3 +68,8 @@ def render_ref_text(template: str, *, title: str, need: int, count: int, link: s
     if "{link}" not in template:
         text += f"\n\n👇 Sizning havolangiz:\n{link}"
     return text
+
+
+def render_my_points_text(template: str, *, count: int, link: str) -> str:
+    """"Ballarim" shablonidagi foydalanuvchiga tegishli qiymatlarni qo'yadi."""
+    return template.replace("{count}", str(count)).replace("{link}", link)

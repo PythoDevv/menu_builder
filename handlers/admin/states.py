@@ -73,6 +73,8 @@ class LayoutSG(StatesGroup):
 class MyPointsSG(StatesGroup):
     show = State()
     waiting_text = State()
+    waiting_message = State()
+    confirm_message_reset = State()
     style = State()
 
 

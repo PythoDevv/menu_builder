@@ -27,6 +27,32 @@ TYPE_LABELS = {
 }
 
 
+def extract_button_text_and_icon(message: Message) -> tuple[str, Optional[str]]:
+    """Tugma nomi va undagi birinchi premium custom emoji ID sini ajratadi.
+
+    Telegram tugma ikonkasini matn entitysi bilan emas, alohida
+    ``icon_custom_emoji_id`` maydonida kutadi. Shu sabab birinchi custom emoji
+    matndan olinadi va uning ID si ikonka sifatida qaytariladi.
+    """
+    text = message.text or ""
+    entity = next(
+        (
+            item
+            for item in (message.entities or [])
+            if item.type == "custom_emoji" and item.custom_emoji_id
+        ),
+        None,
+    )
+    if entity is None:
+        return text.strip(), None
+
+    encoded = text.encode("utf-16-le")
+    start = entity.offset * 2
+    end = (entity.offset + entity.length) * 2
+    label = (encoded[:start] + encoded[end:]).decode("utf-16-le").strip()
+    return label, entity.custom_emoji_id
+
+
 def extract_content(message: Message) -> Optional[dict]:
     """Adminning xabaridan file_id + HTML matnni ajratib oladi."""
     caption = message.html_text if message.caption else None

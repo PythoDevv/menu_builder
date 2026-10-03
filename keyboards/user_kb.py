@@ -68,12 +68,21 @@ def menu_kb(
     my_points_enabled: bool = True,
     my_points_text: str = BTN_MY_POINTS,
     my_points_style: Optional[str] = None,
+    my_points_icon_custom_emoji_id: Optional[str] = None,
 ) -> Keyboard:
     """Menyu tugmalari. Ildizda 'Orqaga' kerak emas, 'Ballarim' esa faqat ildizda bor."""
     rows = _rows(children, columns)
     if is_root:
         if my_points_enabled:
-            rows.append([KeyboardButton(text=my_points_text, style=my_points_style)])
+            rows.append(
+                [
+                    KeyboardButton(
+                        text=my_points_text,
+                        style=my_points_style,
+                        icon_custom_emoji_id=my_points_icon_custom_emoji_id,
+                    )
+                ]
+            )
     else:
         rows.append([KeyboardButton(text=BTN_BACK), KeyboardButton(text=BTN_HOME)])
     if not rows:

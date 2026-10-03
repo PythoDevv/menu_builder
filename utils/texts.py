@@ -25,3 +25,12 @@ DEFAULT_REF_TEXT = (
     "Havolani do'stlaringizga yuboring — ular shu havola orqali botga kirsa, "
     "taklif avtomatik hisoblanadi."
 )
+
+#: "Ballarim" tugmasi bosilganda chiqadigan standart matn.
+#: Admin paneldagi "🏆 Ballarim tugmasi" bo'limidan almashtiriladi.
+DEFAULT_MY_POINTS_MESSAGE = (
+    "🏆 <b>Ballaringiz</b>\n\n"
+    "Siz taklif qilgan odamlar soni: <b>{count}</b> ta\n\n"
+    "Do'stlaringizni shu havola orqali taklif qiling:\n"
+    "{link}"
+)

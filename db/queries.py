@@ -26,6 +26,8 @@ K_MENU_COLUMNS = "menu_columns"
 K_MY_POINTS_ENABLED = "my_points_enabled"
 K_MY_POINTS_TEXT = "my_points_text"
 K_MY_POINTS_STYLE = "my_points_style"
+K_MY_POINTS_ICON = "my_points_icon_custom_emoji_id"
+K_MY_POINTS_MESSAGE = "my_points_message"
 
 DEFAULT_MY_POINTS_TEXT = "🏆 Ballarim"
 BUTTON_STYLES = {"primary", "success", "danger"}
@@ -562,7 +564,13 @@ async def set_menu_columns(columns: int) -> int:
 
 async def get_my_points_settings() -> dict[str, object]:
     """Asosiy menyudagi "Ballarim" tugmasi sozlamalari."""
-    keys = (K_MY_POINTS_ENABLED, K_MY_POINTS_TEXT, K_MY_POINTS_STYLE)
+    keys = (
+        K_MY_POINTS_ENABLED,
+        K_MY_POINTS_TEXT,
+        K_MY_POINTS_STYLE,
+        K_MY_POINTS_ICON,
+        K_MY_POINTS_MESSAGE,
+    )
     async with session_maker() as s:
         rows = await s.execute(
             select(Setting.key, Setting.value).where(Setting.key.in_(keys))
@@ -576,6 +584,8 @@ async def get_my_points_settings() -> dict[str, object]:
         "enabled": values.get(K_MY_POINTS_ENABLED, "1") != "0",
         "text": values.get(K_MY_POINTS_TEXT) or DEFAULT_MY_POINTS_TEXT,
         "style": style,
+        "icon_custom_emoji_id": values.get(K_MY_POINTS_ICON),
+        "message": values.get(K_MY_POINTS_MESSAGE),
     }
 
 
@@ -583,17 +593,28 @@ async def set_my_points_enabled(enabled: bool) -> None:
     await set_setting(K_MY_POINTS_ENABLED, "1" if enabled else "0")
 
 
-async def set_my_points_text(text: str) -> None:
+async def set_my_points_text(
+    text: str, icon_custom_emoji_id: Optional[str] = None
+) -> None:
     value = text.strip()
     if not value or len(value) > 64:
         raise ValueError("Tugma matni 1–64 ta belgi bo'lishi kerak")
     await set_setting(K_MY_POINTS_TEXT, value)
+    await set_setting(K_MY_POINTS_ICON, icon_custom_emoji_id)
 
 
 async def set_my_points_style(style: Optional[str]) -> None:
     if style is not None and style not in BUTTON_STYLES:
         raise ValueError(f"Noto'g'ri tugma uslubi: {style}")
     await set_setting(K_MY_POINTS_STYLE, style)
+
+
+async def set_my_points_message(text_html: str) -> None:
+    await set_setting(K_MY_POINTS_MESSAGE, text_html)
+
+
+async def delete_my_points_message() -> None:
+    await set_setting(K_MY_POINTS_MESSAGE, None)
 
 
 async def is_phone_required() -> bool:

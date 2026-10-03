@@ -99,8 +99,10 @@ BTN_LT_ONE = "1️⃣ Bittadan"
 BTN_LT_TWO = "2️⃣ Ikkitadan"
 
 # ----------------------------------------------------------- Ballarim tugmasi
-BTN_POINTS_RENAME = "✏️ Matnini o'zgartirish"
+BTN_POINTS_RENAME = "✏️ Tugma nomi"
 BTN_POINTS_STYLE = "🎨 Rangini o'zgartirish"
+BTN_POINTS_MESSAGE = "📝 Natija xabari"
+BTN_POINTS_MESSAGE_RESET = "♻️ Xabarni standartga qaytarish"
 
 # ---------------------------------------------------------------------- broadcast
 BTN_BC_SEND = "✅ Yuborish"
@@ -339,14 +341,16 @@ def layout_kb() -> ReplyKeyboardMarkup:
 
 
 # ----------------------------------------------------------- BALLARIM TUGMASI
-def my_points_settings_kb(enabled: bool) -> ReplyKeyboardMarkup:
-    return _kb(
-        [
-            [BTN_OFF if enabled else BTN_ON],
-            [BTN_POINTS_RENAME, BTN_POINTS_STYLE],
-            [BTN_HOME],
-        ]
-    )
+def my_points_settings_kb(enabled: bool, custom_message: bool) -> ReplyKeyboardMarkup:
+    rows = [
+        [BTN_OFF if enabled else BTN_ON],
+        [BTN_POINTS_RENAME, BTN_POINTS_STYLE],
+        [BTN_POINTS_MESSAGE, BTN_VIEW],
+    ]
+    if custom_message:
+        rows.append([BTN_POINTS_MESSAGE_RESET])
+    rows.append([BTN_HOME])
+    return _kb(rows)
 
 
 # ---------------------------------------------------------------------- BROADCAST

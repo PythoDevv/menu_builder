@@ -1,21 +1,25 @@
 from html import escape
 
 from aiogram import F
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import LinkPreviewOptions, Message
 
 from db.queries import (
+    delete_my_points_message,
     delete_start_message,
     delete_sub_message,
     get_channels,
     get_items,
     get_menu_columns,
     get_my_points_settings,
+    get_referral_count,
     get_start_message,
     get_sub_message,
     is_phone_required,
     set_menu_columns,
     set_my_points_enabled,
+    set_my_points_message,
     set_my_points_style,
     set_my_points_text,
     set_start_message,
@@ -43,6 +47,8 @@ from keyboards.admin_kb import (
     BTN_ON,
     BTN_PHONE,
     BTN_POINTS,
+    BTN_POINTS_MESSAGE,
+    BTN_POINTS_MESSAGE_RESET,
     BTN_POINTS_RENAME,
     BTN_POINTS_STYLE,
     BTN_ST_ADD,
@@ -66,10 +72,17 @@ from keyboards.user_kb import (
     BTN_BACK as USER_BACK,
     BTN_HOME as USER_HOME,
     menu_kb,
+    share_kb,
     subscribe_kb,
 )
-from utils.content import TYPE_LABELS, extract_content, send_raw_content
-from utils.texts import DEFAULT_SUB_MESSAGE
+from utils.content import (
+    TYPE_LABELS,
+    extract_button_text_and_icon,
+    extract_content,
+    send_raw_content,
+)
+from utils.referral import ref_link, render_my_points_text
+from utils.texts import DEFAULT_MY_POINTS_MESSAGE, DEFAULT_SUB_MESSAGE
 
 router = admin_router()
 
@@ -316,6 +329,7 @@ async def preview_layout(message: Message, state: FSMContext) -> None:
             my_points_enabled=bool(points["enabled"]),
             my_points_text=str(points["text"]),
             my_points_style=points["style"],
+            my_points_icon_custom_emoji_id=points["icon_custom_emoji_id"],
         ),
     )
 
@@ -330,15 +344,19 @@ async def back_from_preview(message: Message, state: FSMContext) -> None:
 async def show_my_points(message: Message, state: FSMContext) -> None:
     settings = await get_my_points_settings()
     enabled = bool(settings["enabled"])
+    custom_message = bool(settings["message"])
+    icon_status = "✅ bor" if settings["icon_custom_emoji_id"] else "yo'q"
     await state.set_state(MyPointsSG.show)
     await message.answer(
         "🏆 <b>Ballarim tugmasi</b>\n\n"
         f"Holat: <b>{'🟢 KO‘RINADI' if enabled else '🔴 YASHIRILGAN'}</b>\n"
         f"Matni: <b>{escape(str(settings['text']))}</b>\n"
+        f"Premium emoji: <b>{icon_status}</b>\n"
         f"Rangi: <b>{button_style_label(settings['style'])}</b>\n\n"
+        f"Xabar: <b>{'admin o‘rnatgan' if custom_message else 'standart matn'}</b>\n\n"
         "Telegram faqat oddiy, ko‘k, yashil va qizil uslublarni qo‘llaydi; "
         "sariq fon Bot API’da mavjud emas.",
-        reply_markup=my_points_settings_kb(enabled),
+        reply_markup=my_points_settings_kb(enabled, custom_message),
     )
 
 
@@ -359,17 +377,21 @@ async def toggle_my_points(message: Message, state: FSMContext) -> None:
 async def ask_my_points_text(message: Message, state: FSMContext) -> None:
     await state.set_state(MyPointsSG.waiting_text)
     await message.answer(
-        "✏️ Yangi tugma matnini yuboring.\n\nMaksimum: 64 ta belgi.",
+        "✏️ Yangi tugma nomini yuboring.\n\n"
+        "Premium custom emoji ishlatsangiz, uni nom bilan birga yuboring — "
+        "birinchi premium emoji tugma ikonkasiga aylanadi.\n\n"
+        "Maksimum: 64 ta belgi.",
         reply_markup=cancel_kb(),
     )
 
 
 @router.message(MyPointsSG.waiting_text, NOT_COMMAND)
 async def save_my_points_text(message: Message, state: FSMContext) -> None:
-    text = (message.text or "").strip()
+    text, icon_custom_emoji_id = extract_button_text_and_icon(message)
     if not text or len(text) > 64:
         await message.answer(
-            "❗️ Matn bo'sh bo'lmasin va 64 ta belgidan oshmasin.",
+            "❗️ Tugma nomi bo'sh bo'lmasin va 64 ta belgidan oshmasin. "
+            "Premium emoji yuborsangiz, uning yoniga tugma nomini ham yozing.",
             reply_markup=cancel_kb(),
         )
         return
@@ -386,8 +408,136 @@ async def save_my_points_text(message: Message, state: FSMContext) -> None:
             reply_markup=cancel_kb(),
         )
         return
-    await set_my_points_text(text)
+    settings = await get_my_points_settings()
+    try:
+        await message.answer(
+            "👇 Tugma shunday ko'rinadi:",
+            reply_markup=menu_kb(
+                [],
+                is_root=True,
+                my_points_text=text,
+                my_points_style=settings["style"],
+                my_points_icon_custom_emoji_id=icon_custom_emoji_id,
+            ),
+        )
+    except TelegramBadRequest:
+        await message.answer(
+            "❗️ Telegram premium emojini tugmada qabul qilmadi. Bot egasida "
+            "Telegram Premium faol ekanini tekshiring yoki oddiy emoji yuboring.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    await set_my_points_text(text, icon_custom_emoji_id)
     await message.answer("✅ Tugma matni saqlandi")
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.show, F.text == BTN_POINTS_MESSAGE)
+async def ask_my_points_message(message: Message, state: FSMContext) -> None:
+    settings = await get_my_points_settings()
+    template = str(settings["message"] or DEFAULT_MY_POINTS_MESSAGE)
+    link = await ref_link(message.bot, message.from_user.id)
+    count = await get_referral_count(message.from_user.id)
+    await state.set_state(MyPointsSG.waiting_message)
+    await message.answer(
+        "📝 <b>Ballarim xabari</b>\n\n"
+        "Yangi matnni Telegram formatida yuboring. Premium custom emoji, qalin, "
+        "kursiv va havolalar saqlanadi.\n\n"
+        "<code>{count}</code> — foydalanuvchining ballari\n"
+        "<code>{link}</code> — foydalanuvchining taklif havolasi\n\n"
+        "Matnda <code>{link}</code> bo'lishi shart.",
+        reply_markup=cancel_kb(),
+    )
+    await message.answer(
+        "👇 Hozirgi ko'rinish:",
+    )
+    await message.answer(
+        render_my_points_text(template, count=count, link=link),
+        reply_markup=share_kb(link),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    )
+
+
+@router.message(MyPointsSG.waiting_message, NOT_COMMAND)
+async def save_my_points_message(message: Message, state: FSMContext) -> None:
+    if not message.text:
+        await message.answer(
+            "❗️ Matn yuboring. Premium emoji matn ichida bo'lishi kerak; "
+            "alohida sticker bu yerda ishlamaydi.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    if len(message.text) > 3000:
+        await message.answer(
+            "❗️ Matn 3000 ta belgidan oshmasin.", reply_markup=cancel_kb()
+        )
+        return
+
+    template = message.html_text
+    if "{link}" not in template:
+        await message.answer(
+            "❗️ Matnda <code>{link}</code> kaliti bo'lishi shart. Uni kerakli "
+            "joyga qo'shib, matnni qayta yuboring.",
+            reply_markup=cancel_kb(),
+        )
+        return
+
+    link = await ref_link(message.bot, message.from_user.id)
+    count = await get_referral_count(message.from_user.id)
+    rendered = render_my_points_text(template, count=count, link=link)
+    await message.answer("👇 Foydalanuvchi shu ko'rinishda ko'radi:")
+    try:
+        await message.answer(
+            rendered,
+            reply_markup=share_kb(link),
+            link_preview_options=LinkPreviewOptions(is_disabled=True),
+        )
+    except TelegramBadRequest:
+        await message.answer(
+            "❗️ Xabar saqlanmadi. Format yoki premium emoji Telegram tomonidan "
+            "qabul qilinmadi. Bot egasida Telegram Premium faol ekanini tekshiring.",
+            reply_markup=cancel_kb(),
+        )
+        return
+
+    await set_my_points_message(template)
+    await message.answer("✅ Ballarim xabari saqlandi")
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.show, F.text == BTN_VIEW)
+async def preview_my_points_message(message: Message, state: FSMContext) -> None:
+    settings = await get_my_points_settings()
+    template = str(settings["message"] or DEFAULT_MY_POINTS_MESSAGE)
+    link = await ref_link(message.bot, message.from_user.id)
+    count = await get_referral_count(message.from_user.id)
+    await message.answer("👇 Foydalanuvchi shu ko'rinishda ko'radi:")
+    await message.answer(
+        render_my_points_text(template, count=count, link=link),
+        reply_markup=share_kb(link),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    )
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.show, F.text == BTN_POINTS_MESSAGE_RESET)
+async def ask_reset_my_points_message(message: Message, state: FSMContext) -> None:
+    await state.set_state(MyPointsSG.confirm_message_reset)
+    await message.answer(
+        "♻️ Ballarim xabari standart matnga qaytarilsinmi?",
+        reply_markup=confirm_delete_kb(),
+    )
+
+
+@router.message(MyPointsSG.confirm_message_reset, F.text == BTN_YES_DELETE)
+async def reset_my_points_message(message: Message, state: FSMContext) -> None:
+    await delete_my_points_message()
+    await message.answer("♻️ Standart matnga qaytarildi")
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.confirm_message_reset, F.text == BTN_NO)
+async def cancel_reset_my_points_message(message: Message, state: FSMContext) -> None:
     await show_my_points(message, state)
 
 
