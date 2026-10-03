@@ -36,7 +36,11 @@ Keyboard = Union[ReplyKeyboardMarkup, ReplyKeyboardRemove]
 
 
 def _menu_button(item: MenuItem) -> KeyboardButton:
-    return KeyboardButton(text=item.title, style=item.button_style)
+    return KeyboardButton(
+        text=item.title,
+        style=item.button_style,
+        icon_custom_emoji_id=item.icon_custom_emoji_id,
+    )
 
 
 def _rows(items: Sequence[MenuItem], columns: int) -> list[list[KeyboardButton]]:

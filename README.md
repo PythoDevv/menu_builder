@@ -11,9 +11,9 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 - **Obuna tekshiruvi** — ochiq va yopiq (qo'shilish so'rovi) kanallar. Zayafka tashlagan odamdan qayta so'ralmaydi.
 - **Obuna xabari** — majburiy obuna ekranidagi post admin paneldan almashtiriladi: matn, rasm, video, fayl (`file_id` bilan). Qo'yilmagan bo'lsa standart matn chiqadi. Kanal tugmalari va **✅ Tekshirish** xabar ostiga avtomatik qo'shiladi.
 - **Start xabar** — admin paneldan qo'shiladi / o'zgartiriladi / o'chiriladi. Qo'yilmagan bo'lsa ko'rsatilmaydi.
-- **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga kontent (rasm/video/fayl/matn) biriktiriladi.
+- **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga premium custom emoji ikonka va kontent (rasm/video/fayl/matn) biriktiriladi.
 - **Menyu ko'rinishi** — tugmalar qatorda **bittadan** yoki **ikkitadan** chiqishi admin paneldan tanlanadi. Ikkitadan rejimida nomi uzun tugma qatorni o'zi egallaydi (matni siqilib ketmaydi).
-- **Kontent** — `file_id` + HTML holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi). Oddiy va premium stikerlar ham qo'llanadi.
+- **Kontent** — `file_id` + Telegram entitylari holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi). Premium custom emoji ID si ham yo'qolmaydi. Oddiy va premium stikerlar ham qo'llanadi.
 - **Tugma rangi** — har bir menyu tugmasi uchun oddiy, ko'k, yashil yoki qizil Telegram uslubini tanlash mumkin.
 - **Ballarim tugmasi** — admin paneldan ko'rsatish/yashirish, nomi, rangi va bosilganda chiqadigan xabarni o'zgartirish mumkin. Tugma ikonkasida va xabarda premium custom emoji saqlanadi.
 - **Taklif (referal) sharti** — tugma faqat N ta odam taklif qilgandan keyin ochiladi. Shart tugma qo'shilayotganda so'raladi, keyin ham o'zgartiriladi. Shart bajarilmaganda chiqadigan matn admin paneldan sozlanadi.

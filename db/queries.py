@@ -310,7 +310,10 @@ async def get_item(item_id: int) -> Optional[MenuItem]:
 
 
 async def add_item(
-    parent_id: Optional[int], title: str, required_referrals: int = 0
+    parent_id: Optional[int],
+    title: str,
+    required_referrals: int = 0,
+    icon_custom_emoji_id: Optional[str] = None,
 ) -> MenuItem:
     async with session_maker() as s:
         cond = MenuItem.parent_id.is_(None) if parent_id is None else MenuItem.parent_id == parent_id
@@ -320,6 +323,7 @@ async def add_item(
             title=title,
             position=(last or 0) + 1,
             required_referrals=max(required_referrals, 0),
+            icon_custom_emoji_id=icon_custom_emoji_id,
         )
         s.add(item)
         await s.commit()
@@ -348,9 +352,15 @@ async def set_item_style(item_id: int, style: Optional[str]) -> None:
         await s.commit()
 
 
-async def rename_item(item_id: int, title: str) -> None:
+async def rename_item(
+    item_id: int, title: str, icon_custom_emoji_id: Optional[str] = None
+) -> None:
     async with session_maker() as s:
-        await s.execute(update(MenuItem).where(MenuItem.id == item_id).values(title=title))
+        await s.execute(
+            update(MenuItem)
+            .where(MenuItem.id == item_id)
+            .values(title=title, icon_custom_emoji_id=icon_custom_emoji_id)
+        )
         await s.commit()
 
 

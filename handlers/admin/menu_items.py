@@ -66,7 +66,7 @@ from keyboards.admin_kb import (
     menu_node_kb,
     ref_ask_kb,
 )
-from utils.content import extract_content, send_content
+from utils.content import extract_button_text_and_icon, extract_content, send_content
 
 router = admin_router()
 
@@ -77,6 +77,7 @@ REF_LIMIT = 10_000
 
 #: Yangi tugma nomi taklif sharti so'ralayotgan paytda shu yerda turadi
 KEY_TITLE = "new_title"
+KEY_ICON = "new_icon_custom_emoji_id"
 
 ASK_REF_TEXT = (
     "👥 <b>Taklif sharti</b>\n\n"
@@ -128,6 +129,11 @@ async def show_node(message: Message, state: FSMContext, node_id: Optional[int])
         lines.append("")
         lines.append(f"📎 Kontent: <b>{content_count}</b> ta")
         lines.append(f"Holat: {'👁 ko‘rinadi' if item.is_active else '🚫 yashirin'}")
+        lines.append(
+            "Premium emoji: <b>✅ bor</b>"
+            if item.icon_custom_emoji_id
+            else "Premium emoji: yo'q"
+        )
         lines.append(f"🎨 Tugma rangi: <b>{button_style_label(item.button_style)}</b>")
         lines.append(
             f"👥 Taklif sharti: <b>{item.required_referrals}</b> ta odam"
@@ -178,14 +184,15 @@ async def open_root(message: Message, state: FSMContext) -> None:
 async def ask_title(message: Message, state: FSMContext) -> None:
     await state.set_state(MenuSG.waiting_title)
     await message.answer(
-        f"➕ Yangi tugma nomini yuboring (max {TITLE_LIMIT} belgi):",
+        f"➕ Yangi tugma nomini yuboring (max {TITLE_LIMIT} belgi).\n"
+        "Premium custom emoji ishlatsangiz, uni nom bilan birga yuboring:",
         reply_markup=cancel_kb(),
     )
 
 
 @router.message(MenuSG.waiting_title, NOT_COMMAND)
 async def add_title(message: Message, state: FSMContext) -> None:
-    title = (message.text or "").strip()
+    title, icon_custom_emoji_id = extract_button_text_and_icon(message)
     if not title or len(title) > TITLE_LIMIT:
         await message.answer(
             f"❗️ Nom bo'sh bo'lmasin va {TITLE_LIMIT} belgidan oshmasin.",
@@ -193,7 +200,9 @@ async def add_title(message: Message, state: FSMContext) -> None:
         )
         return
     # nomi olindi — endi taklif sharti kerakmi, deb so'raymiz
-    await state.update_data({KEY_TITLE: title})
+    await state.update_data(
+        {KEY_TITLE: title, KEY_ICON: icon_custom_emoji_id}
+    )
     await state.set_state(MenuSG.ask_ref)
     await message.answer(
         ASK_REF_TEXT.format(title=escape(title)), reply_markup=ref_ask_kb()
@@ -203,12 +212,13 @@ async def add_title(message: Message, state: FSMContext) -> None:
 async def _create_item(message: Message, state: FSMContext, required: int) -> None:
     data = await state.get_data()
     title = (data.get(KEY_TITLE) or "").strip()
+    icon_custom_emoji_id = data.get(KEY_ICON)
     parent_id = data.get(KEY_NODE)
     if not title:
         await show_node(message, state, parent_id)
         return
-    await add_item(parent_id, title, required)
-    await state.update_data({KEY_TITLE: None})
+    await add_item(parent_id, title, required, icon_custom_emoji_id)
+    await state.update_data({KEY_TITLE: None, KEY_ICON: None})
     if required:
         await message.answer(
             f"✅ Tugma qo'shildi.\n👥 Taklif sharti: <b>{required}</b> ta odam."
@@ -265,12 +275,16 @@ async def ask_rename(message: Message, state: FSMContext) -> None:
         await show_node(message, state, None)
         return
     await state.set_state(MenuSG.waiting_rename)
-    await message.answer("✏️ Yangi nomni yuboring:", reply_markup=cancel_kb())
+    await message.answer(
+        "✏️ Yangi nomni yuboring. Premium custom emoji ishlatsangiz, "
+        "uni nom bilan birga yuboring:",
+        reply_markup=cancel_kb(),
+    )
 
 
 @router.message(MenuSG.waiting_rename, NOT_COMMAND)
 async def rename(message: Message, state: FSMContext) -> None:
-    title = (message.text or "").strip()
+    title, icon_custom_emoji_id = extract_button_text_and_icon(message)
     if not title or len(title) > TITLE_LIMIT:
         await message.answer(
             f"❗️ Nom bo'sh bo'lmasin va {TITLE_LIMIT} belgidan oshmasin.",
@@ -279,7 +293,7 @@ async def rename(message: Message, state: FSMContext) -> None:
         return
     item_id = await _node_id(state)
     if item_id is not None:
-        await rename_item(item_id, title)
+        await rename_item(item_id, title, icon_custom_emoji_id)
         await message.answer("✅ Nom o'zgartirildi")
     await show_node(message, state, item_id)
 

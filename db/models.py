@@ -98,10 +98,12 @@ class MenuItem(Base):
     required_referrals: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     # Telegram tugma uslubi: primary / success / danger. None -> oddiy.
     button_style: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    # Tugma matnidan alohida ko'rsatiladigan Telegram Premium custom emoji.
+    icon_custom_emoji_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
 
 
 class Content(Base):
-    """Tugma ichidagi tayyor kontent: file_id + HTML matn."""
+    """Tugma ichidagi tayyor kontent: file_id + formatlangan matn/entitylar."""
 
     __tablename__ = "contents"
 
@@ -112,6 +114,7 @@ class Content(Base):
     # text / photo / video / document / audio / voice / animation / video_note / sticker
     type: Mapped[str] = mapped_column(String(20))
     file_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    # Eski yozuvlarda HTML; yangi yozuvlarda tg_entities_v1 JSON formati.
     text_html: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
