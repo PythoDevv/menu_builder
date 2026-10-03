@@ -21,8 +21,9 @@ K_ASK_PHONE = "ask_phone"
 K_SUB_TYPE = "sub_type"
 K_SUB_FILE = "sub_file_id"
 K_SUB_TEXT = "sub_text"
+K_SUB_CHECK_TEXT = "sub_check_text"
+K_SUB_CHECK_ICON = "sub_check_icon_custom_emoji_id"
 K_REF_TEXT = "ref_text"
-K_MENU_COLUMNS = "menu_columns"
 K_MY_POINTS_ENABLED = "my_points_enabled"
 K_MY_POINTS_TEXT = "my_points_text"
 K_MY_POINTS_STYLE = "my_points_style"
@@ -30,6 +31,7 @@ K_MY_POINTS_ICON = "my_points_icon_custom_emoji_id"
 K_MY_POINTS_MESSAGE = "my_points_message"
 
 DEFAULT_MY_POINTS_TEXT = "🏆 Ballarim"
+DEFAULT_SUB_CHECK_TEXT = "✅ Tekshirish"
 BUTTON_STYLES = {"primary", "success", "danger"}
 
 
@@ -268,6 +270,19 @@ async def toggle_channel(channel_id: int) -> Optional[Channel]:
         return ch
 
 
+async def set_channel_icon(
+    channel_id: int, icon_custom_emoji_id: Optional[str]
+) -> None:
+    """Majburiy obuna inline tugmasining premium emoji ikonkasini saqlaydi."""
+    async with session_maker() as s:
+        await s.execute(
+            update(Channel)
+            .where(Channel.id == channel_id)
+            .values(icon_custom_emoji_id=icon_custom_emoji_id)
+        )
+        await s.commit()
+
+
 async def delete_channel(channel_id: int) -> None:
     async with session_maker() as s:
         await s.execute(delete(Channel).where(Channel.id == channel_id))
@@ -314,7 +329,10 @@ async def add_item(
     title: str,
     required_referrals: int = 0,
     icon_custom_emoji_id: Optional[str] = None,
+    row_size: int = 1,
 ) -> MenuItem:
+    if row_size not in {1, 2, 3, 4}:
+        raise ValueError(f"Noto'g'ri qator o'lchami: {row_size}")
     async with session_maker() as s:
         cond = MenuItem.parent_id.is_(None) if parent_id is None else MenuItem.parent_id == parent_id
         last = await s.scalar(select(func.coalesce(func.max(MenuItem.position), 0)).where(cond))
@@ -324,6 +342,7 @@ async def add_item(
             position=(last or 0) + 1,
             required_referrals=max(required_referrals, 0),
             icon_custom_emoji_id=icon_custom_emoji_id,
+            row_size=row_size,
         )
         s.add(item)
         await s.commit()
@@ -348,6 +367,17 @@ async def set_item_style(item_id: int, style: Optional[str]) -> None:
     async with session_maker() as s:
         await s.execute(
             update(MenuItem).where(MenuItem.id == item_id).values(button_style=style)
+        )
+        await s.commit()
+
+
+async def set_item_row_size(item_id: int, row_size: int) -> None:
+    """Tugma joylashadigan qatordagi tugmalar sonini (1..4) saqlaydi."""
+    if row_size not in {1, 2, 3, 4}:
+        raise ValueError(f"Noto'g'ri qator o'lchami: {row_size}")
+    async with session_maker() as s:
+        await s.execute(
+            update(MenuItem).where(MenuItem.id == item_id).values(row_size=row_size)
         )
         await s.commit()
 
@@ -546,6 +576,35 @@ async def delete_sub_message() -> None:
     await set_setting(K_SUB_TEXT, None)
 
 
+async def get_sub_check_button() -> dict[str, Optional[str]]:
+    """Majburiy obunadagi tekshirish tugmasining matni va premium ikonkasini beradi."""
+    keys = (K_SUB_CHECK_TEXT, K_SUB_CHECK_ICON)
+    async with session_maker() as s:
+        rows = await s.execute(
+            select(Setting.key, Setting.value).where(Setting.key.in_(keys))
+        )
+        values = {key: value for key, value in rows}
+    return {
+        "text": values.get(K_SUB_CHECK_TEXT) or DEFAULT_SUB_CHECK_TEXT,
+        "icon_custom_emoji_id": values.get(K_SUB_CHECK_ICON),
+    }
+
+
+async def set_sub_check_button(
+    text: str, icon_custom_emoji_id: Optional[str] = None
+) -> None:
+    value = text.strip()
+    if not value or len(value) > 64:
+        raise ValueError("Tugma matni 1–64 ta belgi bo'lishi kerak")
+    await set_setting(K_SUB_CHECK_TEXT, value)
+    await set_setting(K_SUB_CHECK_ICON, icon_custom_emoji_id)
+
+
+async def reset_sub_check_button() -> None:
+    await set_setting(K_SUB_CHECK_TEXT, None)
+    await set_setting(K_SUB_CHECK_ICON, None)
+
+
 async def get_ref_text() -> Optional[str]:
     """Admin qo'ygan taklif matni. Qo'yilmagan bo'lsa None (standart ishlatiladi)."""
     return await get_setting(K_REF_TEXT)
@@ -558,18 +617,6 @@ async def set_ref_text(text_html: str) -> None:
 async def delete_ref_text() -> None:
     """Standart matnga qaytaradi."""
     await set_setting(K_REF_TEXT, None)
-
-
-async def get_menu_columns() -> int:
-    """Menyu tugmalari qatorda nechtadan chiqishi: 1 yoki 2 (standart — 2)."""
-    return 2 if (await get_setting(K_MENU_COLUMNS, "2")) == "2" else 1
-
-
-async def set_menu_columns(columns: int) -> int:
-    """Saqlangan qiymatni qaytaradi (2 dan boshqasi — bitta ustun)."""
-    value = 2 if columns == 2 else 1
-    await set_setting(K_MENU_COLUMNS, str(value))
-    return value
 
 
 async def get_my_points_settings() -> dict[str, object]:

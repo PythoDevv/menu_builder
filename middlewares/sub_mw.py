@@ -13,7 +13,12 @@ from aiogram.exceptions import TelegramBadRequest
 from aiogram.types import CallbackQuery, Message, TelegramObject
 
 from db.models import Channel
-from db.queries import get_sub_message, is_phone_required
+from db.queries import (
+    DEFAULT_SUB_CHECK_TEXT,
+    get_sub_check_button,
+    get_sub_message,
+    is_phone_required,
+)
 from keyboards.user_kb import phone_kb, subscribe_kb
 from utils.admins import is_admin
 from utils.content import send_raw_content
@@ -52,7 +57,17 @@ def _skip(event: TelegramObject) -> bool:
 
 async def send_sub_prompt(bot: Bot, chat_id: int, missing: list[Channel]) -> None:
     data = await get_sub_message() or DEFAULT_SUB_MESSAGE
-    await send_raw_content(bot, chat_id, data, reply_markup=subscribe_kb(missing))
+    check_button = await get_sub_check_button()
+    await send_raw_content(
+        bot,
+        chat_id,
+        data,
+        reply_markup=subscribe_kb(
+            missing,
+            check_text=check_button["text"] or DEFAULT_SUB_CHECK_TEXT,
+            check_icon_custom_emoji_id=check_button["icon_custom_emoji_id"],
+        ),
+    )
 
 
 def _shown_channels(event: CallbackQuery) -> int:

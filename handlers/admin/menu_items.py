@@ -18,6 +18,7 @@ from db.queries import (
     move_item,
     rename_item,
     set_item_referrals,
+    set_item_row_size,
     set_item_style,
     toggle_item,
 )
@@ -42,6 +43,7 @@ from keyboards.admin_kb import (
     BTN_MN_HIDE,
     BTN_MN_REF,
     BTN_MN_RENAME,
+    BTN_MN_ROW_SIZE,
     BTN_MN_SHOW,
     BTN_MN_STYLE,
     BTN_MN_UP,
@@ -53,6 +55,7 @@ from keyboards.admin_kb import (
     BTN_ST_EDIT,
     BTN_VIEW,
     BTN_YES_DELETE,
+    BUTTON_ROW_SIZE_OPTIONS,
     BUTTON_STYLE_OPTIONS,
     button_style_kb,
     button_style_label,
@@ -65,6 +68,9 @@ from keyboards.admin_kb import (
     menu_item_label,
     menu_node_kb,
     ref_ask_kb,
+    row_size_ask_kb,
+    row_size_kb,
+    row_size_label,
 )
 from utils.content import extract_button_text_and_icon, extract_content, send_content
 
@@ -75,9 +81,18 @@ TITLE_LIMIT = 60
 #: Taklif sharti uchun eng katta qiymat — xato terilgan raqamdan saqlaydi
 REF_LIMIT = 10_000
 
-#: Yangi tugma nomi taklif sharti so'ralayotgan paytda shu yerda turadi
+#: Yangi tugma yaratilguncha nomi, ikonkasi va ko'rinishi FSMda turadi
 KEY_TITLE = "new_title"
 KEY_ICON = "new_icon_custom_emoji_id"
+KEY_ROW_SIZE = "new_row_size"
+
+ASK_ROW_SIZE_TEXT = (
+    "🧩 <b>Tugma ko'rinishi</b>\n\n"
+    "Tugma qatorda qanday joylashsin?\n\n"
+    "1️⃣ <b>Bittalik</b> — alohida qatorda, to'liq kenglikda.\n"
+    "2️⃣ <b>Ikkitalik</b> — oldingi yoki keyingi ikkitalik tugma bilan "
+    "bir qatorda chiqadi."
+)
 
 ASK_REF_TEXT = (
     "👥 <b>Taklif sharti</b>\n\n"
@@ -135,6 +150,7 @@ async def show_node(message: Message, state: FSMContext, node_id: Optional[int])
             else "Premium emoji: yo'q"
         )
         lines.append(f"🎨 Tugma rangi: <b>{button_style_label(item.button_style)}</b>")
+        lines.append(f"🧩 Ko'rinishi: <b>{row_size_label(item.row_size)}</b>")
         lines.append(
             f"👥 Taklif sharti: <b>{item.required_referrals}</b> ta odam"
             if item.required_referrals
@@ -199,13 +215,34 @@ async def add_title(message: Message, state: FSMContext) -> None:
             reply_markup=cancel_kb(),
         )
         return
-    # nomi olindi — endi taklif sharti kerakmi, deb so'raymiz
+    # nomi olindi — endi tugmaning qatordagi ko'rinishini so'raymiz
     await state.update_data(
         {KEY_TITLE: title, KEY_ICON: icon_custom_emoji_id}
     )
+    await state.set_state(MenuSG.ask_row_size)
+    await message.answer(ASK_ROW_SIZE_TEXT, reply_markup=row_size_ask_kb())
+
+
+@router.message(
+    MenuSG.ask_row_size,
+    F.text.in_(
+        {label for label, size in BUTTON_ROW_SIZE_OPTIONS.items() if size <= 2}
+    ),
+)
+async def choose_new_row_size(message: Message, state: FSMContext) -> None:
+    await state.update_data({KEY_ROW_SIZE: BUTTON_ROW_SIZE_OPTIONS[message.text]})
+    title = (await state.get_data()).get(KEY_TITLE) or ""
     await state.set_state(MenuSG.ask_ref)
     await message.answer(
         ASK_REF_TEXT.format(title=escape(title)), reply_markup=ref_ask_kb()
+    )
+
+
+@router.message(MenuSG.ask_row_size, NOT_COMMAND)
+async def ask_row_size_again(message: Message, state: FSMContext) -> None:
+    await message.answer(
+        "❗️ <b>1️⃣ Bittalik</b> yoki <b>2️⃣ Ikkitalik</b> tugmasini tanlang.",
+        reply_markup=row_size_ask_kb(),
     )
 
 
@@ -213,12 +250,19 @@ async def _create_item(message: Message, state: FSMContext, required: int) -> No
     data = await state.get_data()
     title = (data.get(KEY_TITLE) or "").strip()
     icon_custom_emoji_id = data.get(KEY_ICON)
+    row_size = data.get(KEY_ROW_SIZE, 1)
     parent_id = data.get(KEY_NODE)
     if not title:
         await show_node(message, state, parent_id)
         return
-    await add_item(parent_id, title, required, icon_custom_emoji_id)
-    await state.update_data({KEY_TITLE: None, KEY_ICON: None})
+    await add_item(
+        parent_id,
+        title,
+        required,
+        icon_custom_emoji_id,
+        row_size=row_size,
+    )
+    await state.update_data({KEY_TITLE: None, KEY_ICON: None, KEY_ROW_SIZE: None})
     if required:
         await message.answer(
             f"✅ Tugma qo'shildi.\n👥 Taklif sharti: <b>{required}</b> ta odam."
@@ -346,6 +390,39 @@ async def save_style(message: Message, state: FSMContext) -> None:
 
 @router.message(MenuSG.style, F.text == BTN_BACK)
 async def style_back(message: Message, state: FSMContext) -> None:
+    await show_node(message, state, await _node_id(state))
+
+
+# -------------------------------------------------------------- qator ko'rinishi
+@router.message(MenuSG.node, F.text == BTN_MN_ROW_SIZE)
+async def show_row_size(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    item = await get_item(item_id) if item_id is not None else None
+    if item is None:
+        await show_node(message, state, None)
+        return
+    await state.set_state(MenuSG.row_size)
+    await message.answer(
+        f"🧩 <b>{escape(item.title)}</b> — tugma ko'rinishi\n\n"
+        f"Hozir: <b>{row_size_label(item.row_size)}</b>\n\n"
+        "Ketma-ket bir xil ko'rinishdagi tugmalar tanlangan songacha "
+        "bitta qatorda chiqadi.",
+        reply_markup=row_size_kb(),
+    )
+
+
+@router.message(MenuSG.row_size, F.text.in_(set(BUTTON_ROW_SIZE_OPTIONS)))
+async def save_row_size(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    if item_id is not None:
+        row_size = BUTTON_ROW_SIZE_OPTIONS[message.text]
+        await set_item_row_size(item_id, row_size)
+        await message.answer(f"✅ Tugma ko'rinishi: <b>{row_size_label(row_size)}</b>")
+    await show_node(message, state, item_id)
+
+
+@router.message(MenuSG.row_size, F.text == BTN_BACK)
+async def row_size_back(message: Message, state: FSMContext) -> None:
     await show_node(message, state, await _node_id(state))
 
 

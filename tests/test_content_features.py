@@ -4,9 +4,9 @@ from unittest.mock import AsyncMock
 
 from aiogram.types import Chat, Message, MessageEntity, User
 
-from db.models import MenuItem
-from keyboards.admin_kb import button_style_kb
-from keyboards.user_kb import COLUMNS_ONE, COLUMNS_TWO, menu_kb
+from db.models import Channel, MenuItem
+from keyboards.admin_kb import button_style_kb, row_size_ask_kb, row_size_kb
+from keyboards.user_kb import menu_kb, subscribe_kb
 from utils.content import (
     FORMATTED_TEXT_PREFIX,
     extract_button_text_and_icon,
@@ -118,7 +118,7 @@ class MenuButtonStyleTest(unittest.TestCase):
         item = MenuItem(title="Yashil tugma", position=1)
         item.button_style = "success"
 
-        keyboard = menu_kb([item], is_root=True, columns=COLUMNS_ONE)
+        keyboard = menu_kb([item], is_root=True)
 
         button = keyboard.keyboard[0][0]
         self.assertEqual(button.model_dump(exclude_none=True)["style"], "success")
@@ -128,7 +128,7 @@ class MenuButtonStyleTest(unittest.TestCase):
         item.button_style = "success"
         item.icon_custom_emoji_id = "menu-premium-emoji-id"
 
-        keyboard = menu_kb([item], is_root=True, columns=COLUMNS_ONE)
+        keyboard = menu_kb([item], is_root=True)
 
         button = keyboard.keyboard[0][0]
         self.assertEqual(button.text, "Barcha savollar")
@@ -141,7 +141,7 @@ class MenuButtonStyleTest(unittest.TestCase):
         item = MenuItem(title="Oddiy tugma", position=1)
         item.button_style = None
 
-        keyboard = menu_kb([item], is_root=True, columns=COLUMNS_ONE)
+        keyboard = menu_kb([item], is_root=True)
 
         button = keyboard.keyboard[0][0]
         self.assertNotIn("style", button.model_dump(exclude_none=True))
@@ -150,7 +150,6 @@ class MenuButtonStyleTest(unittest.TestCase):
         keyboard = menu_kb(
             [],
             is_root=True,
-            columns=COLUMNS_ONE,
             my_points_enabled=False,
         )
 
@@ -160,7 +159,6 @@ class MenuButtonStyleTest(unittest.TestCase):
         keyboard = menu_kb(
             [],
             is_root=True,
-            columns=COLUMNS_ONE,
             my_points_text="⭐ Mening natijam",
             my_points_style="primary",
         )
@@ -215,17 +213,106 @@ class MenuButtonStyleTest(unittest.TestCase):
 
 
 class MenuLayoutTest(unittest.TestCase):
-    def test_two_columns_pair_long_titles(self) -> None:
+    @staticmethod
+    def _item(title: str, row_size: int) -> MenuItem:
+        item = MenuItem(title=title, position=1)
+        item.row_size = row_size
+        return item
+
+    def test_existing_default_items_each_use_full_row(self) -> None:
         items = [
-            MenuItem(title="Birinchi uzun menyu tugmasi", position=1),
-            MenuItem(title="Ikkinchi uzun menyu tugmasi", position=2),
+            self._item("Birinchi", 1),
+            self._item("Ikkinchi", 1),
         ]
 
-        keyboard = menu_kb(items, is_root=True, columns=COLUMNS_TWO)
+        keyboard = menu_kb(items, is_root=True, my_points_enabled=False)
 
         self.assertEqual(
-            [button.text for button in keyboard.keyboard[0]],
-            [item.title for item in items],
+            [[button.text for button in row] for row in keyboard.keyboard],
+            [["Birinchi"], ["Ikkinchi"]],
+        )
+
+    def test_consecutive_two_size_items_share_a_row(self) -> None:
+        items = [self._item("Birinchi", 2), self._item("Ikkinchi", 2)]
+
+        keyboard = menu_kb(items, is_root=True, my_points_enabled=False)
+
+        self.assertEqual(
+            [[button.text for button in row] for row in keyboard.keyboard],
+            [["Birinchi", "Ikkinchi"]],
+        )
+
+    def test_new_item_picker_only_offers_one_or_two(self) -> None:
+        keyboard = row_size_ask_kb()
+
+        self.assertEqual(len(keyboard.keyboard[0]), 2)
+        self.assertEqual(
+            [button.text[:1] for button in keyboard.keyboard[0]],
+            ["1", "2"],
+        )
+
+    def test_edit_picker_offers_one_through_four(self) -> None:
+        keyboard = row_size_kb()
+
+        choices = [
+            button.text[:1] for row in keyboard.keyboard[:2] for button in row
+        ]
+        self.assertEqual(choices, ["1", "2", "3", "4"])
+
+    def test_different_sizes_start_new_rows(self) -> None:
+        items = [
+            self._item("Ikki-1", 2),
+            self._item("Uch-1", 3),
+            self._item("Uch-2", 3),
+            self._item("Uch-3", 3),
+            self._item("To'rt-1", 4),
+            self._item("To'rt-2", 4),
+            self._item("To'rt-3", 4),
+            self._item("To'rt-4", 4),
+        ]
+
+        keyboard = menu_kb(items, is_root=True, my_points_enabled=False)
+
+        self.assertEqual(
+            [[button.text for button in row] for row in keyboard.keyboard],
+            [
+                ["Ikki-1"],
+                ["Uch-1", "Uch-2", "Uch-3"],
+                ["To'rt-1", "To'rt-2", "To'rt-3", "To'rt-4"],
+            ],
+        )
+
+
+class SubscriptionButtonTest(unittest.TestCase):
+    def test_channel_button_uses_saved_custom_emoji_icon(self) -> None:
+        channel = Channel(
+            title="Premium kanal",
+            username="premium_channel",
+            is_private=False,
+        )
+        channel.icon_custom_emoji_id = "channel-premium-emoji-id"
+
+        keyboard = subscribe_kb([channel])
+        button = keyboard.inline_keyboard[0][0]
+
+        self.assertEqual(button.text, "Premium kanal")
+        self.assertEqual(
+            button.model_dump(exclude_none=True)["icon_custom_emoji_id"],
+            "channel-premium-emoji-id",
+        )
+
+    def test_check_button_uses_custom_text_and_premium_icon(self) -> None:
+        keyboard = subscribe_kb(
+            [],
+            check_text="Obunani tekshirish",
+            check_icon_custom_emoji_id="check-premium-emoji-id",
+        )
+        button = keyboard.inline_keyboard[-1][0]
+
+        self.assertEqual(button.text, "Obunani tekshirish")
+        self.assertEqual(
+            button.model_dump(exclude_none=True)["icon_custom_emoji_id"],
+            "check-premium-emoji-id",
         )
 
 

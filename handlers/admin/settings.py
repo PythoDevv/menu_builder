@@ -6,29 +6,30 @@ from aiogram.fsm.context import FSMContext
 from aiogram.types import LinkPreviewOptions, Message
 
 from db.queries import (
+    DEFAULT_SUB_CHECK_TEXT,
     delete_my_points_message,
     delete_start_message,
     delete_sub_message,
     get_channels,
     get_items,
-    get_menu_columns,
     get_my_points_settings,
     get_referral_count,
+    get_sub_check_button,
     get_start_message,
     get_sub_message,
     is_phone_required,
-    set_menu_columns,
+    reset_sub_check_button,
     set_my_points_enabled,
     set_my_points_message,
     set_my_points_style,
     set_my_points_text,
     set_start_message,
+    set_sub_check_button,
     set_sub_message,
     toggle_phone_required,
 )
 from handlers.admin.common import NOT_COMMAND, admin_router
 from handlers.admin.states import (
-    LayoutSG,
     MyPointsSG,
     PanelSG,
     PhoneSG,
@@ -39,9 +40,6 @@ from keyboards.admin_kb import (
     BUTTON_STYLE_OPTIONS,
     BTN_BACK,
     BTN_DELETE,
-    BTN_LAYOUT,
-    BTN_LT_ONE,
-    BTN_LT_TWO,
     BTN_NO,
     BTN_OFF,
     BTN_ON,
@@ -55,6 +53,8 @@ from keyboards.admin_kb import (
     BTN_ST_EDIT,
     BTN_START_MSG,
     BTN_SUB_MSG,
+    BTN_SUB_CHECK,
+    BTN_SUB_CHECK_RESET,
     BTN_SUB_RESET,
     BTN_VIEW,
     BTN_YES_DELETE,
@@ -62,19 +62,15 @@ from keyboards.admin_kb import (
     button_style_kb,
     button_style_label,
     confirm_delete_kb,
-    layout_kb,
     my_points_settings_kb,
     phone_settings_kb,
     start_msg_kb,
+    sub_check_kb,
     sub_msg_kb,
 )
-from keyboards.user_kb import (
-    BTN_BACK as USER_BACK,
-    BTN_HOME as USER_HOME,
-    menu_kb,
-    share_kb,
-    subscribe_kb,
-)
+from keyboards.user_kb import BTN_BACK as USER_BACK
+from keyboards.user_kb import BTN_HOME as USER_HOME
+from keyboards.user_kb import menu_kb, share_kb, subscribe_kb
 from utils.content import (
     TYPE_LABELS,
     extract_button_text_and_icon,
@@ -166,16 +162,24 @@ async def save_start(message: Message, state: FSMContext) -> None:
 # ------------------------------------------------------------------ OBUNA XABARI
 SUB_EDIT_TEXT = (
     "📌 <b>Obuna xabari</b>\n\n"
-    "Yangi xabarni yuboring — matn, rasm, video, fayl...\n"
+    "Yangi xabarni yuboring — matn, rasm, video, fayl yoki premium stiker...\n"
     "Rasm/videoga izoh (caption) yozsangiz, u ham saqlanadi.\n"
-    "Formatlash (qalin, kursiv, havola) o'zgarmasdan saqlanadi.\n\n"
-    "⚠️ Kanal tugmalari va <b>✅ Tekshirish</b> xabar ostiga avtomatik qo'shiladi — "
+    "Formatlash va premium custom emojilar o'zgarmasdan saqlanadi.\n\n"
+    "⚠️ Kanal tugmalari va tekshirish tugmasi xabar ostiga avtomatik qo'shiladi — "
     "ularni o'zingiz yozishingiz shart emas."
+)
+
+SUB_CHECK_EDIT_TEXT = (
+    "✅ <b>Tekshirish tugmasi</b>\n\n"
+    "Yangi tugma matnini yuboring. Premium custom emoji ishlatsangiz, "
+    "uni matn bilan birga yuboring. Birinchi premium emoji tugma ikonkasiga aylanadi.\n\n"
+    "Maksimum: 64 ta belgi."
 )
 
 
 async def show_sub(message: Message, state: FSMContext) -> None:
     data = await get_sub_message()
+    check_button = await get_sub_check_button()
     if data:
         text = (
             "📌 <b>Obuna xabari</b>\n\n"
@@ -190,6 +194,12 @@ async def show_sub(message: Message, state: FSMContext) -> None:
             "Majburiy obuna talab qilinganda ko'rsatiladigan xabar.\n"
             "O'zingizning matningiz yoki rasm/videoli postni qo'yishingiz mumkin."
         )
+    check_icon = "✅ bor" if check_button["icon_custom_emoji_id"] else "yo'q"
+    text += (
+        "\n\n"
+        f"Tekshirish tugmasi: <b>{escape(check_button['text'] or DEFAULT_SUB_CHECK_TEXT)}</b>\n"
+        f"Tugma premium emojisi: <b>{check_icon}</b>"
+    )
     await state.set_state(SubSG.show)
     await message.answer(text, reply_markup=sub_msg_kb(bool(data)))
 
@@ -209,9 +219,17 @@ async def ask_sub(message: Message, state: FSMContext) -> None:
 async def preview_sub(message: Message, state: FSMContext) -> None:
     data = await get_sub_message() or DEFAULT_SUB_MESSAGE
     channels = await get_channels(active_only=True)
+    check_button = await get_sub_check_button()
     await message.answer("👇 Foydalanuvchi shu ko'rinishda ko'radi:")
     await send_raw_content(
-        message.bot, message.chat.id, data, reply_markup=subscribe_kb(channels)
+        message.bot,
+        message.chat.id,
+        data,
+        reply_markup=subscribe_kb(
+            channels,
+            check_text=check_button["text"] or DEFAULT_SUB_CHECK_TEXT,
+            check_icon_custom_emoji_id=check_button["icon_custom_emoji_id"],
+        ),
     )
     if not channels:
         await message.answer("ℹ️ Hozircha faol kanal yo'q — tugmalar bo'sh ko'rinadi.")
@@ -252,6 +270,58 @@ async def save_sub(message: Message, state: FSMContext) -> None:
     await show_sub(message, state)
 
 
+async def show_sub_check(message: Message, state: FSMContext) -> None:
+    button = await get_sub_check_button()
+    text = button["text"] or DEFAULT_SUB_CHECK_TEXT
+    icon = button["icon_custom_emoji_id"]
+    custom = text != DEFAULT_SUB_CHECK_TEXT or bool(icon)
+    await state.set_state(SubSG.check_button)
+    await message.answer(
+        "✅ <b>Tekshirish tugmasi</b>\n\n"
+        f"Matni: <b>{escape(text)}</b>\n"
+        f"Premium emoji: <b>{'✅ bor' if icon else 'yo‘q'}</b>",
+        reply_markup=sub_check_kb(custom),
+    )
+
+
+@router.message(SubSG.show, F.text == BTN_SUB_CHECK)
+async def open_sub_check(message: Message, state: FSMContext) -> None:
+    await show_sub_check(message, state)
+
+
+@router.message(SubSG.check_button, F.text == BTN_ST_EDIT)
+async def ask_sub_check(message: Message, state: FSMContext) -> None:
+    await state.set_state(SubSG.waiting_check_button)
+    await message.answer(SUB_CHECK_EDIT_TEXT, reply_markup=cancel_kb())
+
+
+@router.message(SubSG.waiting_check_button, NOT_COMMAND)
+async def save_sub_check(message: Message, state: FSMContext) -> None:
+    text, icon_custom_emoji_id = extract_button_text_and_icon(message)
+    if not text or len(text) > 64:
+        await message.answer(
+            "❗️ Tugma matni bo'sh bo'lmasin va 64 ta belgidan oshmasin. "
+            "Premium emoji yuborsangiz, yoniga tugma matnini ham yozing.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    await set_sub_check_button(text, icon_custom_emoji_id)
+    await message.answer("✅ Tekshirish tugmasi saqlandi")
+    await show_sub_check(message, state)
+
+
+@router.message(SubSG.check_button, F.text == BTN_SUB_CHECK_RESET)
+async def reset_sub_check(message: Message, state: FSMContext) -> None:
+    await reset_sub_check_button()
+    await message.answer("♻️ Tekshirish tugmasi standartga qaytarildi")
+    await show_sub_check(message, state)
+
+
+@router.message(SubSG.check_button, F.text == BTN_BACK)
+async def sub_check_back(message: Message, state: FSMContext) -> None:
+    await show_sub(message, state)
+
+
 # ------------------------------------------------------------------ telefon on/off
 async def show_phone(message: Message, state: FSMContext, enabled: bool) -> None:
     hint = (
@@ -278,66 +348,6 @@ async def toggle_phone(message: Message, state: FSMContext) -> None:
     enabled = await toggle_phone_required()
     await message.answer("✅ O'zgartirildi")
     await show_phone(message, state, enabled)
-
-
-# ------------------------------------------------------------- menyu ko'rinishi
-async def show_layout(message: Message, state: FSMContext, columns: int) -> None:
-    if columns == 2:
-        hint = "Tugmalar bir qatorga <b>ikkitadan</b> joylashadi."
-    else:
-        hint = "Har bir tugma alohida qatorda, butun kenglikda chiqadi."
-
-    await state.set_state(LayoutSG.show)
-    await message.answer(
-        "🧩 <b>Menyu ko'rinishi</b>\n\n"
-        f"Holat: <b>{'2️⃣ ikkitadan' if columns == 2 else '1️⃣ bittadan'}</b>\n\n"
-        f"{hint}\n\n"
-        "Bu sozlama foydalanuvchi ko'radigan menyuga tegishli.",
-        reply_markup=layout_kb(),
-    )
-
-
-@router.message(PanelSG.home, F.text == BTN_LAYOUT)
-async def open_layout(message: Message, state: FSMContext) -> None:
-    await show_layout(message, state, await get_menu_columns())
-
-
-@router.message(LayoutSG.show, F.text.in_({BTN_LT_ONE, BTN_LT_TWO}))
-async def choose_layout(message: Message, state: FSMContext) -> None:
-    columns = await set_menu_columns(1 if message.text == BTN_LT_ONE else 2)
-    await message.answer("✅ Saqlandi")
-    await show_layout(message, state, columns)
-
-
-@router.message(LayoutSG.show, F.text == BTN_VIEW)
-async def preview_layout(message: Message, state: FSMContext) -> None:
-    """Asosiy menyuni haqiqiy klaviatura sifatida ko'rsatadi."""
-    columns = await get_menu_columns()
-    items = await get_items(None, active_only=True)
-    points = await get_my_points_settings()
-    if not items and not points["enabled"]:
-        await message.answer("❗️ Asosiy menyuda faol tugma yo'q")
-        return
-
-    await message.answer(
-        "👇 Foydalanuvchi asosiy menyuni shunday ko'radi:\n\n"
-        "Istalgan tugmani bossangiz sozlamaga qaytasiz.",
-        reply_markup=menu_kb(
-            items,
-            is_root=True,
-            columns=columns,
-            my_points_enabled=bool(points["enabled"]),
-            my_points_text=str(points["text"]),
-            my_points_style=points["style"],
-            my_points_icon_custom_emoji_id=points["icon_custom_emoji_id"],
-        ),
-    )
-
-
-@router.message(LayoutSG.show, NOT_COMMAND)
-async def back_from_preview(message: Message, state: FSMContext) -> None:
-    """Namunadagi tugma bosilsa — sozlama ekraniga qaytamiz."""
-    await show_layout(message, state, await get_menu_columns())
 
 
 # ----------------------------------------------------------- Ballarim tugmasi

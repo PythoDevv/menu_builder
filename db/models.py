@@ -4,6 +4,7 @@ from typing import Optional
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Integer,
@@ -58,6 +59,8 @@ class Channel(Base):
     title: Mapped[str] = mapped_column(String(255), default="")
     username: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     invite_link: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    # Majburiy obuna inline tugmasida kanal nomidan oldin chiqadigan premium emoji.
+    icon_custom_emoji_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     # True -> yopiq kanal (qo'shilish so'rovi yuboriladi)
     is_private: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
@@ -86,6 +89,9 @@ class MenuItem(Base):
     """Menyu tugmasi. parent_id=None -> asosiy menyu."""
 
     __tablename__ = "menu_items"
+    __table_args__ = (
+        CheckConstraint("row_size BETWEEN 1 AND 4", name="ck_menu_items_row_size"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     parent_id: Mapped[Optional[int]] = mapped_column(
@@ -100,6 +106,9 @@ class MenuItem(Base):
     button_style: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
     # Tugma matnidan alohida ko'rsatiladigan Telegram Premium custom emoji.
     icon_custom_emoji_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    # Shu tugma qatorida nechta bir xil turdagi tugma joylashishi kerak (1..4).
+    # Eski tugmalar migratsiyada 1 talik deb olinadi.
+    row_size: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
 
 
 class Content(Base):

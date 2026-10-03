@@ -15,22 +15,17 @@ from aiogram.types import (
 )
 
 from db.models import Channel, MenuItem
-from db.queries import DEFAULT_MY_POINTS_TEXT
+from db.queries import DEFAULT_MY_POINTS_TEXT, DEFAULT_SUB_CHECK_TEXT
 from utils.referral import share_url
 
 BTN_BACK = "⬅️ Orqaga"
 BTN_HOME = "🏠 Bosh menyu"
-BTN_CHECK_SUB = "✅ Tekshirish"
+BTN_CHECK_SUB = DEFAULT_SUB_CHECK_TEXT
 BTN_PHONE = "📱 Raqamni yuborish"
 BTN_SHARE = "📤 Do'stlarga yuborish"
 BTN_MY_POINTS = DEFAULT_MY_POINTS_TEXT
 
 CB_CHECK_SUB = "check_sub"
-
-#: Menyu ustunlari soni (admin paneldan boshqariladi)
-COLUMNS_ONE = 1
-COLUMNS_TWO = 2
-DEFAULT_COLUMNS = COLUMNS_TWO
 
 Keyboard = Union[ReplyKeyboardMarkup, ReplyKeyboardRemove]
 
@@ -43,39 +38,45 @@ def _menu_button(item: MenuItem) -> KeyboardButton:
     )
 
 
-def _rows(items: Sequence[MenuItem], columns: int) -> list[list[KeyboardButton]]:
-    """Tanlangan ustun soniga ko'ra tugmalarni qatorlarga joylaydi."""
+def _item_row_size(item: MenuItem) -> int:
+    """Eski/noto'g'ri qiymatni xavfsiz tarzda 1 talik deb oladi."""
+    value = getattr(item, "row_size", 1)
+    return value if value in {1, 2, 3, 4} else 1
+
+
+def _rows(items: Sequence[MenuItem]) -> list[list[KeyboardButton]]:
+    """Ketma-ket, bir xil o'lchamli tugmalarni qatorlarga guruhlaydi."""
     rows: list[list[MenuItem]] = []
-    pending: Optional[MenuItem] = None
+    pending: list[MenuItem] = []
+    pending_size: Optional[int] = None
 
     for item in items:
-        if columns < COLUMNS_TWO:
-            if pending is not None:
-                rows.append([pending])
-                pending = None
-            rows.append([item])
-        elif pending is None:
-            pending = item
-        else:
-            rows.append([pending, item])
-            pending = None
+        row_size = _item_row_size(item)
+        if pending and row_size != pending_size:
+            rows.append(pending)
+            pending = []
+        pending_size = row_size
+        pending.append(item)
+        if len(pending) == row_size:
+            rows.append(pending)
+            pending = []
+            pending_size = None
 
-    if pending is not None:
-        rows.append([pending])
+    if pending:
+        rows.append(pending)
     return [[_menu_button(item) for item in row] for row in rows]
 
 
 def menu_kb(
     children: list[MenuItem],
     is_root: bool,
-    columns: int = DEFAULT_COLUMNS,
     my_points_enabled: bool = True,
     my_points_text: str = BTN_MY_POINTS,
     my_points_style: Optional[str] = None,
     my_points_icon_custom_emoji_id: Optional[str] = None,
 ) -> Keyboard:
     """Menyu tugmalari. Ildizda 'Orqaga' kerak emas, 'Ballarim' esa faqat ildizda bor."""
-    rows = _rows(children, columns)
+    rows = _rows(children)
     if is_root:
         if my_points_enabled:
             rows.append(
@@ -104,7 +105,11 @@ def channel_url(ch: Channel) -> str:
     return (ch.invite_link or public) if ch.is_private else (public or ch.invite_link)
 
 
-def subscribe_kb(channels: list[Channel]) -> InlineKeyboardMarkup:
+def subscribe_kb(
+    channels: list[Channel],
+    check_text: str = BTN_CHECK_SUB,
+    check_icon_custom_emoji_id: Optional[str] = None,
+) -> InlineKeyboardMarkup:
     """Kanal havolalari + tekshirish tugmasi (inline)."""
     rows = []
     for ch in channels:
@@ -112,8 +117,26 @@ def subscribe_kb(channels: list[Channel]) -> InlineKeyboardMarkup:
         if not url:
             continue
         prefix = "🔒" if ch.is_private else "📢"
-        rows.append([InlineKeyboardButton(text=f"{prefix} {ch.title}", url=url)])
-    rows.append([InlineKeyboardButton(text=BTN_CHECK_SUB, callback_data=CB_CHECK_SUB)])
+        icon_custom_emoji_id = getattr(ch, "icon_custom_emoji_id", None)
+        text = ch.title if icon_custom_emoji_id else f"{prefix} {ch.title}"
+        rows.append(
+            [
+                InlineKeyboardButton(
+                    text=text,
+                    url=url,
+                    icon_custom_emoji_id=icon_custom_emoji_id,
+                )
+            ]
+        )
+    rows.append(
+        [
+            InlineKeyboardButton(
+                text=check_text,
+                callback_data=CB_CHECK_SUB,
+                icon_custom_emoji_id=check_icon_custom_emoji_id,
+            )
+        ]
+    )
     return InlineKeyboardMarkup(inline_keyboard=rows)
 
 

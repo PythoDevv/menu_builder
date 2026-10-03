@@ -18,7 +18,6 @@ from db.queries import (
     get_contents,
     get_item,
     get_items,
-    get_menu_columns,
     get_my_points_settings,
     get_ref_text,
     get_referral_count,
@@ -56,12 +55,11 @@ async def node_kb(node_id: Optional[int]) -> Keyboard:
 
 
 async def build_menu_kb(children: list[MenuItem], is_root: bool) -> Keyboard:
-    """Saqlangan ko'rinish va "Ballarim" sozlamalari bilan menyu yaratadi."""
+    """Tugmalarning alohida ko'rinishi va "Ballarim" sozlamalari bilan menyu yaratadi."""
     points = await get_my_points_settings() if is_root else None
     return menu_kb(
         children,
         is_root=is_root,
-        columns=await get_menu_columns(),
         my_points_enabled=bool(points["enabled"]) if points else True,
         my_points_text=str(points["text"]) if points else "",
         my_points_style=points["style"] if points else None,
