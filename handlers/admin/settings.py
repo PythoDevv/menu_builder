@@ -10,17 +10,30 @@ from db.queries import (
     get_channels,
     get_items,
     get_menu_columns,
+    get_my_points_settings,
     get_start_message,
     get_sub_message,
     is_phone_required,
     set_menu_columns,
+    set_my_points_enabled,
+    set_my_points_style,
+    set_my_points_text,
     set_start_message,
     set_sub_message,
     toggle_phone_required,
 )
 from handlers.admin.common import NOT_COMMAND, admin_router
-from handlers.admin.states import LayoutSG, PanelSG, PhoneSG, StartSG, SubSG
+from handlers.admin.states import (
+    LayoutSG,
+    MyPointsSG,
+    PanelSG,
+    PhoneSG,
+    StartSG,
+    SubSG,
+)
 from keyboards.admin_kb import (
+    BUTTON_STYLE_OPTIONS,
+    BTN_BACK,
     BTN_DELETE,
     BTN_LAYOUT,
     BTN_LT_ONE,
@@ -29,6 +42,9 @@ from keyboards.admin_kb import (
     BTN_OFF,
     BTN_ON,
     BTN_PHONE,
+    BTN_POINTS,
+    BTN_POINTS_RENAME,
+    BTN_POINTS_STYLE,
     BTN_ST_ADD,
     BTN_ST_EDIT,
     BTN_START_MSG,
@@ -37,13 +53,21 @@ from keyboards.admin_kb import (
     BTN_VIEW,
     BTN_YES_DELETE,
     cancel_kb,
+    button_style_kb,
+    button_style_label,
     confirm_delete_kb,
     layout_kb,
+    my_points_settings_kb,
     phone_settings_kb,
     start_msg_kb,
     sub_msg_kb,
 )
-from keyboards.user_kb import menu_kb, subscribe_kb
+from keyboards.user_kb import (
+    BTN_BACK as USER_BACK,
+    BTN_HOME as USER_HOME,
+    menu_kb,
+    subscribe_kb,
+)
 from utils.content import TYPE_LABELS, extract_content, send_raw_content
 from utils.texts import DEFAULT_SUB_MESSAGE
 
@@ -277,14 +301,22 @@ async def preview_layout(message: Message, state: FSMContext) -> None:
     """Asosiy menyuni haqiqiy klaviatura sifatida ko'rsatadi."""
     columns = await get_menu_columns()
     items = await get_items(None, active_only=True)
-    if not items:
+    points = await get_my_points_settings()
+    if not items and not points["enabled"]:
         await message.answer("❗️ Asosiy menyuda faol tugma yo'q")
         return
 
     await message.answer(
         "👇 Foydalanuvchi asosiy menyuni shunday ko'radi:\n\n"
         "Istalgan tugmani bossangiz sozlamaga qaytasiz.",
-        reply_markup=menu_kb(items, is_root=True, columns=columns),
+        reply_markup=menu_kb(
+            items,
+            is_root=True,
+            columns=columns,
+            my_points_enabled=bool(points["enabled"]),
+            my_points_text=str(points["text"]),
+            my_points_style=points["style"],
+        ),
     )
 
 
@@ -292,3 +324,94 @@ async def preview_layout(message: Message, state: FSMContext) -> None:
 async def back_from_preview(message: Message, state: FSMContext) -> None:
     """Namunadagi tugma bosilsa — sozlama ekraniga qaytamiz."""
     await show_layout(message, state, await get_menu_columns())
+
+
+# ----------------------------------------------------------- Ballarim tugmasi
+async def show_my_points(message: Message, state: FSMContext) -> None:
+    settings = await get_my_points_settings()
+    enabled = bool(settings["enabled"])
+    await state.set_state(MyPointsSG.show)
+    await message.answer(
+        "🏆 <b>Ballarim tugmasi</b>\n\n"
+        f"Holat: <b>{'🟢 KO‘RINADI' if enabled else '🔴 YASHIRILGAN'}</b>\n"
+        f"Matni: <b>{escape(str(settings['text']))}</b>\n"
+        f"Rangi: <b>{button_style_label(settings['style'])}</b>\n\n"
+        "Telegram faqat oddiy, ko‘k, yashil va qizil uslublarni qo‘llaydi; "
+        "sariq fon Bot API’da mavjud emas.",
+        reply_markup=my_points_settings_kb(enabled),
+    )
+
+
+@router.message(PanelSG.home, F.text == BTN_POINTS)
+async def open_my_points(message: Message, state: FSMContext) -> None:
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.show, F.text.in_({BTN_ON, BTN_OFF}))
+async def toggle_my_points(message: Message, state: FSMContext) -> None:
+    settings = await get_my_points_settings()
+    await set_my_points_enabled(not bool(settings["enabled"]))
+    await message.answer("✅ O'zgartirildi")
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.show, F.text == BTN_POINTS_RENAME)
+async def ask_my_points_text(message: Message, state: FSMContext) -> None:
+    await state.set_state(MyPointsSG.waiting_text)
+    await message.answer(
+        "✏️ Yangi tugma matnini yuboring.\n\nMaksimum: 64 ta belgi.",
+        reply_markup=cancel_kb(),
+    )
+
+
+@router.message(MyPointsSG.waiting_text, NOT_COMMAND)
+async def save_my_points_text(message: Message, state: FSMContext) -> None:
+    text = (message.text or "").strip()
+    if not text or len(text) > 64:
+        await message.answer(
+            "❗️ Matn bo'sh bo'lmasin va 64 ta belgidan oshmasin.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    if text in {USER_BACK, USER_HOME}:
+        await message.answer(
+            "❗️ Bu matn menyuning xizmat tugmasi uchun band. Boshqa nom yuboring.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    root_items = await get_items(None)
+    if any(item.title == text for item in root_items):
+        await message.answer(
+            "❗️ Asosiy menyuda bunday nomli tugma bor. Boshqa nom yuboring.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    await set_my_points_text(text)
+    await message.answer("✅ Tugma matni saqlandi")
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.show, F.text == BTN_POINTS_STYLE)
+async def ask_my_points_style(message: Message, state: FSMContext) -> None:
+    settings = await get_my_points_settings()
+    await state.set_state(MyPointsSG.style)
+    await message.answer(
+        "🎨 <b>Ballarim tugmasi rangi</b>\n\n"
+        f"Hozir: <b>{button_style_label(settings['style'])}</b>\n\n"
+        "Telegram ruxsat bergan ranglardan birini tanlang. "
+        "Sariq rang Bot API’da yo‘q.",
+        reply_markup=button_style_kb(),
+    )
+
+
+@router.message(MyPointsSG.style, F.text.in_(set(BUTTON_STYLE_OPTIONS)))
+async def save_my_points_style(message: Message, state: FSMContext) -> None:
+    style = BUTTON_STYLE_OPTIONS[message.text]
+    await set_my_points_style(style)
+    await message.answer(f"✅ Tugma rangi: <b>{button_style_label(style)}</b>")
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.style, F.text == BTN_BACK)
+async def my_points_style_back(message: Message, state: FSMContext) -> None:
+    await show_my_points(message, state)

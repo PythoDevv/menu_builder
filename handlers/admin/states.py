@@ -70,6 +70,12 @@ class LayoutSG(StatesGroup):
     show = State()
 
 
+class MyPointsSG(StatesGroup):
+    show = State()
+    waiting_text = State()
+    style = State()
+
+
 class BroadcastSG(StatesGroup):
     waiting_message = State()
     confirm = State()
@@ -91,6 +97,7 @@ ALL_STATES = (
     *RefTextSG.__all_states__,
     *PhoneSG.__all_states__,
     *LayoutSG.__all_states__,
+    *MyPointsSG.__all_states__,
     *BroadcastSG.__all_states__,
     *ExcelSG.__all_states__,
 )

@@ -9,6 +9,7 @@ from html import escape
 from typing import Optional
 
 from aiogram import F, Router
+from aiogram.filters import BaseFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import LinkPreviewOptions, Message
 
@@ -18,10 +19,11 @@ from db.queries import (
     get_item,
     get_items,
     get_menu_columns,
+    get_my_points_settings,
     get_ref_text,
     get_referral_count,
 )
-from keyboards.user_kb import BTN_BACK, BTN_HOME, BTN_MY_POINTS, Keyboard, menu_kb, share_kb
+from keyboards.user_kb import BTN_BACK, BTN_HOME, Keyboard, menu_kb, share_kb
 from utils.admins import is_admin
 from utils.content import send_content
 from utils.referral import ref_link, render_ref_text
@@ -50,7 +52,20 @@ async def current_node_id(state: FSMContext) -> Optional[int]:
 
 async def node_kb(node_id: Optional[int]) -> Keyboard:
     children = await get_items(node_id, active_only=True)
-    return menu_kb(children, is_root=node_id is None, columns=await get_menu_columns())
+    return await build_menu_kb(children, is_root=node_id is None)
+
+
+async def build_menu_kb(children: list[MenuItem], is_root: bool) -> Keyboard:
+    """Saqlangan ko'rinish va "Ballarim" sozlamalari bilan menyu yaratadi."""
+    points = await get_my_points_settings() if is_root else None
+    return menu_kb(
+        children,
+        is_root=is_root,
+        columns=await get_menu_columns(),
+        my_points_enabled=bool(points["enabled"]) if points else True,
+        my_points_text=str(points["text"]) if points else "",
+        my_points_style=points["style"] if points else None,
+    )
 
 
 async def _send_contents(message: Message, item_id: int, kb: Keyboard) -> None:
@@ -70,7 +85,7 @@ async def open_node(message: Message, state: FSMContext, node_id: Optional[int])
     """Bo'lim ichiga kiradi: kontentini yuboradi va ichki tugmalarini ko'rsatadi."""
     await state.update_data({KEY_NODE: node_id})
     children = await get_items(node_id, active_only=True)
-    kb = menu_kb(children, is_root=node_id is None, columns=await get_menu_columns())
+    kb = await build_menu_kb(children, is_root=node_id is None)
 
     if node_id is not None and await get_contents(node_id):
         await _send_contents(message, node_id, kb)
@@ -130,7 +145,13 @@ async def go_back(message: Message, state: FSMContext) -> None:
     await open_node(message, state, parent_id)
 
 
-@router.message(F.text == BTN_MY_POINTS)
+class MyPointsFilter(BaseFilter):
+    async def __call__(self, message: Message) -> bool:
+        settings = await get_my_points_settings()
+        return bool(settings["enabled"]) and message.text == settings["text"]
+
+
+@router.message(MyPointsFilter())
 async def my_points(message: Message) -> None:
     """Doimiy 'Ballarim' tugmasi — shartli tugma bosilishini kutmasdan ham ko'rinadi."""
     user_id = message.from_user.id

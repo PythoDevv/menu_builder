@@ -41,6 +41,7 @@ BTN_STATS = "👥 Statistika"
 BTN_ADMINS = "👮 Adminlar"
 BTN_REF_TEXT = "✍️ Taklif matni"
 BTN_LAYOUT = "🧩 Menyu ko'rinishi"
+BTN_POINTS = "🏆 Ballarim tugmasi"
 
 # ---------------------------------------------------------------------- kanallar
 BTN_CH_ADD = "➕ Kanal qo'shish"
@@ -97,6 +98,10 @@ BTN_SUB_RESET = "♻️ Standartga qaytarish"
 BTN_LT_ONE = "1️⃣ Bittadan"
 BTN_LT_TWO = "2️⃣ Ikkitadan"
 
+# ----------------------------------------------------------- Ballarim tugmasi
+BTN_POINTS_RENAME = "✏️ Matnini o'zgartirish"
+BTN_POINTS_STYLE = "🎨 Rangini o'zgartirish"
+
 # ---------------------------------------------------------------------- broadcast
 BTN_BC_SEND = "✅ Yuborish"
 
@@ -132,7 +137,7 @@ def admin_home_kb() -> ReplyKeyboardMarkup:
             [BTN_PHONE, BTN_REF_TEXT],
             [BTN_BROADCAST, BTN_EXCEL],
             [BTN_STATS, BTN_ADMINS],
-            [BTN_LAYOUT],
+            [BTN_LAYOUT, BTN_POINTS],
             [BTN_EXIT],
         ],
         "Bo'limni tanlang",
@@ -247,13 +252,18 @@ def button_style_label(style: Optional[str]) -> str:
 
 
 def button_style_kb() -> ReplyKeyboardMarkup:
-    return _kb(
-        [
-            [BTN_STYLE_DEFAULT],
-            [BTN_STYLE_PRIMARY, BTN_STYLE_SUCCESS, BTN_STYLE_DANGER],
-            [BTN_BACK, BTN_HOME],
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BTN_STYLE_DEFAULT)],
+            [
+                KeyboardButton(text=BTN_STYLE_PRIMARY, style="primary"),
+                KeyboardButton(text=BTN_STYLE_SUCCESS, style="success"),
+                KeyboardButton(text=BTN_STYLE_DANGER, style="danger"),
+            ],
+            [KeyboardButton(text=BTN_BACK), KeyboardButton(text=BTN_HOME)],
         ],
-        "Tugma rangini tanlang",
+        resize_keyboard=True,
+        input_field_placeholder="Tugma rangini tanlang",
     )
 
 
@@ -326,6 +336,17 @@ def phone_settings_kb(enabled: bool) -> ReplyKeyboardMarkup:
 def layout_kb() -> ReplyKeyboardMarkup:
     """Ikkala variant ham turadi; qaysi biri faolligi xabar matnida yoziladi."""
     return _kb([[BTN_LT_ONE, BTN_LT_TWO], [BTN_VIEW], [BTN_HOME]], "Ko'rinishni tanlang")
+
+
+# ----------------------------------------------------------- BALLARIM TUGMASI
+def my_points_settings_kb(enabled: bool) -> ReplyKeyboardMarkup:
+    return _kb(
+        [
+            [BTN_OFF if enabled else BTN_ON],
+            [BTN_POINTS_RENAME, BTN_POINTS_STYLE],
+            [BTN_HOME],
+        ]
+    )
 
 
 # ---------------------------------------------------------------------- BROADCAST

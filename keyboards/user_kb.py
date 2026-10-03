@@ -15,6 +15,7 @@ from aiogram.types import (
 )
 
 from db.models import Channel, MenuItem
+from db.queries import DEFAULT_MY_POINTS_TEXT
 from utils.referral import share_url
 
 BTN_BACK = "⬅️ Orqaga"
@@ -22,7 +23,7 @@ BTN_HOME = "🏠 Bosh menyu"
 BTN_CHECK_SUB = "✅ Tekshirish"
 BTN_PHONE = "📱 Raqamni yuborish"
 BTN_SHARE = "📤 Do'stlarga yuborish"
-BTN_MY_POINTS = "🏆 Ballarim"
+BTN_MY_POINTS = DEFAULT_MY_POINTS_TEXT
 
 CB_CHECK_SUB = "check_sub"
 
@@ -61,12 +62,18 @@ def _rows(items: Sequence[MenuItem], columns: int) -> list[list[KeyboardButton]]
 
 
 def menu_kb(
-    children: list[MenuItem], is_root: bool, columns: int = DEFAULT_COLUMNS
+    children: list[MenuItem],
+    is_root: bool,
+    columns: int = DEFAULT_COLUMNS,
+    my_points_enabled: bool = True,
+    my_points_text: str = BTN_MY_POINTS,
+    my_points_style: Optional[str] = None,
 ) -> Keyboard:
     """Menyu tugmalari. Ildizda 'Orqaga' kerak emas, 'Ballarim' esa faqat ildizda bor."""
     rows = _rows(children, columns)
     if is_root:
-        rows.append([KeyboardButton(text=BTN_MY_POINTS)])
+        if my_points_enabled:
+            rows.append([KeyboardButton(text=my_points_text, style=my_points_style)])
     else:
         rows.append([KeyboardButton(text=BTN_BACK), KeyboardButton(text=BTN_HOME)])
     if not rows:

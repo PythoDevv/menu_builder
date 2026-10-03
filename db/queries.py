@@ -23,6 +23,12 @@ K_SUB_FILE = "sub_file_id"
 K_SUB_TEXT = "sub_text"
 K_REF_TEXT = "ref_text"
 K_MENU_COLUMNS = "menu_columns"
+K_MY_POINTS_ENABLED = "my_points_enabled"
+K_MY_POINTS_TEXT = "my_points_text"
+K_MY_POINTS_STYLE = "my_points_style"
+
+DEFAULT_MY_POINTS_TEXT = "🏆 Ballarim"
+BUTTON_STYLES = {"primary", "success", "danger"}
 
 
 # ============================================================================ USERS
@@ -331,7 +337,7 @@ async def set_item_referrals(item_id: int, count: int) -> None:
 
 async def set_item_style(item_id: int, style: Optional[str]) -> None:
     """Telegram tugma uslubi. None -> oddiy ko'rinish."""
-    if style is not None and style not in {"primary", "success", "danger"}:
+    if style is not None and style not in BUTTON_STYLES:
         raise ValueError(f"Noto'g'ri tugma uslubi: {style}")
     async with session_maker() as s:
         await s.execute(
@@ -552,6 +558,42 @@ async def set_menu_columns(columns: int) -> int:
     value = 2 if columns == 2 else 1
     await set_setting(K_MENU_COLUMNS, str(value))
     return value
+
+
+async def get_my_points_settings() -> dict[str, object]:
+    """Asosiy menyudagi "Ballarim" tugmasi sozlamalari."""
+    keys = (K_MY_POINTS_ENABLED, K_MY_POINTS_TEXT, K_MY_POINTS_STYLE)
+    async with session_maker() as s:
+        rows = await s.execute(
+            select(Setting.key, Setting.value).where(Setting.key.in_(keys))
+        )
+        values = {key: value for key, value in rows}
+
+    style = values.get(K_MY_POINTS_STYLE)
+    if style not in BUTTON_STYLES:
+        style = None
+    return {
+        "enabled": values.get(K_MY_POINTS_ENABLED, "1") != "0",
+        "text": values.get(K_MY_POINTS_TEXT) or DEFAULT_MY_POINTS_TEXT,
+        "style": style,
+    }
+
+
+async def set_my_points_enabled(enabled: bool) -> None:
+    await set_setting(K_MY_POINTS_ENABLED, "1" if enabled else "0")
+
+
+async def set_my_points_text(text: str) -> None:
+    value = text.strip()
+    if not value or len(value) > 64:
+        raise ValueError("Tugma matni 1–64 ta belgi bo'lishi kerak")
+    await set_setting(K_MY_POINTS_TEXT, value)
+
+
+async def set_my_points_style(style: Optional[str]) -> None:
+    if style is not None and style not in BUTTON_STYLES:
+        raise ValueError(f"Noto'g'ri tugma uslubi: {style}")
+    await set_setting(K_MY_POINTS_STYLE, style)
 
 
 async def is_phone_required() -> bool:

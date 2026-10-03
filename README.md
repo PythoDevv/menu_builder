@@ -15,6 +15,7 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 - **Menyu ko'rinishi** — tugmalar qatorda **bittadan** yoki **ikkitadan** chiqishi admin paneldan tanlanadi. Ikkitadan rejimida nomi uzun tugma qatorni o'zi egallaydi (matni siqilib ketmaydi).
 - **Kontent** — `file_id` + HTML holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi). Oddiy va premium stikerlar ham qo'llanadi.
 - **Tugma rangi** — har bir menyu tugmasi uchun oddiy, ko'k, yashil yoki qizil Telegram uslubini tanlash mumkin.
+- **Ballarim tugmasi** — admin paneldan ko'rsatish/yashirish, matni va rangini o'zgartirish mumkin.
 - **Taklif (referal) sharti** — tugma faqat N ta odam taklif qilgandan keyin ochiladi. Shart tugma qo'shilayotganda so'raladi, keyin ham o'zgartiriladi. Shart bajarilmaganda chiqadigan matn admin paneldan sozlanadi.
 - **Telefon so'rash** — admin paneldan yoqiladi/o'chiriladi. Bir marta olingan raqam qayta so'ralmaydi.
 - **Hammaga xabar** — bloklaganlar avtomatik belgilanadi.
@@ -77,6 +78,7 @@ oddiy foydalanuvchi menyusini ko'radi.
 | ✍️ Taklif matni | Taklif sharti bajarilmaganda chiqadigan matn: ko'rish, o'zgartirish, standartga qaytarish |
 | ☎️ Telefon so'rash | ON / OFF |
 | 🧩 Menyu ko'rinishi | Tugmalar 1 tadan yoki 2 tadan chiqishi + namunani ko'rish |
+| 🏆 Ballarim tugmasi | Ko'rsatish/yashirish, matni va rangini o'zgartirish |
 | 📨 Xabar yuborish | Hamma faol foydalanuvchiga |
 | 📊 Excel | Faylni olish yoki qo'lda yangilash |
 | 👥 Statistika | Jami / faol / bugun / 7 kun |
@@ -102,9 +104,11 @@ Ro'yxatda shartli tugmalar `🔒5` belgisi bilan ko'rinadi.
 (ostida **📤 Do'stlarga yuborish** tugmasi bilan). Talab bajarilgach tugma
 o'z-o'zidan ochiladi — hech narsani qayta bosish shart emas.
 
-Bundan tashqari, asosiy menyu tagida doimiy **🏆 Ballarim** tugmasi bor —
-hech qanday shartli tugmaga bog'liq bo'lmasdan, istalgan vaqtda taklif
-qilinganlar sonini va shaxsiy havolani ko'rsatadi.
+Bundan tashqari, asosiy menyu tagidagi **🏆 Ballarim** tugmasi hech qanday shartli
+tugmaga bog'liq bo'lmasdan taklif qilinganlar sonini va shaxsiy havolani ko'rsatadi.
+Admin uning ko'rinishini, matnini va Telegram ruxsat bergan rangini o'zgartira oladi.
+Telegram Bot API sariq fon bermaydi; sariq urg'u kerak bo'lsa tugma matnida `🟡`
+emoji ishlatish mumkin, lekin tugmaning haqiqiy foni sariq bo'lmaydi.
 
 Matnda ishlatiladigan o'rinbosarlar:
 

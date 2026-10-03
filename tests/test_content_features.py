@@ -3,6 +3,7 @@ from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
 from db.models import MenuItem
+from keyboards.admin_kb import button_style_kb
 from keyboards.user_kb import COLUMNS_ONE, COLUMNS_TWO, menu_kb
 from utils.content import extract_content, send_content
 
@@ -51,6 +52,15 @@ class PremiumStickerSendingTest(unittest.IsolatedAsyncioTestCase):
 
 
 class MenuButtonStyleTest(unittest.TestCase):
+    def test_admin_color_picker_previews_supported_colors(self) -> None:
+        keyboard = button_style_kb()
+        styles = [
+            button.model_dump(exclude_none=True).get("style")
+            for button in keyboard.keyboard[1]
+        ]
+
+        self.assertEqual(styles, ["primary", "success", "danger"])
+
     def test_menu_button_uses_saved_style(self) -> None:
         item = MenuItem(title="Yashil tugma", position=1)
         item.button_style = "success"
@@ -68,6 +78,29 @@ class MenuButtonStyleTest(unittest.TestCase):
 
         button = keyboard.keyboard[0][0]
         self.assertNotIn("style", button.model_dump(exclude_none=True))
+
+    def test_my_points_button_can_be_hidden(self) -> None:
+        keyboard = menu_kb(
+            [],
+            is_root=True,
+            columns=COLUMNS_ONE,
+            my_points_enabled=False,
+        )
+
+        self.assertEqual(keyboard.__class__.__name__, "ReplyKeyboardRemove")
+
+    def test_my_points_button_uses_custom_text_and_style(self) -> None:
+        keyboard = menu_kb(
+            [],
+            is_root=True,
+            columns=COLUMNS_ONE,
+            my_points_text="⭐ Mening natijam",
+            my_points_style="primary",
+        )
+
+        button = keyboard.keyboard[0][0]
+        self.assertEqual(button.text, "⭐ Mening natijam")
+        self.assertEqual(button.model_dump(exclude_none=True)["style"], "primary")
 
 
 class MenuLayoutTest(unittest.TestCase):
