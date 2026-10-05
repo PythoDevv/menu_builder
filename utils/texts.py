@@ -34,3 +34,11 @@ DEFAULT_MY_POINTS_MESSAGE = (
     "Do'stlaringizni shu havola orqali taklif qiling:\n"
     "{link}"
 )
+
+#: "Reyting" tugmasi bosilganda chiqadigan standart post.
+#: ``{users-N}`` N ta eng ko'p taklif qilgan foydalanuvchini chiqaradi.
+DEFAULT_RATING_MESSAGE = (
+    "🏅 <b>Takliflar reytingi</b>\n\n"
+    "{users-10}\n\n"
+    "Eng faol ishtirokchilar ro'yxati."
+)

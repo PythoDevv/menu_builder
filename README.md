@@ -16,6 +16,7 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 - **Kontent** — `file_id` + Telegram entitylari holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi). Premium custom emoji ID si ham yo'qolmaydi. Oddiy va premium stikerlar ham qo'llanadi.
 - **Tugma rangi** — har bir menyu tugmasi uchun oddiy, ko'k, yashil yoki qizil Telegram uslubini tanlash mumkin.
 - **Ballarim tugmasi** — admin paneldan ko'rsatish/yashirish, nomi, rangi va bosilganda chiqadigan xabarni o'zgartirish mumkin. Tugma ikonkasida va xabarda premium custom emoji saqlanadi.
+- **Reyting tugmasi** — ko'rsatish/yashirish, nomi, premium emoji ikonka, rangi va 1–4 talik joylashuvi boshqariladi. Reyting posti formatlash/premium emojilarni saqlaydi; `{users-10}` kabi kalit top foydalanuvchilarni chiqaradi.
 - **Taklif (referal) sharti** — tugma faqat N ta odam taklif qilgandan keyin ochiladi. Shart tugma qo'shilayotganda so'raladi, keyin ham o'zgartiriladi. Shart bajarilmaganda chiqadigan matn admin paneldan sozlanadi.
 - **Telefon so'rash** — admin paneldan yoqiladi/o'chiriladi. Bir marta olingan raqam qayta so'ralmaydi.
 - **Hammaga xabar** — bloklaganlar avtomatik belgilanadi.
@@ -51,12 +52,31 @@ cd /root/menu_builder            # serverdagi papka
 git pull
 source venv/bin/activate
 pip install -r requirements.txt
-python migrate.py                # yangi jadvallarni qo'shadi
+python migrate.py                # avval dump oladi, keyin migratsiyani qo'llaydi
 supervisorctl restart menu_builder_bot
 ```
 
 `migrate.py` qaysi fayl qo'llanganini `schema_migrations` jadvalida saqlaydi —
 qayta ishga tushirsangiz bajarilgani takrorlanmaydi.
+
+`migrate.py` har ishga tushganda, SQL ishlashidan **oldin** baza `dumps/` papkasiga
+`backup_0001_YYYYMMDD_HHMMSS_pre_migrate.dump` ko'rinishida saqlanadi. `pg_dump`
+muvaffaqiyatsiz tugasa migratsiya umuman boshlanmaydi. Yangi migratsiya bo'lmasa
+ham dump yaratiladi, SQL esa qayta bajarilmaydi. Serverda PostgreSQL client
+(`pg_dump`, `pg_restore`) o'rnatilgan bo'lishi kerak.
+
+Dumpni qayta tiklash:
+
+```bash
+supervisorctl stop menu_builder_bot
+python3 restore.py
+supervisorctl start menu_builder_bot
+```
+
+`restore.py` raqamlangan dumplarni eng yangisidan boshlab ko'rsatadi (Enter bosilsa
+oxirgisi tanlanadi). Tanlangan dump yozilishidan oldin bazaning joriy holati ham
+`pre_restore` nomi bilan avtomatik dump qilinadi. Yakuniy tasdiq uchun `RESTORE`
+so'zini yozish kerak.
 
 Yangi migratsiya qo'shish uchun `migrations/` ichiga `002_...sql` ko'rinishida
 fayl tashlang (nomi bo'yicha tartib bilan bajariladi).
@@ -78,6 +98,7 @@ oddiy foydalanuvchi menyusini ko'radi.
 | ✍️ Taklif matni | Taklif sharti bajarilmaganda chiqadigan matn: ko'rish, o'zgartirish, standartga qaytarish |
 | ☎️ Telefon so'rash | ON / OFF |
 | 🏆 Ballarim tugmasi | Ko'rsatish/yashirish, nomi, rangi, premium emoji va natija xabarini o'zgartirish |
+| 🏅 Reyting tugmasi | Ko'rsatish/yashirish, nomi, rangi, premium emoji, joylashuvi va `{users-N}` kalitli postni o'zgartirish |
 | 📨 Xabar yuborish | Hamma faol foydalanuvchiga |
 | 📊 Excel | Faylni olish yoki qo'lda yangilash |
 | 👥 Statistika | Jami / faol / bugun / 7 kun |
@@ -115,6 +136,19 @@ Telegram ichida formatlangan premium custom emoji yuborilsa, uning
 `custom_emoji_id` qiymati HTML shablon bilan birga saqlanadi. Tugma nomidagi
 birinchi premium custom emoji alohida ikonka sifatida saqlanadi. Buning ishlashi
 uchun bot egasining Telegram Premium obunasi faol bo'lishi kerak.
+
+## Reyting posti
+
+Admin panel → **🏅 Reyting tugmasi** orqali tugma va post sozlanadi. Post ichida
+`{users-N}` yozilsa, shu joyga eng ko'p odam taklif qilgan N ta foydalanuvchi
+joylanadi. Masalan, `{users-10}` — top 10. N qiymati 1–50 oralig'ida xavfsiz
+chegaralanadi. Ro'yxatning tepasi va pastida aynan bittadan bo'sh qator avtomatik
+qoldiriladi.
+
+Post Telegram formatida saqlanadi: qalin/kursiv matn, havola va premium custom
+emojilar ishlaydi. Tugma nomiga qo'shilgan birinchi premium custom emoji alohida
+ikonka sifatida ishlatiladi. 2 talik joylashuvda standart holatda **Ballarim** va
+**Reyting** bitta qatorda chiqadi.
 
 Matnda ishlatiladigan o'rinbosarlar:
 
@@ -185,6 +219,8 @@ qo'shilsinmi?"* — **✅ Ha** / **❌ Yo'q** tugmalari bilan.
 ```
 main.py            — polling, middleware va routerlarni ulash
 migrate.py         — SQL migratsiyalarni qo'llash
+restore.py         — raqamlangan dumpni tanlab bazaga qayta tiklash
+db_backup.py       — pg_dump/pg_restore va dump raqamlash logikasi
 config.py          — .env sozlamalari
 db/                — modellar va barcha so'rovlar
 migrations/        — .sql migratsiyalar

@@ -29,8 +29,15 @@ K_MY_POINTS_TEXT = "my_points_text"
 K_MY_POINTS_STYLE = "my_points_style"
 K_MY_POINTS_ICON = "my_points_icon_custom_emoji_id"
 K_MY_POINTS_MESSAGE = "my_points_message"
+K_RATING_ENABLED = "rating_enabled"
+K_RATING_TEXT = "rating_text"
+K_RATING_STYLE = "rating_style"
+K_RATING_ICON = "rating_icon_custom_emoji_id"
+K_RATING_MESSAGE = "rating_message"
+K_RATING_ROW_SIZE = "rating_row_size"
 
 DEFAULT_MY_POINTS_TEXT = "🏆 Ballarim"
+DEFAULT_RATING_TEXT = "🏅 Reyting"
 DEFAULT_SUB_CHECK_TEXT = "✅ Tekshirish"
 BUTTON_STYLES = {"primary", "success", "danger"}
 
@@ -159,7 +166,7 @@ async def get_top_referrers(limit: int = 5) -> list[tuple[User, int]]:
             select(User.referred_by, func.count(User.id).label("cnt"))
             .where(User.referred_by.is_not(None))
             .group_by(User.referred_by)
-            .order_by(func.count(User.id).desc())
+            .order_by(func.count(User.id).desc(), User.referred_by.asc())
             .limit(limit)
         )
         pairs = list(rows)
@@ -672,6 +679,75 @@ async def set_my_points_message(text_html: str) -> None:
 
 async def delete_my_points_message() -> None:
     await set_setting(K_MY_POINTS_MESSAGE, None)
+
+
+async def get_rating_settings() -> dict[str, object]:
+    """Asosiy menyudagi reyting tugmasi va posti sozlamalari."""
+    keys = (
+        K_RATING_ENABLED,
+        K_RATING_TEXT,
+        K_RATING_STYLE,
+        K_RATING_ICON,
+        K_RATING_MESSAGE,
+        K_RATING_ROW_SIZE,
+    )
+    async with session_maker() as s:
+        rows = await s.execute(
+            select(Setting.key, Setting.value).where(Setting.key.in_(keys))
+        )
+        values = {key: value for key, value in rows}
+
+    style = values.get(K_RATING_STYLE)
+    if style not in BUTTON_STYLES:
+        style = None
+    try:
+        row_size = int(values.get(K_RATING_ROW_SIZE) or "2")
+    except ValueError:
+        row_size = 2
+    if row_size not in {1, 2, 3, 4}:
+        row_size = 2
+    return {
+        "enabled": values.get(K_RATING_ENABLED, "1") != "0",
+        "text": values.get(K_RATING_TEXT) or DEFAULT_RATING_TEXT,
+        "style": style,
+        "icon_custom_emoji_id": values.get(K_RATING_ICON),
+        "message": values.get(K_RATING_MESSAGE),
+        "row_size": row_size,
+    }
+
+
+async def set_rating_enabled(enabled: bool) -> None:
+    await set_setting(K_RATING_ENABLED, "1" if enabled else "0")
+
+
+async def set_rating_text(
+    text: str, icon_custom_emoji_id: Optional[str] = None
+) -> None:
+    value = text.strip()
+    if not value or len(value) > 64:
+        raise ValueError("Tugma matni 1–64 ta belgi bo'lishi kerak")
+    await set_setting(K_RATING_TEXT, value)
+    await set_setting(K_RATING_ICON, icon_custom_emoji_id)
+
+
+async def set_rating_style(style: Optional[str]) -> None:
+    if style is not None and style not in BUTTON_STYLES:
+        raise ValueError(f"Noto'g'ri tugma uslubi: {style}")
+    await set_setting(K_RATING_STYLE, style)
+
+
+async def set_rating_message(text_html: str) -> None:
+    await set_setting(K_RATING_MESSAGE, text_html)
+
+
+async def delete_rating_message() -> None:
+    await set_setting(K_RATING_MESSAGE, None)
+
+
+async def set_rating_row_size(row_size: int) -> None:
+    if row_size not in {1, 2, 3, 4}:
+        raise ValueError(f"Noto'g'ri qator o'lchami: {row_size}")
+    await set_setting(K_RATING_ROW_SIZE, str(row_size))
 
 
 async def is_phone_required() -> bool:

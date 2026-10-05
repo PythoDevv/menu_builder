@@ -14,6 +14,7 @@ from utils.content import (
     send_content,
 )
 from utils.referral import render_my_points_text
+from utils.rating import rating_limits, render_rating_text
 
 
 class PremiumStickerTest(unittest.TestCase):
@@ -210,6 +211,70 @@ class MenuButtonStyleTest(unittest.TestCase):
             rendered,
             "Ball: <b>7</b>\nhttps://t.me/example?start=ref1",
         )
+
+    def test_rating_button_uses_custom_style_icon_and_two_column_row(self) -> None:
+        keyboard = menu_kb(
+            [],
+            is_root=True,
+            my_points_text="Ballarim",
+            rating_enabled=True,
+            rating_text="Reyting",
+            rating_style="success",
+            rating_icon_custom_emoji_id="rating-premium-emoji-id",
+            rating_row_size=2,
+        )
+
+        self.assertEqual(
+            [[button.text for button in row] for row in keyboard.keyboard],
+            [["Ballarim", "Reyting"]],
+        )
+        rating_button = keyboard.keyboard[0][1]
+        self.assertEqual(rating_button.model_dump(exclude_none=True)["style"], "success")
+        self.assertEqual(
+            rating_button.model_dump(exclude_none=True)["icon_custom_emoji_id"],
+            "rating-premium-emoji-id",
+        )
+
+    def test_rating_three_column_layout_can_fill_with_adjacent_menu_button(self) -> None:
+        item = MenuItem(title="Oldingi", position=1)
+        item.row_size = 3
+
+        keyboard = menu_kb(
+            [item],
+            is_root=True,
+            my_points_text="Ballarim",
+            rating_enabled=True,
+            rating_text="Reyting",
+            rating_row_size=3,
+        )
+
+        self.assertEqual(
+            [[button.text for button in row] for row in keyboard.keyboard],
+            [["Oldingi", "Ballarim", "Reyting"]],
+        )
+
+
+class RatingTemplateTest(unittest.TestCase):
+    def test_users_keyword_renders_requested_top_and_normalizes_blank_lines(self) -> None:
+        users = [
+            (SimpleNamespace(full_name="Ali & Vali", username=None, tg_id=1), 12),
+            (SimpleNamespace(full_name="Zarina", username=None, tg_id=2), 8),
+            (SimpleNamespace(full_name="Kamol", username=None, tg_id=3), 4),
+        ]
+
+        rendered = render_rating_text(
+            "Tepa\n\n\n{users-2}\nPast",
+            users,
+        )
+
+        self.assertEqual(
+            rendered,
+            "Tepa\n\n1. Ali &amp; Vali — <b>12</b> ta\n"
+            "2. Zarina — <b>8</b> ta\n\nPast",
+        )
+
+    def test_users_keyword_limits_are_safe(self) -> None:
+        self.assertEqual(rating_limits("{users-0} / {users-999}"), [1, 50])
 
 
 class MenuLayoutTest(unittest.TestCase):

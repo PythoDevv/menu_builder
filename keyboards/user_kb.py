@@ -15,7 +15,7 @@ from aiogram.types import (
 )
 
 from db.models import Channel, MenuItem
-from db.queries import DEFAULT_MY_POINTS_TEXT, DEFAULT_SUB_CHECK_TEXT
+from db.queries import DEFAULT_MY_POINTS_TEXT, DEFAULT_RATING_TEXT, DEFAULT_SUB_CHECK_TEXT
 from utils.referral import share_url
 
 BTN_BACK = "⬅️ Orqaga"
@@ -24,6 +24,7 @@ BTN_CHECK_SUB = DEFAULT_SUB_CHECK_TEXT
 BTN_PHONE = "📱 Raqamni yuborish"
 BTN_SHARE = "📤 Do'stlarga yuborish"
 BTN_MY_POINTS = DEFAULT_MY_POINTS_TEXT
+BTN_RATING = DEFAULT_RATING_TEXT
 
 CB_CHECK_SUB = "check_sub"
 
@@ -44,19 +45,20 @@ def _item_row_size(item: MenuItem) -> int:
     return value if value in {1, 2, 3, 4} else 1
 
 
-def _rows(items: Sequence[MenuItem]) -> list[list[KeyboardButton]]:
-    """Ketma-ket, bir xil o'lchamli tugmalarni qatorlarga guruhlaydi."""
-    rows: list[list[MenuItem]] = []
-    pending: list[MenuItem] = []
+def _button_rows(
+    buttons: Sequence[tuple[KeyboardButton, int]],
+) -> list[list[KeyboardButton]]:
+    """Ketma-ket, bir xil sig'imli tugmalarni qatorlarga guruhlaydi."""
+    rows: list[list[KeyboardButton]] = []
+    pending: list[KeyboardButton] = []
     pending_size: Optional[int] = None
 
-    for item in items:
-        row_size = _item_row_size(item)
+    for button, row_size in buttons:
         if pending and row_size != pending_size:
             rows.append(pending)
             pending = []
         pending_size = row_size
-        pending.append(item)
+        pending.append(button)
         if len(pending) == row_size:
             rows.append(pending)
             pending = []
@@ -64,7 +66,13 @@ def _rows(items: Sequence[MenuItem]) -> list[list[KeyboardButton]]:
 
     if pending:
         rows.append(pending)
-    return [[_menu_button(item) for item in row] for row in rows]
+    return rows
+
+
+def _rows(items: Sequence[MenuItem]) -> list[list[KeyboardButton]]:
+    return _button_rows(
+        [(_menu_button(item), _item_row_size(item)) for item in items]
+    )
 
 
 def menu_kb(
@@ -74,21 +82,43 @@ def menu_kb(
     my_points_text: str = BTN_MY_POINTS,
     my_points_style: Optional[str] = None,
     my_points_icon_custom_emoji_id: Optional[str] = None,
+    rating_enabled: bool = False,
+    rating_text: str = BTN_RATING,
+    rating_style: Optional[str] = None,
+    rating_icon_custom_emoji_id: Optional[str] = None,
+    rating_row_size: int = 2,
 ) -> Keyboard:
-    """Menyu tugmalari. Ildizda 'Orqaga' kerak emas, 'Ballarim' esa faqat ildizda bor."""
-    rows = _rows(children)
+    """Menyu tugmalari va ildizdagi doimiy Ballarim/Reyting tugmalari."""
     if is_root:
+        row_size = rating_row_size if rating_row_size in {1, 2, 3, 4} else 2
+        button_specs = [
+            (_menu_button(item), _item_row_size(item)) for item in children
+        ]
         if my_points_enabled:
-            rows.append(
-                [
+            button_specs.append(
+                (
                     KeyboardButton(
                         text=my_points_text,
                         style=my_points_style,
                         icon_custom_emoji_id=my_points_icon_custom_emoji_id,
-                    )
-                ]
+                    ),
+                    row_size if rating_enabled else 1,
+                )
             )
+        if rating_enabled:
+            button_specs.append(
+                (
+                    KeyboardButton(
+                        text=rating_text,
+                        style=rating_style,
+                        icon_custom_emoji_id=rating_icon_custom_emoji_id,
+                    ),
+                    row_size,
+                )
+            )
+        rows = _button_rows(button_specs)
     else:
+        rows = _rows(children)
         rows.append([KeyboardButton(text=BTN_BACK), KeyboardButton(text=BTN_HOME)])
     if not rows:
         return ReplyKeyboardRemove()

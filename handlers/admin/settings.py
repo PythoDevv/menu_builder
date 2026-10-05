@@ -13,6 +13,7 @@ from db.queries import (
     get_channels,
     get_items,
     get_my_points_settings,
+    get_rating_settings,
     get_referral_count,
     get_sub_check_button,
     get_start_message,
@@ -412,7 +413,8 @@ async def save_my_points_text(message: Message, state: FSMContext) -> None:
         )
         return
     root_items = await get_items(None)
-    if any(item.title == text for item in root_items):
+    rating_settings = await get_rating_settings()
+    if any(item.title == text for item in root_items) or text == rating_settings["text"]:
         await message.answer(
             "❗️ Asosiy menyuda bunday nomli tugma bor. Boshqa nom yuboring.",
             reply_markup=cancel_kb(),

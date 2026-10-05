@@ -15,6 +15,8 @@ from db.queries import (
     get_item,
     get_item_path,
     get_items,
+    get_my_points_settings,
+    get_rating_settings,
     move_item,
     rename_item,
     set_item_referrals,
@@ -107,6 +109,15 @@ ASK_COUNT_TEXT = (
     f"0 dan katta butun son yuboring (1 dan {REF_LIMIT} gacha).\n"
     "Masalan: <code>5</code>"
 )
+
+
+async def _is_reserved_root_title(parent_id: Optional[int], title: str) -> bool:
+    """Ildizda doimiy Ballarim/Reyting tugmalari bilan nom to'qnashmasin."""
+    if parent_id is not None:
+        return False
+    points = await get_my_points_settings()
+    rating = await get_rating_settings()
+    return title in {points["text"], rating["text"]}
 
 BAD_COUNT_TEXT = (
     "❗️ Faqat <b>0 dan katta</b> butun son yuboring.\n"
@@ -212,6 +223,13 @@ async def add_title(message: Message, state: FSMContext) -> None:
     if not title or len(title) > TITLE_LIMIT:
         await message.answer(
             f"❗️ Nom bo'sh bo'lmasin va {TITLE_LIMIT} belgidan oshmasin.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    parent_id = (await state.get_data()).get(KEY_NODE)
+    if await _is_reserved_root_title(parent_id, title):
+        await message.answer(
+            "❗️ Bu nom asosiy menyudagi doimiy tugma uchun band. Boshqa nom yuboring.",
             reply_markup=cancel_kb(),
         )
         return
@@ -337,6 +355,14 @@ async def rename(message: Message, state: FSMContext) -> None:
         return
     item_id = await _node_id(state)
     if item_id is not None:
+        item = await get_item(item_id)
+        if item and await _is_reserved_root_title(item.parent_id, title):
+            await message.answer(
+                "❗️ Bu nom asosiy menyudagi doimiy tugma uchun band. "
+                "Boshqa nom yuboring.",
+                reply_markup=cancel_kb(),
+            )
+            return
         await rename_item(item_id, title, icon_custom_emoji_id)
         await message.answer("✅ Nom o'zgartirildi")
     await show_node(message, state, item_id)

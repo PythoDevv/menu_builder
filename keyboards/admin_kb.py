@@ -41,6 +41,7 @@ BTN_STATS = "👥 Statistika"
 BTN_ADMINS = "👮 Adminlar"
 BTN_REF_TEXT = "✍️ Taklif matni"
 BTN_POINTS = "🏆 Ballarim tugmasi"
+BTN_RATING = "🏅 Reyting tugmasi"
 
 # ---------------------------------------------------------------------- kanallar
 BTN_CH_ADD = "➕ Kanal qo'shish"
@@ -116,6 +117,13 @@ BTN_POINTS_STYLE = "🎨 Rangini o'zgartirish"
 BTN_POINTS_MESSAGE = "📝 Natija xabari"
 BTN_POINTS_MESSAGE_RESET = "♻️ Xabarni standartga qaytarish"
 
+# ------------------------------------------------------------ Reyting tugmasi
+BTN_RATING_RENAME = "✏️ Reyting tugmasi nomi"
+BTN_RATING_STYLE = "🎨 Reyting tugmasi rangi"
+BTN_RATING_ROW_SIZE = "🧩 Reyting joylashuvi"
+BTN_RATING_MESSAGE = "📝 Reyting posti"
+BTN_RATING_MESSAGE_RESET = "♻️ Reyting postini standartga qaytarish"
+
 # ---------------------------------------------------------------------- broadcast
 BTN_BC_SEND = "✅ Yuborish"
 
@@ -151,7 +159,7 @@ def admin_home_kb() -> ReplyKeyboardMarkup:
             [BTN_PHONE, BTN_REF_TEXT],
             [BTN_BROADCAST, BTN_EXCEL],
             [BTN_STATS, BTN_ADMINS],
-            [BTN_POINTS],
+            [BTN_POINTS, BTN_RATING],
             [BTN_EXIT],
         ],
         "Bo'limni tanlang",
@@ -396,6 +404,20 @@ def my_points_settings_kb(enabled: bool, custom_message: bool) -> ReplyKeyboardM
     ]
     if custom_message:
         rows.append([BTN_POINTS_MESSAGE_RESET])
+    rows.append([BTN_HOME])
+    return _kb(rows)
+
+
+# ------------------------------------------------------------ REYTING TUGMASI
+def rating_settings_kb(enabled: bool, custom_message: bool) -> ReplyKeyboardMarkup:
+    rows = [
+        [BTN_OFF if enabled else BTN_ON],
+        [BTN_RATING_RENAME, BTN_RATING_STYLE],
+        [BTN_RATING_ROW_SIZE],
+        [BTN_RATING_MESSAGE, BTN_VIEW],
+    ]
+    if custom_message:
+        rows.append([BTN_RATING_MESSAGE_RESET])
     rows.append([BTN_HOME])
     return _kb(rows)
 

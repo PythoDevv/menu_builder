@@ -24,6 +24,8 @@ EXPORT_DIR = BASE_DIR / "exports"
 EXPORT_FILE = EXPORT_DIR / "users.xlsx"
 EXPORT_DIR.mkdir(exist_ok=True)
 
+DUMPS_DIR = BASE_DIR / "dumps"
+
 EXPORT_HOUR = int(os.getenv("EXPORT_HOUR", "0"))
 EXPORT_MINUTE = int(os.getenv("EXPORT_MINUTE", "5"))
 

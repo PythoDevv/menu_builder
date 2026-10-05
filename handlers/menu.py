@@ -19,14 +19,17 @@ from db.queries import (
     get_item,
     get_items,
     get_my_points_settings,
+    get_rating_settings,
     get_ref_text,
     get_referral_count,
+    get_top_referrers,
 )
 from keyboards.user_kb import BTN_BACK, BTN_HOME, Keyboard, menu_kb, share_kb
 from utils.admins import is_admin
 from utils.content import send_content
 from utils.referral import ref_link, render_my_points_text, render_ref_text
-from utils.texts import DEFAULT_MY_POINTS_MESSAGE, DEFAULT_REF_TEXT
+from utils.rating import rating_limits, render_rating_text
+from utils.texts import DEFAULT_MY_POINTS_MESSAGE, DEFAULT_RATING_MESSAGE, DEFAULT_REF_TEXT
 
 router = Router()
 
@@ -57,6 +60,7 @@ async def node_kb(node_id: Optional[int]) -> Keyboard:
 async def build_menu_kb(children: list[MenuItem], is_root: bool) -> Keyboard:
     """Tugmalarning alohida ko'rinishi va "Ballarim" sozlamalari bilan menyu yaratadi."""
     points = await get_my_points_settings() if is_root else None
+    rating = await get_rating_settings() if is_root else None
     return menu_kb(
         children,
         is_root=is_root,
@@ -66,6 +70,13 @@ async def build_menu_kb(children: list[MenuItem], is_root: bool) -> Keyboard:
         my_points_icon_custom_emoji_id=(
             points["icon_custom_emoji_id"] if points else None
         ),
+        rating_enabled=bool(rating["enabled"]) if rating else False,
+        rating_text=str(rating["text"]) if rating else "",
+        rating_style=rating["style"] if rating else None,
+        rating_icon_custom_emoji_id=(
+            rating["icon_custom_emoji_id"] if rating else None
+        ),
+        rating_row_size=int(rating["row_size"]) if rating else 2,
     )
 
 
@@ -152,6 +163,12 @@ class MyPointsFilter(BaseFilter):
         return bool(settings["enabled"]) and message.text == settings["text"]
 
 
+class RatingFilter(BaseFilter):
+    async def __call__(self, message: Message) -> bool:
+        settings = await get_rating_settings()
+        return bool(settings["enabled"]) and message.text == settings["text"]
+
+
 @router.message(MyPointsFilter())
 async def my_points(message: Message) -> None:
     """Doimiy 'Ballarim' tugmasi — shartli tugma bosilishini kutmasdan ham ko'rinadi."""
@@ -163,6 +180,19 @@ async def my_points(message: Message) -> None:
     await message.answer(
         render_my_points_text(template, count=count, link=link),
         reply_markup=share_kb(link),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    )
+
+
+@router.message(RatingFilter())
+async def rating(message: Message) -> None:
+    """Admin shabloniga ko'ra top taklifchilar reytingini ko'rsatadi."""
+    settings = await get_rating_settings()
+    template = str(settings["message"] or DEFAULT_RATING_MESSAGE)
+    limits = rating_limits(template)
+    top = await get_top_referrers(max(limits, default=10))
+    await message.answer(
+        render_rating_text(template, top),
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
 
