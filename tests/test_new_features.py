@@ -9,7 +9,7 @@ from db.models import Channel, MenuItem
 from db.queries import reset_referral_points
 from keyboards.user_kb import menu_kb
 from middlewares.sub_mw import SubscriptionMiddleware
-from utils.commands import ADMIN_COMMANDS, SUPER_ADMIN_COMMANDS, set_admin_commands
+from utils.commands import ADMIN_COMMANDS, set_admin_commands
 from utils.maintenance import MaintenanceMiddleware, is_maintenance_active, maintenance_mode
 
 
@@ -66,12 +66,11 @@ class StartSubscriptionGateTest(unittest.IsolatedAsyncioTestCase):
 
 
 class SuperAdminCommandsTest(unittest.IsolatedAsyncioTestCase):
-    async def test_regular_admin_does_not_get_superadmin_command(self) -> None:
+    async def test_superadmin_command_is_hidden_even_for_superadmin(self) -> None:
         self.assertNotIn("superadmin", [item.command for item in ADMIN_COMMANDS])
-        self.assertIn("superadmin", [item.command for item in SUPER_ADMIN_COMMANDS])
 
         bot = SimpleNamespace(set_my_commands=AsyncMock())
-        await set_admin_commands(bot, 123, super_admin=False)
+        await set_admin_commands(bot, 123, super_admin=True)
         commands = bot.set_my_commands.await_args.args[0]
         self.assertNotIn("superadmin", [item.command for item in commands])
 

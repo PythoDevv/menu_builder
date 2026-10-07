@@ -106,8 +106,8 @@ oddiy foydalanuvchi menyusini ko'radi.
 | 📊 Excel | Faylni olish yoki qo'lda yangilash |
 | 👥 Statistika | Jami / faol / bugun / 7 kun |
 
-`/superadmin` komandasi Telegram komandalar ro'yxatida ham, handler darajasida ham
-faqat `.env` dagi `ADMINS` uchun ochiladi. Ballarni tozalashdan oldin
+`/superadmin` Telegram komandalar ro'yxatida hech kimga ko'rinmaydi. Uni qo'lda
+yozganda esa faqat `.env` dagi `ADMINS` uchun handler ishlaydi. Ballarni tozalashdan oldin
 `pre_points_reset`, restore oldidan esa `pre_restore` dump avtomatik yaratiladi.
 
 ## Taklif (referal) sharti
