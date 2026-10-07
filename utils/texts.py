@@ -3,7 +3,7 @@
 #: Majburiy obuna ekranidagi standart xabar. Admin paneldan almashtiriladi.
 DEFAULT_SUB_TEXT = (
     "👋 Botdan foydalanish uchun quyidagi kanallarga obuna bo'ling.\n\n"
-    "So'ng <b>✅ Tekshirish</b> tugmasini bosing."
+    "So'ng <b>✅ A'zo bo'ldim</b> tugmasini bosing."
 )
 
 #: send_raw_content() kutadigan ko'rinish — obuna xabari qo'yilmaganda ishlatiladi

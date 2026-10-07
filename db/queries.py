@@ -38,7 +38,7 @@ K_RATING_ROW_SIZE = "rating_row_size"
 
 DEFAULT_MY_POINTS_TEXT = "🏆 Ballarim"
 DEFAULT_RATING_TEXT = "🏅 Reyting"
-DEFAULT_SUB_CHECK_TEXT = "✅ Tekshirish"
+DEFAULT_SUB_CHECK_TEXT = "✅ A'zo bo'ldim"
 BUTTON_STYLES = {"primary", "success", "danger"}
 
 
@@ -177,6 +177,23 @@ async def get_top_referrers(limit: int = 5) -> list[tuple[User, int]]:
             u.tg_id: u for u in await s.scalars(select(User).where(User.tg_id.in_(ids)))
         }
         return [(users[tg_id], count) for tg_id, count in pairs if tg_id in users]
+
+
+async def reset_referral_points() -> int:
+    """Barcha taklif ballarini nolga tushiradi va o'zgargan qatorlar sonini beradi.
+
+    Chaqiruvchi bu funksiyadan oldin dump yaratishi shart. Alohida funksiya bo'lishi
+    resetni bitta DB tranzaksiyasida bajarish va backup xatosida unga umuman
+    tegmaslik imkonini beradi.
+    """
+    async with session_maker() as s:
+        result = await s.execute(
+            update(User)
+            .where(User.referred_by.is_not(None))
+            .values(referred_by=None)
+        )
+        await s.commit()
+        return result.rowcount or 0
 
 
 # =========================================================================== ADMINS
@@ -336,7 +353,7 @@ async def add_item(
     title: str,
     required_referrals: int = 0,
     icon_custom_emoji_id: Optional[str] = None,
-    row_size: int = 1,
+    row_size: int = 2,
 ) -> MenuItem:
     if row_size not in {1, 2, 3, 4}:
         raise ValueError(f"Noto'g'ri qator o'lchami: {row_size}")

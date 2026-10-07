@@ -42,6 +42,19 @@ BTN_ADMINS = "👮 Adminlar"
 BTN_REF_TEXT = "✍️ Taklif matni"
 BTN_POINTS = "🏆 Ballarim tugmasi"
 BTN_RATING = "🏅 Reyting tugmasi"
+BTN_WINNERS = "🏆 G'oliblar"
+
+# --------------------------------------------------------------- super admin
+BTN_POINTS_RESET = "🧹 Ballarni 0 qilish"
+BTN_DUMPS = "🗄 Dumplar / restore"
+BTN_SUPER_ADMIN = "🔐 Superadmin panel"
+BTN_RESTORE = "♻️ Shu dumpni tiklash"
+BTN_CONFIRM_RESET = "⚠️ Ha, dump olib 0 qil"
+BTN_CONFIRM_RESTORE = "⚠️ Ha, bazani tiklash"
+
+# -------------------------------------------------------------------- g'oliblar
+BTN_WINNER_MESSAGE = "✉️ Xabar yuborish"
+BTN_WINNERS_LIST = "⬅️ G'oliblar"
 
 # ---------------------------------------------------------------------- kanallar
 BTN_CH_ADD = "➕ Kanal qo'shish"
@@ -158,12 +171,48 @@ def admin_home_kb() -> ReplyKeyboardMarkup:
             [BTN_START_MSG, BTN_SUB_MSG],
             [BTN_PHONE, BTN_REF_TEXT],
             [BTN_BROADCAST, BTN_EXCEL],
-            [BTN_STATS, BTN_ADMINS],
+            [BTN_STATS, BTN_WINNERS],
+            [BTN_ADMINS],
             [BTN_POINTS, BTN_RATING],
             [BTN_EXIT],
         ],
         "Bo'limni tanlang",
     )
+
+
+def winners_kb(labels: Sequence[str]) -> ReplyKeyboardMarkup:
+    return _kb(_list_rows(labels) + [[BTN_HOME]])
+
+
+def winner_one_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_WINNER_MESSAGE], [BTN_WINNERS_LIST, BTN_HOME]])
+
+
+def winner_send_confirm_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_BC_SEND], [BTN_CANCEL]], "Xabarni tasdiqlang")
+
+
+def super_admin_kb() -> ReplyKeyboardMarkup:
+    return _kb(
+        [[BTN_POINTS_RESET], [BTN_DUMPS], [BTN_HOME]],
+        "Superadmin amalini tanlang",
+    )
+
+
+def dumps_kb(labels: Sequence[str]) -> ReplyKeyboardMarkup:
+    return _kb(_list_rows(labels) + [[BTN_SUPER_ADMIN]], "Dumpni tanlang")
+
+
+def dump_one_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_RESTORE], [BTN_DUMPS, BTN_SUPER_ADMIN]])
+
+
+def reset_points_confirm_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_CONFIRM_RESET], [BTN_SUPER_ADMIN]], "Tasdiqlang")
+
+
+def restore_confirm_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_CONFIRM_RESTORE], [BTN_DUMPS]], "Tasdiqlang")
 
 
 def cancel_kb() -> ReplyKeyboardMarkup:

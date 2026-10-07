@@ -8,15 +8,17 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 ## Imkoniyatlar
 
 - **Adminlar** — paneldan telegram ID raqami orqali qo'shiladi/o'chiriladi. `.env` dagilar asosiy admin bo'lib qoladi.
-- **Obuna tekshiruvi** — ochiq va yopiq (qo'shilish so'rovi) kanallar. Zayafka tashlagan odamdan qayta so'ralmaydi.
-- **Obuna xabari** — majburiy obuna ekranidagi post admin paneldan almashtiriladi: matn, rasm, video, fayl (`file_id` bilan). Matn/captiondagi premium custom emojilar saqlanadi. Kanal tugmalari va matni o'zgaradigan **Tekshirish** tugmasi xabar ostiga avtomatik qo'shiladi; ikkala turdagi tugmaga ham premium emoji ikonka qo'yish mumkin.
+- **Obuna tekshiruvi** — har bir `/start` da ochiq va yopiq kanallar ko'rsatiladi; foydalanuvchi oldindan a'zo bo'lsa ham menyu faqat **A'zo bo'ldim** tugmasidan keyin ochiladi. Yopiq kanalga zayafka tashlash tekshiruvdan o'tish uchun yetarli.
+- **Obuna xabari** — majburiy obuna ekranidagi post admin paneldan almashtiriladi: matn, rasm, video, fayl (`file_id` bilan). Matn/captiondagi premium custom emojilar saqlanadi. Kanal tugmalari va matni o'zgaradigan **A'zo bo'ldim** tugmasi xabar ostiga avtomatik qo'shiladi; ikkala turdagi tugmaga ham premium emoji ikonka qo'yish mumkin.
 - **Start xabar** — admin paneldan qo'shiladi / o'zgartiriladi / o'chiriladi. Qo'yilmagan bo'lsa ko'rsatilmaydi.
 - **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga premium custom emoji ikonka va kontent (rasm/video/fayl/matn) biriktiriladi.
-- **Menyu ko'rinishi** — har bir tugma alohida **1, 2, 3 yoki 4 talik** qilib sozlanadi. Ketma-ket bir xil turdagi tugmalar bitta qatorga guruhlanadi; eski tugmalar 1 talik bo'lib qoladi.
+- **Menyu ko'rinishi** — yangi tugmalar standart **2 talik** yaratiladi; keyin har birini **1, 2, 3 yoki 4 talik** qilib sozlash mumkin. Ketma-ket bir xil turdagi tugmalar bitta qatorga guruhlanadi.
 - **Kontent** — `file_id` + Telegram entitylari holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi). Premium custom emoji ID si ham yo'qolmaydi. Oddiy va premium stikerlar ham qo'llanadi.
 - **Tugma rangi** — har bir menyu tugmasi uchun oddiy, ko'k, yashil yoki qizil Telegram uslubini tanlash mumkin.
 - **Ballarim tugmasi** — admin paneldan ko'rsatish/yashirish, nomi, rangi va bosilganda chiqadigan xabarni o'zgartirish mumkin. Tugma ikonkasida va xabarda premium custom emoji saqlanadi.
 - **Reyting tugmasi** — ko'rsatish/yashirish, nomi, premium emoji ikonka, rangi va 1–4 talik joylashuvi boshqariladi. Reyting posti formatlash/premium emojilarni saqlaydi; `{users-10}` kabi kalit top foydalanuvchilarni chiqaradi.
+- **G'oliblar** — top-50 foydalanuvchining ism, username, Telegram ID, telefon va ballari ko'rinadi; tanlangan odamning o'ziga matn/media/fayl yuboriladi.
+- **Superadmin** — faqat `.env` dagi `ADMINS` uchun `/superadmin`: dump olib ballarni nolga tushirish va raqamlangan dumpni tanlab bazani qayta tiklash.
 - **Taklif (referal) sharti** — tugma faqat N ta odam taklif qilgandan keyin ochiladi. Shart tugma qo'shilayotganda so'raladi, keyin ham o'zgartiriladi. Shart bajarilmaganda chiqadigan matn admin paneldan sozlanadi.
 - **Telefon so'rash** — admin paneldan yoqiladi/o'chiriladi. Bir marta olingan raqam qayta so'ralmaydi.
 - **Hammaga xabar** — bloklaganlar avtomatik belgilanadi.
@@ -99,9 +101,14 @@ oddiy foydalanuvchi menyusini ko'radi.
 | ☎️ Telefon so'rash | ON / OFF |
 | 🏆 Ballarim tugmasi | Ko'rsatish/yashirish, nomi, rangi, premium emoji va natija xabarini o'zgartirish |
 | 🏅 Reyting tugmasi | Ko'rsatish/yashirish, nomi, rangi, premium emoji, joylashuvi va `{users-N}` kalitli postni o'zgartirish |
+| 🏆 G'oliblar | Top-50 natija, foydalanuvchining aloqa ma'lumotlari va faqat tanlangan g'olibga xabar yuborish |
 | 📨 Xabar yuborish | Hamma faol foydalanuvchiga |
 | 📊 Excel | Faylni olish yoki qo'lda yangilash |
 | 👥 Statistika | Jami / faol / bugun / 7 kun |
+
+`/superadmin` komandasi Telegram komandalar ro'yxatida ham, handler darajasida ham
+faqat `.env` dagi `ADMINS` uchun ochiladi. Ballarni tozalashdan oldin
+`pre_points_reset`, restore oldidan esa `pre_restore` dump avtomatik yaratiladi.
 
 ## Taklif (referal) sharti
 

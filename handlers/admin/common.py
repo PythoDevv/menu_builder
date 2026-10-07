@@ -14,13 +14,13 @@ from aiogram.types import Message, TelegramObject
 
 from keyboards.admin_kb import admin_home_kb
 from handlers.admin.states import PanelSG
-from utils.admins import is_admin
+from utils.admins import is_admin, is_super_admin
 
 HOME_TEXT = "👑 <b>Admin panel</b>\n\nKerakli bo'limni tanlang:"
 PICK_TEXT = "❗️ Pastdagi tugmalardan birini tanlang."
 
 #: "Xabarni kutamiz" turidagi holatlar komandalarni ushlab qolmasligi kerak
-NOT_COMMAND = ~Command("start", "admin")
+NOT_COMMAND = ~Command("start", "admin", "superadmin")
 
 #: FSM kalitlari
 KEY_LABELS = "labels"  # tugma matni -> id
@@ -36,10 +36,24 @@ class IsAdmin(BaseFilter):
         return user is not None and is_admin(user.id)
 
 
+class IsSuperAdmin(BaseFilter):
+    """Faqat `.env` dagi doimiy adminlar uchun."""
+
+    async def __call__(self, event: TelegramObject) -> bool:
+        user = getattr(event, "from_user", None)
+        return user is not None and is_super_admin(user.id)
+
+
 def admin_router() -> Router:
     """Faqat adminlar uchun router."""
     router = Router()
     router.message.filter(IsAdmin())
+    return router
+
+
+def super_admin_router() -> Router:
+    router = Router()
+    router.message.filter(IsSuperAdmin())
     return router
 
 

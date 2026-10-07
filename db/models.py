@@ -107,8 +107,8 @@ class MenuItem(Base):
     # Tugma matnidan alohida ko'rsatiladigan Telegram Premium custom emoji.
     icon_custom_emoji_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     # Shu tugma qatorida nechta bir xil turdagi tugma joylashishi kerak (1..4).
-    # Eski tugmalar migratsiyada 1 talik deb olinadi.
-    row_size: Mapped[int] = mapped_column(Integer, default=1, server_default="1")
+    # Yangi tugmalar standart holatda qatorda 2 tadan chiqadi.
+    row_size: Mapped[int] = mapped_column(Integer, default=2, server_default="2")
 
 
 class Content(Base):

@@ -18,13 +18,16 @@ from handlers.admin import (
     menu_items,
     panel,
     rating,
+    superadmin,
+    winners,
 )
 from handlers.admin import referral as admin_referral
 from handlers.admin import settings as admin_settings
 from middlewares.sub_mw import PhoneMiddleware, SubscriptionMiddleware
 from middlewares.user_mw import UserMiddleware
-from utils.admins import admin_ids, refresh_admins
+from utils.admins import admin_ids, is_super_admin, refresh_admins
 from utils.commands import set_admin_commands, set_default_commands
+from utils.maintenance import MaintenanceMiddleware
 from utils.scheduler import start_scheduler, stop_scheduler
 
 logger = logging.getLogger(__name__)
@@ -33,7 +36,7 @@ logger = logging.getLogger(__name__)
 async def set_commands(bot: Bot) -> None:
     await set_default_commands(bot)
     for admin_id in admin_ids():
-        await set_admin_commands(bot, admin_id)
+        await set_admin_commands(bot, admin_id, super_admin=is_super_admin(admin_id))
 
 
 async def main() -> None:
@@ -48,6 +51,8 @@ async def main() -> None:
     dp = Dispatcher(storage=MemoryStorage())
 
     # middlewarelar. Obuna ekrani inline bo'lgani uchun callback ham tekshiriladi.
+    # Restore/reset paytida UserMiddleware DBga kirmasligi uchun birinchi turadi.
+    dp.update.outer_middleware(MaintenanceMiddleware())
     dp.update.outer_middleware(UserMiddleware())
     for observer in (dp.message, dp.callback_query):
         observer.outer_middleware(SubscriptionMiddleware())
@@ -64,9 +69,11 @@ async def main() -> None:
         menu_items.router,
         admin_settings.router,
         rating.router,
+        winners.router,
         admin_referral.router,
         broadcast.router,
         export.router,
+        superadmin.router,
         panel.fallback_router,
         join_request.router,
         start.router,

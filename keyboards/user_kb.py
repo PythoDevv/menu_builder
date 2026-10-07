@@ -40,9 +40,9 @@ def _menu_button(item: MenuItem) -> KeyboardButton:
 
 
 def _item_row_size(item: MenuItem) -> int:
-    """Eski/noto'g'ri qiymatni xavfsiz tarzda 1 talik deb oladi."""
-    value = getattr(item, "row_size", 1)
-    return value if value in {1, 2, 3, 4} else 1
+    """Qiymat yo'q/noto'g'ri bo'lsa standart 2 talik ko'rinishni oladi."""
+    value = getattr(item, "row_size", 2)
+    return value if value in {1, 2, 3, 4} else 2
 
 
 def _button_rows(

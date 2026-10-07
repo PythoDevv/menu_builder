@@ -233,12 +233,15 @@ async def add_title(message: Message, state: FSMContext) -> None:
             reply_markup=cancel_kb(),
         )
         return
-    # nomi olindi — endi tugmaning qatordagi ko'rinishini so'raymiz
+    # Yangi tugma standart 2 talik. Istasa admin keyin tugma ichidan 1..4 ga
+    # o'zgartirishi mumkin.
     await state.update_data(
-        {KEY_TITLE: title, KEY_ICON: icon_custom_emoji_id}
+        {KEY_TITLE: title, KEY_ICON: icon_custom_emoji_id, KEY_ROW_SIZE: 2}
     )
-    await state.set_state(MenuSG.ask_row_size)
-    await message.answer(ASK_ROW_SIZE_TEXT, reply_markup=row_size_ask_kb())
+    await state.set_state(MenuSG.ask_ref)
+    await message.answer(
+        ASK_REF_TEXT.format(title=escape(title)), reply_markup=ref_ask_kb()
+    )
 
 
 @router.message(
@@ -268,7 +271,7 @@ async def _create_item(message: Message, state: FSMContext, required: int) -> No
     data = await state.get_data()
     title = (data.get(KEY_TITLE) or "").strip()
     icon_custom_emoji_id = data.get(KEY_ICON)
-    row_size = data.get(KEY_ROW_SIZE, 1)
+    row_size = data.get(KEY_ROW_SIZE, 2)
     parent_id = data.get(KEY_NODE)
     if not title:
         await show_node(message, state, parent_id)

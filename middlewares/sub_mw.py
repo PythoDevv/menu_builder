@@ -15,6 +15,7 @@ from aiogram.types import CallbackQuery, Message, TelegramObject
 from db.models import Channel
 from db.queries import (
     DEFAULT_SUB_CHECK_TEXT,
+    get_channels,
     get_sub_check_button,
     get_sub_message,
     is_phone_required,
@@ -22,7 +23,7 @@ from db.queries import (
 from keyboards.user_kb import phone_kb, subscribe_kb
 from utils.admins import is_admin
 from utils.content import send_raw_content
-from utils.subscription import check_subscription
+from utils.subscription import check_subscription, clear_cache
 from utils.texts import DEFAULT_SUB_MESSAGE
 
 PHONE_TEXT = (
@@ -55,6 +56,14 @@ def _skip(event: TelegramObject) -> bool:
     return user is None or is_admin(user.id)
 
 
+def _is_start_message(event: TelegramObject) -> bool:
+    """`/start`, payloadli `/start ref...` va `/start@bot` ni taniydi."""
+    if not isinstance(event, Message) or not event.text:
+        return False
+    command = event.text.split(maxsplit=1)[0].lower()
+    return command == "/start" or command.startswith("/start@")
+
+
 async def send_sub_prompt(bot: Bot, chat_id: int, missing: list[Channel]) -> None:
     data = await get_sub_message() or DEFAULT_SUB_MESSAGE
     check_button = await get_sub_check_button()
@@ -85,6 +94,16 @@ class SubscriptionMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
+        # Har bir /start avval obuna ekranini ko'rsatadi. Foydalanuvchi oldindan
+        # a'zo bo'lsa ham menyuga faqat tekshirish tugmasidan keyin o'tadi.
+        # Bu yerda barcha faol kanallar ko'rsatiladi, faqat yetishmayotganlari emas.
+        if _is_start_message(event) and event.chat.type == "private":
+            channels = await get_channels(active_only=True)
+            if channels:
+                clear_cache(event.from_user.id)
+                await send_sub_prompt(data["bot"], event.chat.id, channels)
+                return None
+
         if _skip(event):
             return await handler(event, data)
 

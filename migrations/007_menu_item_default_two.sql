@@ -1,0 +1,1 @@
+ALTER TABLE menu_items ALTER COLUMN row_size SET DEFAULT 2;

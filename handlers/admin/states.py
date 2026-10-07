@@ -88,6 +88,20 @@ class RatingSG(StatesGroup):
     row_size = State()
 
 
+class WinnersSG(StatesGroup):
+    browse = State()
+    one = State()
+    waiting_message = State()
+    confirm_send = State()
+
+
+class SuperAdminSG(StatesGroup):
+    home = State()
+    dumps = State()
+    restore_confirm = State()
+    reset_confirm = State()
+
+
 class BroadcastSG(StatesGroup):
     waiting_message = State()
     confirm = State()
@@ -110,6 +124,8 @@ ALL_STATES = (
     *PhoneSG.__all_states__,
     *MyPointsSG.__all_states__,
     *RatingSG.__all_states__,
+    *WinnersSG.__all_states__,
+    *SuperAdminSG.__all_states__,
     *BroadcastSG.__all_states__,
     *ExcelSG.__all_states__,
 )
