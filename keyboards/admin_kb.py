@@ -57,6 +57,7 @@ BTN_WINNERS_VIEW = "📋 G'oliblarni chiqarish"
 BTN_WINNERS_COUNT = "🔢 G'oliblar soni"
 BTN_DIRECT_MESSAGE = "✉️ ID bo'yicha xabar"
 BTN_WINNERS_BACK = "⬅️ G'oliblar"
+BTN_WINNERS_RESET = "🧹 Barcha ballarni 0 qilish"
 
 # ---------------------------------------------------------------------- kanallar
 BTN_CH_ADD = "➕ Kanal qo'shish"
@@ -182,14 +183,15 @@ def admin_home_kb() -> ReplyKeyboardMarkup:
     )
 
 
-def winners_kb() -> ReplyKeyboardMarkup:
-    return _kb(
-        [
-            [BTN_WINNERS_VIEW],
-            [BTN_WINNERS_COUNT, BTN_DIRECT_MESSAGE],
-            [BTN_HOME],
-        ]
-    )
+def winners_kb(can_reset_points: bool = False) -> ReplyKeyboardMarkup:
+    rows = [
+        [BTN_WINNERS_VIEW],
+        [BTN_WINNERS_COUNT, BTN_DIRECT_MESSAGE],
+    ]
+    if can_reset_points:
+        rows.append([BTN_WINNERS_RESET])
+    rows.append([BTN_HOME])
+    return _kb(rows)
 
 
 def winner_send_confirm_kb() -> ReplyKeyboardMarkup:

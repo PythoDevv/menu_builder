@@ -23,17 +23,20 @@ from db.queries import (
 )
 from handlers.admin.common import KEY_ITEM, NOT_COMMAND, admin_router
 from handlers.admin.states import PanelSG, WinnersSG
+from handlers.admin.superadmin import ask_points_reset
 from keyboards.admin_kb import (
     BTN_BC_SEND,
     BTN_DIRECT_MESSAGE,
     BTN_WINNERS,
     BTN_WINNERS_BACK,
     BTN_WINNERS_COUNT,
+    BTN_WINNERS_RESET,
     BTN_WINNERS_VIEW,
     cancel_kb,
     winner_send_confirm_kb,
     winners_kb,
 )
+from utils.admins import is_super_admin
 
 router = admin_router()
 
@@ -61,6 +64,9 @@ def render_winners_report(rows: list[tuple[User, int]]) -> str:
 async def show_winners(message: Message, state: FSMContext) -> None:
     limit = await get_winners_limit()
     await state.set_state(WinnersSG.show)
+    can_reset_points = (
+        message.from_user is not None and is_super_admin(message.from_user.id)
+    )
     await message.answer(
         "🏆 <b>G'oliblar boshqaruvi</b>\n\n"
         f"Bitta xabarda ko'rsatiladigan g'oliblar: <b>{limit}</b> ta.\n\n"
@@ -68,7 +74,7 @@ async def show_winners(message: Message, state: FSMContext) -> None:
         "to'plagan balli chiqadi.\n"
         "✉️ ID bo'yicha xabar orqali botdagi istalgan odamga alohida xabar "
         "yuborish mumkin.",
-        reply_markup=winners_kb(),
+        reply_markup=winners_kb(can_reset_points),
     )
 
 
@@ -91,7 +97,20 @@ async def open_winners(message: Message, state: FSMContext) -> None:
 async def view_winners(message: Message, state: FSMContext) -> None:
     limit = await get_winners_limit()
     top = await get_top_referrers(limit)
-    await message.answer(render_winners_report(top), reply_markup=winners_kb())
+    can_reset_points = (
+        message.from_user is not None and is_super_admin(message.from_user.id)
+    )
+    await message.answer(
+        render_winners_report(top), reply_markup=winners_kb(can_reset_points)
+    )
+
+
+@router.message(WinnersSG.show, F.text == BTN_WINNERS_RESET)
+async def reset_all_points_from_winners(message: Message, state: FSMContext) -> None:
+    if message.from_user is None or not is_super_admin(message.from_user.id):
+        await message.answer("❌ Bu amal faqat superadmin uchun.")
+        return
+    await ask_points_reset(message, state)
 
 
 @router.message(WinnersSG.show, F.text == BTN_WINNERS_COUNT)

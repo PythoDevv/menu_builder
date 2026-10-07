@@ -8,6 +8,7 @@ from sqlalchemy.dialects import postgresql
 from db.models import Channel, MenuItem, User as DBUser
 from db.queries import get_winners_limit, reset_referral_points, set_winners_limit
 from handlers.admin.winners import render_winners_report
+from keyboards.admin_kb import BTN_WINNERS_RESET, winners_kb
 from keyboards.user_kb import menu_kb
 from middlewares.sub_mw import SubscriptionMiddleware
 from utils.commands import ADMIN_COMMANDS, set_admin_commands
@@ -91,6 +92,17 @@ class WinnersReportTest(unittest.TestCase):
         self.assertIn("123456789", report)
         self.assertIn("27", report)
         self.assertLessEqual(len(report), 4096)
+
+    def test_score_reset_button_is_only_added_for_superadmins(self) -> None:
+        regular_admin_buttons = [
+            button.text for row in winners_kb().keyboard for button in row
+        ]
+        superadmin_buttons = [
+            button.text for row in winners_kb(can_reset_points=True).keyboard for button in row
+        ]
+
+        self.assertNotIn(BTN_WINNERS_RESET, regular_admin_buttons)
+        self.assertIn(BTN_WINNERS_RESET, superadmin_buttons)
 
 
 class WinnersLimitTest(unittest.IsolatedAsyncioTestCase):
