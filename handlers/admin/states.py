@@ -89,8 +89,9 @@ class RatingSG(StatesGroup):
 
 
 class WinnersSG(StatesGroup):
-    browse = State()
-    one = State()
+    show = State()
+    waiting_limit = State()
+    waiting_id = State()
     waiting_message = State()
     confirm_send = State()
 

@@ -17,7 +17,7 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 - **Tugma rangi** — har bir menyu tugmasi uchun oddiy, ko'k, yashil yoki qizil Telegram uslubini tanlash mumkin.
 - **Ballarim tugmasi** — admin paneldan ko'rsatish/yashirish, nomi, rangi va bosilganda chiqadigan xabarni o'zgartirish mumkin. Tugma ikonkasida va xabarda premium custom emoji saqlanadi.
 - **Reyting tugmasi** — ko'rsatish/yashirish, nomi, premium emoji ikonka, rangi va 1–4 talik joylashuvi boshqariladi. Reyting posti formatlash/premium emojilarni saqlaydi; `{users-10}` kabi kalit top foydalanuvchilarni chiqaradi.
-- **G'oliblar** — top-50 foydalanuvchining ism, username, Telegram ID, telefon va ballari ko'rinadi; tanlangan odamning o'ziga matn/media/fayl yuboriladi.
+- **G'oliblar** — admin 1–20 oralig'ida natija sonini belgilaydi; tanlangan TOP foydalanuvchilarning ism, username, Telegram ID va ballari bitta xabarda chiqadi. Alohida ID bo'yicha xabar bo'limidan botdagi istalgan odamga matn/media/fayl yuboriladi.
 - **Superadmin** — faqat `.env` dagi `ADMINS` uchun `/superadmin`: dump olib ballarni nolga tushirish va raqamlangan dumpni tanlab bazani qayta tiklash.
 - **Taklif (referal) sharti** — tugma faqat N ta odam taklif qilgandan keyin ochiladi. Shart tugma qo'shilayotganda so'raladi, keyin ham o'zgartiriladi. Shart bajarilmaganda chiqadigan matn admin paneldan sozlanadi.
 - **Telefon so'rash** — admin paneldan yoqiladi/o'chiriladi. Bir marta olingan raqam qayta so'ralmaydi.
@@ -101,7 +101,7 @@ oddiy foydalanuvchi menyusini ko'radi.
 | ☎️ Telefon so'rash | ON / OFF |
 | 🏆 Ballarim tugmasi | Ko'rsatish/yashirish, nomi, rangi, premium emoji va natija xabarini o'zgartirish |
 | 🏅 Reyting tugmasi | Ko'rsatish/yashirish, nomi, rangi, premium emoji, joylashuvi va `{users-N}` kalitli postni o'zgartirish |
-| 🏆 G'oliblar | Top-50 natija, foydalanuvchining aloqa ma'lumotlari va faqat tanlangan g'olibga xabar yuborish |
+| 🏆 G'oliblar | Natijalar sonini sozlash, to'liq TOP ro'yxatni bitta xabarda olish va Telegram ID bo'yicha bitta odamga xabar yuborish |
 | 📨 Xabar yuborish | Hamma faol foydalanuvchiga |
 | 📊 Excel | Faylni olish yoki qo'lda yangilash |
 | 👥 Statistika | Jami / faol / bugun / 7 kun |

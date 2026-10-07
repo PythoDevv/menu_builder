@@ -53,8 +53,10 @@ BTN_CONFIRM_RESET = "⚠️ Ha, dump olib 0 qil"
 BTN_CONFIRM_RESTORE = "⚠️ Ha, bazani tiklash"
 
 # -------------------------------------------------------------------- g'oliblar
-BTN_WINNER_MESSAGE = "✉️ Xabar yuborish"
-BTN_WINNERS_LIST = "⬅️ G'oliblar"
+BTN_WINNERS_VIEW = "📋 G'oliblarni chiqarish"
+BTN_WINNERS_COUNT = "🔢 G'oliblar soni"
+BTN_DIRECT_MESSAGE = "✉️ ID bo'yicha xabar"
+BTN_WINNERS_BACK = "⬅️ G'oliblar"
 
 # ---------------------------------------------------------------------- kanallar
 BTN_CH_ADD = "➕ Kanal qo'shish"
@@ -180,16 +182,18 @@ def admin_home_kb() -> ReplyKeyboardMarkup:
     )
 
 
-def winners_kb(labels: Sequence[str]) -> ReplyKeyboardMarkup:
-    return _kb(_list_rows(labels) + [[BTN_HOME]])
-
-
-def winner_one_kb() -> ReplyKeyboardMarkup:
-    return _kb([[BTN_WINNER_MESSAGE], [BTN_WINNERS_LIST, BTN_HOME]])
+def winners_kb() -> ReplyKeyboardMarkup:
+    return _kb(
+        [
+            [BTN_WINNERS_VIEW],
+            [BTN_WINNERS_COUNT, BTN_DIRECT_MESSAGE],
+            [BTN_HOME],
+        ]
+    )
 
 
 def winner_send_confirm_kb() -> ReplyKeyboardMarkup:
-    return _kb([[BTN_BC_SEND], [BTN_CANCEL]], "Xabarni tasdiqlang")
+    return _kb([[BTN_BC_SEND], [BTN_WINNERS_BACK]], "Xabarni tasdiqlang")
 
 
 def super_admin_kb() -> ReplyKeyboardMarkup:

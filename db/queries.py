@@ -35,11 +35,14 @@ K_RATING_STYLE = "rating_style"
 K_RATING_ICON = "rating_icon_custom_emoji_id"
 K_RATING_MESSAGE = "rating_message"
 K_RATING_ROW_SIZE = "rating_row_size"
+K_WINNERS_LIMIT = "winners_limit"
 
 DEFAULT_MY_POINTS_TEXT = "🏆 Ballarim"
 DEFAULT_RATING_TEXT = "🏅 Reyting"
 DEFAULT_SUB_CHECK_TEXT = "✅ A'zo bo'ldim"
 BUTTON_STYLES = {"primary", "success", "danger"}
+DEFAULT_WINNERS_LIMIT = 10
+MAX_WINNERS_LIMIT = 20
 
 
 # ============================================================================ USERS
@@ -765,6 +768,23 @@ async def set_rating_row_size(row_size: int) -> None:
     if row_size not in {1, 2, 3, 4}:
         raise ValueError(f"Noto'g'ri qator o'lchami: {row_size}")
     await set_setting(K_RATING_ROW_SIZE, str(row_size))
+
+
+async def get_winners_limit() -> int:
+    """Bitta Telegram xabarida ko'rsatiladigan g'oliblar soni."""
+    try:
+        value = int(await get_setting(K_WINNERS_LIMIT, str(DEFAULT_WINNERS_LIMIT)) or "")
+    except ValueError:
+        value = DEFAULT_WINNERS_LIMIT
+    return min(max(value, 1), MAX_WINNERS_LIMIT)
+
+
+async def set_winners_limit(limit: int) -> None:
+    if not 1 <= limit <= MAX_WINNERS_LIMIT:
+        raise ValueError(
+            f"G'oliblar soni 1..{MAX_WINNERS_LIMIT} oralig'ida bo'lishi kerak"
+        )
+    await set_setting(K_WINNERS_LIMIT, str(limit))
 
 
 async def is_phone_required() -> bool:

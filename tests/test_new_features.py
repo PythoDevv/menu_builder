@@ -5,8 +5,9 @@ from unittest.mock import AsyncMock, Mock, patch
 from aiogram.types import Chat, Message, Update, User
 from sqlalchemy.dialects import postgresql
 
-from db.models import Channel, MenuItem
-from db.queries import reset_referral_points
+from db.models import Channel, MenuItem, User as DBUser
+from db.queries import get_winners_limit, reset_referral_points, set_winners_limit
+from handlers.admin.winners import render_winners_report
 from keyboards.user_kb import menu_kb
 from middlewares.sub_mw import SubscriptionMiddleware
 from utils.commands import ADMIN_COMMANDS, set_admin_commands
@@ -73,6 +74,34 @@ class SuperAdminCommandsTest(unittest.IsolatedAsyncioTestCase):
         await set_admin_commands(bot, 123, super_admin=True)
         commands = bot.set_my_commands.await_args.args[0]
         self.assertNotIn("superadmin", [item.command for item in commands])
+
+
+class WinnersReportTest(unittest.TestCase):
+    def test_report_contains_every_requested_user_field_in_one_message(self) -> None:
+        user = DBUser(
+            tg_id=123456789,
+            full_name="Ali & Vali",
+            username="ali_user",
+        )
+
+        report = render_winners_report([(user, 27)])
+
+        self.assertIn("Ali &amp; Vali", report)
+        self.assertIn("@ali_user", report)
+        self.assertIn("123456789", report)
+        self.assertIn("27", report)
+        self.assertLessEqual(len(report), 4096)
+
+
+class WinnersLimitTest(unittest.IsolatedAsyncioTestCase):
+    async def test_limit_is_clamped_for_old_or_invalid_database_values(self) -> None:
+        with patch("db.queries.get_setting", AsyncMock(return_value="999")):
+            self.assertEqual(await get_winners_limit(), 20)
+
+    async def test_admin_limit_is_saved_in_settings(self) -> None:
+        with patch("db.queries.set_setting", AsyncMock()) as save:
+            await set_winners_limit(7)
+        save.assert_awaited_once_with("winners_limit", "7")
 
 
 class MaintenanceModeTest(unittest.IsolatedAsyncioTestCase):
