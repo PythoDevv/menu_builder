@@ -14,7 +14,7 @@ from aiogram.types import (
     ReplyKeyboardRemove,
 )
 
-from db.models import Channel, MenuItem
+from db.models import Channel, MenuItem, SubscriptionButton
 from db.queries import DEFAULT_MY_POINTS_TEXT, DEFAULT_RATING_TEXT, DEFAULT_SUB_CHECK_TEXT
 from utils.referral import share_url
 
@@ -137,10 +137,11 @@ def channel_url(ch: Channel) -> str:
 
 def subscribe_kb(
     channels: list[Channel],
+    link_buttons: Sequence[SubscriptionButton] = (),
     check_text: str = BTN_CHECK_SUB,
     check_icon_custom_emoji_id: Optional[str] = None,
 ) -> InlineKeyboardMarkup:
-    """Kanal havolalari + tekshirish tugmasi (inline)."""
+    """Kanal havolalari + oddiy URL tugmalar + tekshirish tugmasi."""
     rows = []
     for ch in channels:
         url = channel_url(ch)
@@ -158,11 +159,13 @@ def subscribe_kb(
                 )
             ]
         )
+    for button in link_buttons:
+        rows.append([InlineKeyboardButton(text=button.title, url=button.url)])
     rows.append(
         [
             InlineKeyboardButton(
                 text=check_text,
-                callback_data=CB_CHECK_SUB,
+                callback_data=f"{CB_CHECK_SUB}:{len(channels)}",
                 icon_custom_emoji_id=check_icon_custom_emoji_id,
             )
         ]

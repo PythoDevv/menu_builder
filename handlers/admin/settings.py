@@ -16,8 +16,10 @@ from db.queries import (
     get_rating_settings,
     get_referral_count,
     get_sub_check_button,
+    get_subscription_buttons,
     get_start_message,
     get_sub_message,
+    is_force_sub_on_start_enabled,
     is_phone_required,
     reset_sub_check_button,
     set_my_points_enabled,
@@ -28,6 +30,7 @@ from db.queries import (
     set_sub_check_button,
     set_sub_message,
     toggle_phone_required,
+    toggle_force_sub_on_start,
 )
 from handlers.admin.common import NOT_COMMAND, admin_router
 from handlers.admin.states import (
@@ -56,6 +59,8 @@ from keyboards.admin_kb import (
     BTN_SUB_MSG,
     BTN_SUB_CHECK,
     BTN_SUB_CHECK_RESET,
+    BTN_SUB_FORCE_OFF,
+    BTN_SUB_FORCE_ON,
     BTN_SUB_RESET,
     BTN_VIEW,
     BTN_YES_DELETE,
@@ -181,6 +186,7 @@ SUB_CHECK_EDIT_TEXT = (
 async def show_sub(message: Message, state: FSMContext) -> None:
     data = await get_sub_message()
     check_button = await get_sub_check_button()
+    force_on_start = await is_force_sub_on_start_enabled()
     if data:
         text = (
             "📌 <b>Obuna xabari</b>\n\n"
@@ -198,15 +204,26 @@ async def show_sub(message: Message, state: FSMContext) -> None:
     check_icon = "✅ bor" if check_button["icon_custom_emoji_id"] else "yo'q"
     text += (
         "\n\n"
+        "A'zo bo'lganlarga har /start da qayta ko'rsatish: "
+        f"<b>{'🟢 YOQILGAN' if force_on_start else '🔴 O‘CHIRILGAN'}</b>\n"
         f"Tekshirish tugmasi: <b>{escape(check_button['text'] or DEFAULT_SUB_CHECK_TEXT)}</b>\n"
         f"Tugma premium emojisi: <b>{check_icon}</b>"
     )
     await state.set_state(SubSG.show)
-    await message.answer(text, reply_markup=sub_msg_kb(bool(data)))
+    await message.answer(
+        text, reply_markup=sub_msg_kb(bool(data), force_on_start)
+    )
 
 
 @router.message(PanelSG.home, F.text == BTN_SUB_MSG)
 async def open_sub(message: Message, state: FSMContext) -> None:
+    await show_sub(message, state)
+
+
+@router.message(SubSG.show, F.text.in_({BTN_SUB_FORCE_ON, BTN_SUB_FORCE_OFF}))
+async def toggle_force_sub(message: Message, state: FSMContext) -> None:
+    await toggle_force_sub_on_start()
+    await message.answer("✅ O'zgartirildi")
     await show_sub(message, state)
 
 
@@ -220,6 +237,7 @@ async def ask_sub(message: Message, state: FSMContext) -> None:
 async def preview_sub(message: Message, state: FSMContext) -> None:
     data = await get_sub_message() or DEFAULT_SUB_MESSAGE
     channels = await get_channels(active_only=True)
+    link_buttons = await get_subscription_buttons()
     check_button = await get_sub_check_button()
     await message.answer("👇 Foydalanuvchi shu ko'rinishda ko'radi:")
     await send_raw_content(
@@ -228,12 +246,15 @@ async def preview_sub(message: Message, state: FSMContext) -> None:
         data,
         reply_markup=subscribe_kb(
             channels,
+            link_buttons=link_buttons,
             check_text=check_button["text"] or DEFAULT_SUB_CHECK_TEXT,
             check_icon_custom_emoji_id=check_button["icon_custom_emoji_id"],
         ),
     )
-    if not channels:
+    if not channels and not link_buttons:
         await message.answer("ℹ️ Hozircha faol kanal yo'q — tugmalar bo'sh ko'rinadi.")
+    elif not channels:
+        await message.answer("ℹ️ Faol kanal yo'q — faqat oddiy URL tugmalar ko'rinadi.")
     await show_sub(message, state)
 
 

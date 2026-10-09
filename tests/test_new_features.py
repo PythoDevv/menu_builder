@@ -8,6 +8,7 @@ from sqlalchemy.dialects import postgresql
 from db.models import Channel, MenuItem, User as DBUser
 from db.queries import get_winners_limit, reset_referral_points, set_winners_limit
 from handlers.admin.winners import render_winners_report
+from handlers.admin.subscription_buttons import normalize_button_url
 from keyboards.admin_kb import BTN_WINNERS_RESET, winners_kb
 from keyboards.user_kb import menu_kb
 from middlewares.sub_mw import SubscriptionMiddleware
@@ -34,14 +35,17 @@ class DefaultTwoColumnTest(unittest.TestCase):
 
 
 class StartSubscriptionGateTest(unittest.IsolatedAsyncioTestCase):
-    async def test_start_always_shows_all_active_channels_before_menu(self) -> None:
-        event = Message(
+    def _start_event(self) -> Message:
+        return Message(
             message_id=1,
             date=0,
             chat=Chat(id=100, type="private"),
             from_user=User(id=200, is_bot=False, first_name="User"),
             text="/start ref123",
         )
+
+    async def test_enabled_setting_always_shows_all_active_channels(self) -> None:
+        event = self._start_event()
         private = Channel(
             id=1,
             chat_id=-1001,
@@ -54,6 +58,10 @@ class StartSubscriptionGateTest(unittest.IsolatedAsyncioTestCase):
         bot = SimpleNamespace()
 
         with (
+            patch(
+                "middlewares.sub_mw.is_force_sub_on_start_enabled",
+                AsyncMock(return_value=True),
+            ),
             patch("middlewares.sub_mw.get_channels", AsyncMock(return_value=[private])),
             patch("middlewares.sub_mw.clear_cache", Mock()) as clear_cache,
             patch("middlewares.sub_mw.send_sub_prompt", AsyncMock()) as prompt,
@@ -66,6 +74,57 @@ class StartSubscriptionGateTest(unittest.IsolatedAsyncioTestCase):
         check.assert_not_awaited()
         handler.assert_not_awaited()
 
+    async def test_disabled_setting_does_not_prompt_an_existing_member(self) -> None:
+        event = self._start_event()
+        handler = AsyncMock(return_value="handled")
+        bot = SimpleNamespace()
+
+        with (
+            patch(
+                "middlewares.sub_mw.is_force_sub_on_start_enabled",
+                AsyncMock(return_value=False),
+            ),
+            patch("middlewares.sub_mw.get_channels", AsyncMock()) as channels,
+            patch("middlewares.sub_mw.send_sub_prompt", AsyncMock()) as prompt,
+            patch("middlewares.sub_mw.check_subscription", AsyncMock(return_value=[])) as check,
+        ):
+            result = await SubscriptionMiddleware()(handler, event, {"bot": bot})
+
+        self.assertEqual(result, "handled")
+        channels.assert_not_awaited()
+        prompt.assert_not_awaited()
+        check.assert_awaited_once_with(bot, 200)
+        handler.assert_awaited_once_with(event, {"bot": bot})
+
+    async def test_disabled_setting_still_prompts_a_non_member(self) -> None:
+        event = self._start_event()
+        missing = Channel(
+            id=1,
+            chat_id=-1001,
+            title="Kanal",
+            invite_link="https://t.me/channel",
+            is_private=False,
+            is_active=True,
+        )
+        handler = AsyncMock()
+        bot = SimpleNamespace()
+
+        with (
+            patch(
+                "middlewares.sub_mw.is_force_sub_on_start_enabled",
+                AsyncMock(return_value=False),
+            ),
+            patch(
+                "middlewares.sub_mw.check_subscription",
+                AsyncMock(return_value=[missing]),
+            ),
+            patch("middlewares.sub_mw.send_sub_prompt", AsyncMock()) as prompt,
+        ):
+            await SubscriptionMiddleware()(handler, event, {"bot": bot})
+
+        prompt.assert_awaited_once_with(bot, 100, [missing])
+        handler.assert_not_awaited()
+
 
 class SuperAdminCommandsTest(unittest.IsolatedAsyncioTestCase):
     async def test_superadmin_command_is_hidden_even_for_superadmin(self) -> None:
@@ -75,6 +134,23 @@ class SuperAdminCommandsTest(unittest.IsolatedAsyncioTestCase):
         await set_admin_commands(bot, 123, super_admin=True)
         commands = bot.set_my_commands.await_args.args[0]
         self.assertNotIn("superadmin", [item.command for item in commands])
+        self.assertIn("tugma", [item.command for item in commands])
+
+
+class SubscriptionUrlTest(unittest.TestCase):
+    def test_https_is_kept_and_bare_domain_is_normalized(self) -> None:
+        self.assertEqual(
+            normalize_button_url("https://example.com/path"),
+            "https://example.com/path",
+        )
+        self.assertEqual(
+            normalize_button_url("t.me/example"),
+            "https://t.me/example",
+        )
+
+    def test_invalid_url_is_rejected(self) -> None:
+        self.assertIsNone(normalize_button_url("oddiy matn"))
+        self.assertIsNone(normalize_button_url("javascript:alert(1)"))
 
 
 class WinnersReportTest(unittest.TestCase):

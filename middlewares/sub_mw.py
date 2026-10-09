@@ -16,11 +16,13 @@ from db.models import Channel
 from db.queries import (
     DEFAULT_SUB_CHECK_TEXT,
     get_channels,
+    get_subscription_buttons,
     get_sub_check_button,
     get_sub_message,
+    is_force_sub_on_start_enabled,
     is_phone_required,
 )
-from keyboards.user_kb import phone_kb, subscribe_kb
+from keyboards.user_kb import CB_CHECK_SUB, phone_kb, subscribe_kb
 from utils.admins import is_admin
 from utils.content import send_raw_content
 from utils.subscription import check_subscription, clear_cache
@@ -67,12 +69,14 @@ def _is_start_message(event: TelegramObject) -> bool:
 async def send_sub_prompt(bot: Bot, chat_id: int, missing: list[Channel]) -> None:
     data = await get_sub_message() or DEFAULT_SUB_MESSAGE
     check_button = await get_sub_check_button()
+    link_buttons = await get_subscription_buttons()
     await send_raw_content(
         bot,
         chat_id,
         data,
         reply_markup=subscribe_kb(
             missing,
+            link_buttons=link_buttons,
             check_text=check_button["text"] or DEFAULT_SUB_CHECK_TEXT,
             check_icon_custom_emoji_id=check_button["icon_custom_emoji_id"],
         ),
@@ -81,6 +85,13 @@ async def send_sub_prompt(bot: Bot, chat_id: int, missing: list[Channel]) -> Non
 
 def _shown_channels(event: CallbackQuery) -> int:
     """Bosilgan xabarda nechta kanal tugmasi turganini sanaydi."""
+    data = event.data or ""
+    prefix = f"{CB_CHECK_SUB}:"
+    if data.startswith(prefix):
+        try:
+            return int(data.removeprefix(prefix))
+        except ValueError:
+            pass
     markup = getattr(event.message, "reply_markup", None)
     if markup is None:
         return -1
@@ -94,10 +105,14 @@ class SubscriptionMiddleware(BaseMiddleware):
         event: TelegramObject,
         data: dict[str, Any],
     ) -> Any:
-        # Har bir /start avval obuna ekranini ko'rsatadi. Foydalanuvchi oldindan
-        # a'zo bo'lsa ham menyuga faqat tekshirish tugmasidan keyin o'tadi.
-        # Bu yerda barcha faol kanallar ko'rsatiladi, faqat yetishmayotganlari emas.
-        if _is_start_message(event) and event.chat.type == "private":
+        # Admin yoqqan bo'lsa, har bir /start avval barcha faol kanallarni
+        # ko'rsatadi. O'chirilgan holatda pastdagi odatiy tekshiruv faqat hali
+        # a'zo bo'lmagan foydalanuvchini to'sadi.
+        if (
+            _is_start_message(event)
+            and event.chat.type == "private"
+            and await is_force_sub_on_start_enabled()
+        ):
             channels = await get_channels(active_only=True)
             if channels:
                 clear_cache(event.from_user.id)

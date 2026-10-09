@@ -36,7 +36,7 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     await send_start_screen(message.bot, message.chat.id, state)
 
 
-@router.callback_query(F.data == CB_CHECK_SUB)
+@router.callback_query(F.data.startswith(CB_CHECK_SUB))
 async def check_sub(callback: CallbackQuery, state: FSMContext) -> None:
     # bu yergacha yetib kelgan bo'lsa — obuna tekshiruvidan o'tgan
     await callback.answer("✅ Rahmat!")

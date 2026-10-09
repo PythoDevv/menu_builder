@@ -20,7 +20,7 @@ HOME_TEXT = "👑 <b>Admin panel</b>\n\nKerakli bo'limni tanlang:"
 PICK_TEXT = "❗️ Pastdagi tugmalardan birini tanlang."
 
 #: "Xabarni kutamiz" turidagi holatlar komandalarni ushlab qolmasligi kerak
-NOT_COMMAND = ~Command("start", "admin", "superadmin")
+NOT_COMMAND = ~Command("start", "admin", "tugma", "superadmin")
 
 #: FSM kalitlari
 KEY_LABELS = "labels"  # tugma matni -> id

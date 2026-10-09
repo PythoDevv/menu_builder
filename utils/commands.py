@@ -10,8 +10,11 @@ logger = logging.getLogger(__name__)
 
 USER_COMMANDS = [BotCommand(command="start", description="Boshlash")]
 ADMIN_COMMANDS = USER_COMMANDS + [
-    BotCommand(command="admin", description="Admin panel")
+    BotCommand(command="admin", description="Admin panel"),
+    BotCommand(command="tugma", description="Obuna URL tugmalari"),
 ]
+
+
 async def set_default_commands(bot: Bot) -> None:
     await bot.set_my_commands(USER_COMMANDS, scope=BotCommandScopeDefault())
 

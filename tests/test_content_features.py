@@ -4,7 +4,7 @@ from unittest.mock import AsyncMock
 
 from aiogram.types import Chat, Message, MessageEntity, User
 
-from db.models import Channel, MenuItem
+from db.models import Channel, MenuItem, SubscriptionButton
 from keyboards.admin_kb import button_style_kb, row_size_ask_kb, row_size_kb
 from keyboards.user_kb import menu_kb, subscribe_kb
 from utils.content import (
@@ -379,6 +379,27 @@ class SubscriptionButtonTest(unittest.TestCase):
             button.model_dump(exclude_none=True)["icon_custom_emoji_id"],
             "check-premium-emoji-id",
         )
+
+    def test_url_buttons_are_between_channels_and_check_button(self) -> None:
+        channel = Channel(
+            title="Kanal",
+            username="channel",
+            is_private=False,
+        )
+        link_button = SubscriptionButton(
+            title="Saytga o'tish",
+            url="https://example.com",
+        )
+
+        keyboard = subscribe_kb([channel], link_buttons=[link_button])
+        buttons = [row[0] for row in keyboard.inline_keyboard]
+
+        self.assertEqual(
+            [button.text for button in buttons],
+            ["📢 Kanal", "Saytga o'tish", "✅ A'zo bo'ldim"],
+        )
+        self.assertEqual(buttons[1].url, "https://example.com")
+        self.assertEqual(buttons[2].callback_data, "check_sub:1")
 
 
 if __name__ == "__main__":

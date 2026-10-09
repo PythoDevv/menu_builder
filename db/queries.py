@@ -9,7 +9,16 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from config import TIMEZONE
 from db.base import session_maker
-from db.models import Admin, Channel, Content, JoinRequest, MenuItem, Setting, User
+from db.models import (
+    Admin,
+    Channel,
+    Content,
+    JoinRequest,
+    MenuItem,
+    Setting,
+    SubscriptionButton,
+    User,
+)
 
 TZ = ZoneInfo(TIMEZONE)
 
@@ -23,6 +32,7 @@ K_SUB_FILE = "sub_file_id"
 K_SUB_TEXT = "sub_text"
 K_SUB_CHECK_TEXT = "sub_check_text"
 K_SUB_CHECK_ICON = "sub_check_icon_custom_emoji_id"
+K_FORCE_SUB_ON_START = "force_sub_on_start"
 K_REF_TEXT = "ref_text"
 K_MY_POINTS_ENABLED = "my_points_enabled"
 K_MY_POINTS_TEXT = "my_points_text"
@@ -313,6 +323,34 @@ async def set_channel_icon(
 async def delete_channel(channel_id: int) -> None:
     async with session_maker() as s:
         await s.execute(delete(Channel).where(Channel.id == channel_id))
+        await s.commit()
+
+
+# ========================================================== SUBSCRIPTION BUTTONS
+async def get_subscription_buttons() -> list[SubscriptionButton]:
+    async with session_maker() as s:
+        query = select(SubscriptionButton).order_by(SubscriptionButton.id)
+        return list(await s.scalars(query))
+
+
+async def get_subscription_button(button_id: int) -> Optional[SubscriptionButton]:
+    async with session_maker() as s:
+        return await s.get(SubscriptionButton, button_id)
+
+
+async def add_subscription_button(title: str, url: str) -> SubscriptionButton:
+    async with session_maker() as s:
+        button = SubscriptionButton(title=title, url=url)
+        s.add(button)
+        await s.commit()
+        return button
+
+
+async def delete_subscription_button(button_id: int) -> None:
+    async with session_maker() as s:
+        await s.execute(
+            delete(SubscriptionButton).where(SubscriptionButton.id == button_id)
+        )
         await s.commit()
 
 
@@ -630,6 +668,17 @@ async def set_sub_check_button(
 async def reset_sub_check_button() -> None:
     await set_setting(K_SUB_CHECK_TEXT, None)
     await set_setting(K_SUB_CHECK_ICON, None)
+
+
+async def is_force_sub_on_start_enabled() -> bool:
+    """A'zo bo'lsa ham har `/start` da obuna ekranini ko'rsatish sozlamasi."""
+    return (await get_setting(K_FORCE_SUB_ON_START, "0")) == "1"
+
+
+async def toggle_force_sub_on_start() -> bool:
+    enabled = not await is_force_sub_on_start_enabled()
+    await set_setting(K_FORCE_SUB_ON_START, "1" if enabled else "0")
+    return enabled
 
 
 async def get_ref_text() -> Optional[str]:

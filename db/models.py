@@ -69,6 +69,19 @@ class Channel(Base):
     )
 
 
+class SubscriptionButton(Base):
+    """Majburiy obuna postidagi kanalga bog'liq bo'lmagan URL tugma."""
+
+    __tablename__ = "subscription_buttons"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(64))
+    url: Mapped[str] = mapped_column(String(2048))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class JoinRequest(Base):
     """Yopiq kanalga tashlangan qo'shilish so'rovi (Telegram API buni ko'rsatmaydi)."""
 

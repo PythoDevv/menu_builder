@@ -28,6 +28,14 @@ class ChannelSG(StatesGroup):
     icon = State()
 
 
+class SubscriptionButtonSG(StatesGroup):
+    browse = State()
+    one = State()
+    waiting_title = State()
+    waiting_url = State()
+    confirm_delete = State()
+
+
 class MenuSG(StatesGroup):
     node = State()
     confirm_delete = State()
@@ -118,6 +126,7 @@ ALL_STATES = (
     *PanelSG.__all_states__,
     *AdminSG.__all_states__,
     *ChannelSG.__all_states__,
+    *SubscriptionButtonSG.__all_states__,
     *MenuSG.__all_states__,
     *StartSG.__all_states__,
     *SubSG.__all_states__,

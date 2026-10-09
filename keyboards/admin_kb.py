@@ -14,7 +14,7 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
 )
 
-from db.models import Admin, Channel, Content, MenuItem
+from db.models import Admin, Channel, Content, MenuItem, SubscriptionButton
 from utils.content import content_label
 
 # ------------------------------------------------------------------ umumiy tugmalar
@@ -31,6 +31,7 @@ BTN_OFF = "🔴 O'chirish"
 
 # ------------------------------------------------------------------- bosh sahifa
 BTN_CHANNELS = "📢 Kanallar"
+BTN_SUB_BUTTONS = "🔗 Tugma"
 BTN_MENU = "🗂 Menyu tugmalari"
 BTN_START_MSG = "✏️ Start xabar"
 BTN_SUB_MSG = "📌 Obuna xabari"
@@ -68,6 +69,10 @@ BTN_CH_PUBLIC = "📢 Ochiq kanal"
 BTN_CH_PRIVATE = "🔒 Yopiq (qo'shilish so'rovi)"
 BTN_CH_ICON = "🌟 Tugma premium emoji"
 BTN_CH_ICON_CLEAR = "🚫 Premium emojini olib tashlash"
+
+# ---------------------------------------------------------- obuna URL tugmalari
+BTN_SB_ADD = "➕ Tugma qo'shish"
+BTN_SB_LIST = "⬅️ Tugmalar"
 
 # ------------------------------------------------------------------------- menyu
 BTN_MN_ADD = "➕ Tugma qo'shish"
@@ -126,6 +131,8 @@ BTN_ST_ADD = "➕ Qo'shish"
 BTN_SUB_RESET = "♻️ Standartga qaytarish"
 BTN_SUB_CHECK = "✅ Tekshirish tugmasi"
 BTN_SUB_CHECK_RESET = "♻️ Tugmani standartga qaytarish"
+BTN_SUB_FORCE_ON = "🟢 Har /start da ko'rsatish"
+BTN_SUB_FORCE_OFF = "🔴 Faqat a'zo bo'lmaganga"
 
 # ----------------------------------------------------------- Ballarim tugmasi
 BTN_POINTS_RENAME = "✏️ Tugma nomi"
@@ -170,7 +177,8 @@ def _list_rows(labels: Sequence[str]) -> list[list[str]]:
 def admin_home_kb() -> ReplyKeyboardMarkup:
     return _kb(
         [
-            [BTN_CHANNELS, BTN_MENU],
+            [BTN_CHANNELS, BTN_SUB_BUTTONS],
+            [BTN_MENU],
             [BTN_START_MSG, BTN_SUB_MSG],
             [BTN_PHONE, BTN_REF_TEXT],
             [BTN_BROADCAST, BTN_EXCEL],
@@ -275,6 +283,19 @@ def channel_icon_kb(has_icon: bool) -> ReplyKeyboardMarkup:
 
 def channel_type_kb() -> ReplyKeyboardMarkup:
     return _kb([[BTN_CH_PUBLIC], [BTN_CH_PRIVATE], [BTN_CANCEL]], "Turini tanlang")
+
+
+# ---------------------------------------------------------- OBUNA URL TUGMALARI
+def subscription_button_label(button: SubscriptionButton, index: int) -> str:
+    return f"{index}. 🔗 {button.title}"
+
+
+def subscription_buttons_kb(labels: Sequence[str]) -> ReplyKeyboardMarkup:
+    return _kb(_list_rows(labels) + [[BTN_SB_ADD], [BTN_HOME]])
+
+
+def subscription_button_one_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_DELETE], [BTN_SB_LIST]])
 
 
 # Bot kanalga admin qilinganda o'sha adminga tushadigan so'rov — inline,
@@ -428,9 +449,14 @@ def start_msg_kb(exists: bool) -> ReplyKeyboardMarkup:
 
 
 # ------------------------------------------------------------------ OBUNA XABARI
-def sub_msg_kb(custom: bool) -> ReplyKeyboardMarkup:
+def sub_msg_kb(custom: bool, force_on_start: bool) -> ReplyKeyboardMarkup:
     """custom — admin o'z xabarini qo'yganmi (yo'q bo'lsa standart ishlaydi)."""
-    rows = [[BTN_ST_EDIT if custom else BTN_ST_ADD], [BTN_VIEW], [BTN_SUB_CHECK]]
+    rows = [
+        [BTN_SUB_FORCE_OFF if force_on_start else BTN_SUB_FORCE_ON],
+        [BTN_ST_EDIT if custom else BTN_ST_ADD],
+        [BTN_VIEW],
+        [BTN_SUB_CHECK],
+    ]
     if custom:
         rows.append([BTN_SUB_RESET])
     rows.append([BTN_HOME])

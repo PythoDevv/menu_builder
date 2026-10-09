@@ -8,8 +8,9 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 ## Imkoniyatlar
 
 - **Adminlar** — paneldan telegram ID raqami orqali qo'shiladi/o'chiriladi. `.env` dagilar asosiy admin bo'lib qoladi.
-- **Obuna tekshiruvi** — har bir `/start` da ochiq va yopiq kanallar ko'rsatiladi; foydalanuvchi oldindan a'zo bo'lsa ham menyu faqat **A'zo bo'ldim** tugmasidan keyin ochiladi. Yopiq kanalga zayafka tashlash tekshiruvdan o'tish uchun yetarli.
+- **Obuna tekshiruvi** — odatda faqat hali a'zo bo'lmagan foydalanuvchiga ochiq va yopiq kanallar ko'rsatiladi. Admin obuna xabari bo'limidan **har `/start` da qayta ko'rsatish** rejimini yoqishi mumkin; bunda oldindan a'zo bo'lgan odam ham menyuga **A'zo bo'ldim** tugmasidan keyin o'tadi. Yopiq kanalga zayafka tashlash tekshiruvdan o'tish uchun yetarli.
 - **Obuna xabari** — majburiy obuna ekranidagi post admin paneldan almashtiriladi: matn, rasm, video, fayl (`file_id` bilan). Matn/captiondagi premium custom emojilar saqlanadi. Kanal tugmalari va matni o'zgaradigan **A'zo bo'ldim** tugmasi xabar ostiga avtomatik qo'shiladi; ikkala turdagi tugmaga ham premium emoji ikonka qo'yish mumkin.
+- **Obuna URL tugmalari** — admin `/tugma` yoki **🔗 Tugma** bo'limidan nom va link kiritib, kanalga bog'liq bo'lmagan tugmalar qo'shadi. Ular kanal tugmalaridan keyin, **A'zo bo'ldim** tugmasidan oldin chiqadi va alohida jadvalda saqlanadi.
 - **Start xabar** — admin paneldan qo'shiladi / o'zgartiriladi / o'chiriladi. Qo'yilmagan bo'lsa ko'rsatilmaydi.
 - **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga premium custom emoji ikonka va kontent (rasm/video/fayl/matn) biriktiriladi.
 - **Menyu ko'rinishi** — yangi tugmalar standart **2 talik** yaratiladi; keyin har birini **1, 2, 3 yoki 4 talik** qilib sozlash mumkin. Ketma-ket bir xil turdagi tugmalar bitta qatorga guruhlanadi.
@@ -93,10 +94,11 @@ oddiy foydalanuvchi menyusini ko'radi.
 |---|---|
 | 👮 Adminlar | ID raqami orqali admin qo'shish / adminlikdan olish |
 | 📢 Kanallar | Qo'shish / o'chirish / yoqish-o'chirish va obuna tugmasiga premium emoji qo'yish. Bot kanalda **admin** bo'lishi shart. |
+| 🔗 Tugma | Majburiy obuna postiga nomi va linki alohida saqlanadigan oddiy URL tugmalarni qo'shish/o'chirish (`/tugma` bilan ham ochiladi) |
 | 🆕 Avtomatik so'rov | Bot kanalga admin qilinsa, **admin qilgan odamning o'ziga** "qo'shilsinmi?" so'rovi keladi (pastda) |
 | 🗂 Menyu tugmalari | Tugma qo'shish, nomini/rangini va **1–4 talik ko'rinishini** o'zgartirish, tartiblash, yashirish, o'chirish, kontent biriktirish, **taklif sharti** |
 | ✏️ Start xabar | Ko'rish / o'zgartirish / o'chirish |
-| 📌 Obuna xabari | Majburiy obuna postini premium emojilari bilan qo'yish, ko'rish, standartga qaytarish va **Tekshirish** tugmasi matni/premium emojisini sozlash |
+| 📌 Obuna xabari | Majburiy obuna postini sozlash, **har `/start` da a'zoga ham qayta ko'rsatish** rejimini yoqish/o'chirish va **Tekshirish** tugmasini o'zgartirish |
 | ✍️ Taklif matni | Taklif sharti bajarilmaganda chiqadigan matn: ko'rish, o'zgartirish, standartga qaytarish |
 | ☎️ Telefon so'rash | ON / OFF |
 | 🏆 Ballarim tugmasi | Ko'rsatish/yashirish, nomi, rangi, premium emoji va natija xabarini o'zgartirish |
@@ -212,6 +214,8 @@ qo'shilsinmi?"* — **✅ Ha** / **❌ Yo'q** tugmalari bilan.
 - Tekshirish tugmasi `sub_check_text` / `sub_check_icon_custom_emoji_id` sozlamalarida,
   kanal tugmasining premium emojisi esa `channels.icon_custom_emoji_id` ustunida saqlanadi.
   Kanal ikonkalari uchun `006_channel_button_custom_emoji.sql` migratsiyasini qo'llash kerak.
+- Oddiy obuna URL tugmalari alohida `subscription_buttons` jadvalida saqlanadi.
+  Eski bazada jadval `008_subscription_buttons.sql` migratsiyasi bilan yaratiladi.
 - Taklif matni `settings` jadvalidagi `ref_text` kalitida turadi; taklif soni
   `menu_items.required_referrals`, kim kimni taklif qilgani `users.referred_by`
   ustunida. Eski bazada bu ustunlar `python migrate.py` (002) bilan qo'shiladi.

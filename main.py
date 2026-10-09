@@ -18,6 +18,7 @@ from handlers.admin import (
     menu_items,
     panel,
     rating,
+    subscription_buttons,
     superadmin,
     winners,
 )
@@ -65,6 +66,7 @@ async def main() -> None:
         panel.router,
         admins.router,
         channels.router,
+        subscription_buttons.router,
         channel_events.router,  # bot kanalga admin qilinganda tasdiq so'rovi
         menu_items.router,
         admin_settings.router,
