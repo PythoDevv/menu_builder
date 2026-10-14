@@ -82,10 +82,10 @@ postlari o'zining eski yuborish usulida ishlashda davom etadi.
 ### Polling xavfsizligi
 
 Telegram Bot API aiogram hali tanimaydigan yangi formatdagi update yuborsa, bitta
-xabar butun polling navbatini qayta-qayta buzib qo'ymaydi. Bot bunday update ID
-si haqida logga xato yozib, uni o'tkazib yuboradi va keyingi xabarlarni ishlashda
-davom etadi. Muhim post o'tkazib yuborilgan bo'lsa, aiogram yangilangach uni
-qaytadan forward qilish kerak bo'ladi.
+xabar butun polling navbatini qayta-qayta buzib qo'ymaydi. Yangi rich-postning
+ichki bloki tanilmasa ham post yo'qolmaydi: bot uni Telegram orqali arxiv kanaliga
+nusxalaydi. Rich postga aloqasi bo'lmagan mutlaqo yaroqsiz update esa logga yozilib,
+o'tkazib yuboriladi va keyingi xabarlar ishlashda davom etadi.
 
 `migrate.py` qaysi fayl qo'llanganini `schema_migrations` jadvalida saqlaydi —
 qayta ishga tushirsangiz bajarilgani takrorlanmaydi.

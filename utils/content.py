@@ -21,6 +21,9 @@ Markup = Union[InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove]
 # qaytarish uchun text_html ustunida saqlanadigan versiyalangan format.
 FORMATTED_TEXT_PREFIX = "tg_entities_v1:"
 COPIED_MESSAGE_PREFIX = "tg_copy_v1:"
+# aiogram rich_message ichidagi kelajak blokni parse qila olmasa, polling qatlami
+# uni olib tashlab, xabarni copy qilish kerakligini shu marker bilan bildiradi.
+RICH_MESSAGE_COPY_MARKER = "_rich_message_copy_needed"
 
 TYPE_LABELS = {
     "text": "📝 Matn",
@@ -135,7 +138,10 @@ def extract_content(message: Message) -> Optional[dict]:
     """
     # Rich messages oddiy text/entitylarga aylanmaydi. Ularni Telegramning o'zi
     # nusxalashi kerak, aks holda premium emoji va bloklar yo'qolishi mumkin.
-    if getattr(message, "rich_message", None) is not None:
+    if (
+        getattr(message, "rich_message", None) is not None
+        or getattr(message, RICH_MESSAGE_COPY_MARKER, False)
+    ):
         return {"type": "rich_message", "file_id": None, "text_html": None}
 
     caption = _stored_text(

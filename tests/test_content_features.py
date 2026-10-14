@@ -13,6 +13,7 @@ from keyboards.user_kb import menu_kb, subscribe_kb
 from utils.content import (
     COPIED_MESSAGE_PREFIX,
     FORMATTED_TEXT_PREFIX,
+    RICH_MESSAGE_COPY_MARKER,
     ContentArchiveNotConfiguredError,
     extract_button_text_and_icon,
     extract_content,
@@ -145,7 +146,7 @@ class FaultTolerantPollingTest(unittest.TestCase):
             ],
         }
 
-        with self.assertLogs("utils.polling", level="ERROR") as logs:
+        with self.assertLogs("utils.polling", level="WARNING") as logs:
             response = session.check_response(
                 bot,
                 GetUpdates(timeout=30),
@@ -154,7 +155,8 @@ class FaultTolerantPollingTest(unittest.TestCase):
             )
 
         self.assertEqual([update.update_id for update in response.result], [10, 11])
-        self.assertIsNone(response.result[0].message)
+        self.assertEqual(response.result[0].message.message_id, 1)
+        self.assertTrue(getattr(response.result[0].message, RICH_MESSAGE_COPY_MARKER))
         self.assertEqual(response.result[1].message.text, "keyingi xabar")
         self.assertIn("10", logs.output[0])
 
