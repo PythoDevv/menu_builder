@@ -21,6 +21,7 @@ Markup = Union[InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove]
 # qaytarish uchun text_html ustunida saqlanadigan versiyalangan format.
 FORMATTED_TEXT_PREFIX = "tg_entities_v1:"
 COPIED_MESSAGE_PREFIX = "tg_copy_v1:"
+COPIED_MESSAGE_GROUP_PREFIX = "tg_copy_group_v1:"
 # aiogram rich_message ichidagi kelajak blokni parse qila olmasa, polling qatlami
 # uni olib tashlab, xabarni copy qilish kerakligini shu marker bilan bildiradi.
 RICH_MESSAGE_COPY_MARKER = "_rich_message_copy_needed"
@@ -36,6 +37,7 @@ TYPE_LABELS = {
     "video_note": "⭕️ Video xabar",
     "sticker": "🌟 Stiker",
     "message_copy": "📋 Asl post nusxasi",
+    "message_group": "🖼 Albom",
 }
 
 
@@ -55,6 +57,29 @@ def _parse_copied_message_ref(value: Optional[str]) -> Optional[tuple[int, int]]
     try:
         chat_id, message_id = value[len(COPIED_MESSAGE_PREFIX) :].rsplit(":", 1)
         return int(chat_id), int(message_id)
+    except (TypeError, ValueError):
+        return None
+
+
+def _copied_message_group_ref(chat_id: int, message_ids: list[int]) -> str:
+    """Arxivdagi albom a'zolarini bitta ixcham DB qiymatiga aylantiradi."""
+    return f"{COPIED_MESSAGE_GROUP_PREFIX}{chat_id}:{','.join(map(str, message_ids))}"
+
+
+def _parse_copied_message_group_ref(
+    value: Optional[str],
+) -> Optional[tuple[int, list[int]]]:
+    """Arxiv albomi manzilini o'qiydi va Telegram limitlarini tekshiradi."""
+    if not value or not value.startswith(COPIED_MESSAGE_GROUP_PREFIX):
+        return None
+    try:
+        chat_id_raw, message_ids_raw = value[len(COPIED_MESSAGE_GROUP_PREFIX) :].split(
+            ":", 1
+        )
+        message_ids = [int(value) for value in message_ids_raw.split(",")]
+        if not 2 <= len(message_ids) <= 100 or message_ids != sorted(set(message_ids)):
+            return None
+        return int(chat_id_raw), message_ids
     except (TypeError, ValueError):
         return None
 
@@ -203,6 +228,37 @@ async def prepare_content(bot: Bot, message: Message) -> Optional[dict]:
     }
 
 
+async def prepare_media_group(
+    bot: Bot, source_chat_id: int, source_message_ids: list[int]
+) -> dict:
+    """Admin yuborgan albomni arxivga bitta guruh bo'lib nusxalaydi.
+
+    ``copyMessages`` Telegram tomonida albom ko'rinishini saqlaydi. Keyin aynan
+    shu arxiv IDlar bilan foydalanuvchiga ham bitta albom qaytariladi.
+    """
+    if CONTENT_ARCHIVE_CHAT_ID is None:
+        raise ContentArchiveNotConfiguredError(
+            "CONTENT_ARCHIVE_CHAT_ID sozlanmagan"
+        )
+    message_ids = sorted(set(source_message_ids))
+    if not 2 <= len(message_ids) <= 100:
+        raise ValueError("Albom 2 dan 100 tagacha xabardan iborat bo'lishi kerak")
+
+    copied = await bot.copy_messages(
+        chat_id=CONTENT_ARCHIVE_CHAT_ID,
+        from_chat_id=source_chat_id,
+        message_ids=message_ids,
+    )
+    copied_ids = [message.message_id for message in copied]
+    if len(copied_ids) != len(message_ids):
+        raise ValueError("Albomning barcha rasmlari arxivga nusxalanmadi")
+    return {
+        "type": "message_group",
+        "file_id": _copied_message_group_ref(CONTENT_ARCHIVE_CHAT_ID, copied_ids),
+        "text_html": None,
+    }
+
+
 async def send_content(
     bot: Bot,
     chat_id: int,
@@ -226,6 +282,20 @@ async def send_content(
             from_chat_id=source[0],
             message_id=source[1],
             reply_markup=reply_markup,
+        )
+        return
+
+    if t == "message_group":
+        source = _parse_copied_message_group_ref(fid)
+        if source is None:
+            raise ValueError("Saqlangan albom manzili noto'g'ri")
+        # copyMessages albom guruhlanishini saqlaydi. Bot API bu metodga
+        # reply_markup qabul qilmaydi; menyu reply-klaviaturasi foydalanuvchida
+        # avvaldan turadi va o'zgarishsiz qoladi.
+        await bot.copy_messages(
+            chat_id=chat_id,
+            from_chat_id=source[0],
+            message_ids=source[1],
         )
         return
 
@@ -318,6 +388,10 @@ async def send_raw_content(
 
 def content_label(content: Content, index: int) -> str:
     label = TYPE_LABELS.get(content.type, content.type)
+    if content.type == "message_group":
+        group = _parse_copied_message_group_ref(content.file_id)
+        size = len(group[1]) if group else 0
+        return f"{index}. {label} · {size} ta"
     formatted = _deserialize_formatted_text(content.text_html)
     preview = ((formatted[0] if formatted else content.text_html) or "").replace(
         "\n", " "

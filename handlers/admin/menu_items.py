@@ -1,7 +1,10 @@
+import asyncio
+import logging
+from dataclasses import dataclass, field
 from html import escape
 from typing import Optional
 
-from aiogram import F
+from aiogram import Bot, F
 from aiogram.fsm.context import FSMContext
 from aiogram.exceptions import TelegramAPIError
 from aiogram.types import Message
@@ -79,10 +82,12 @@ from utils.content import (
     ContentArchiveNotConfiguredError,
     extract_button_text_and_icon,
     prepare_content,
+    prepare_media_group,
     send_content,
 )
 
 router = admin_router()
+logger = logging.getLogger(__name__)
 
 TITLE_LIMIT = 60
 
@@ -93,6 +98,103 @@ REF_LIMIT = 10_000
 KEY_TITLE = "new_title"
 KEY_ICON = "new_icon_custom_emoji_id"
 KEY_ROW_SIZE = "new_row_size"
+
+# Telegram albomni bir nechta alohida update qilib yuboradi. Oxirgi a'zo
+# kelganidan keyin qisqa kutish barcha rasmlar bitta guruhga yig'ilishini beradi.
+ALBUM_COLLECT_DELAY = 0.8
+
+
+@dataclass
+class PendingAlbum:
+    bot: Bot
+    chat_id: int
+    item_id: int
+    message_ids: set[int] = field(default_factory=set)
+    task: Optional[asyncio.Task[None]] = None
+
+
+_pending_albums: dict[tuple[int, str], PendingAlbum] = {}
+_pending_albums_lock = asyncio.Lock()
+
+
+async def _send_album_notice(bot: Bot, chat_id: int, text: str) -> None:
+    """Fon taskidagi natijani adminga xabar qiladi."""
+    try:
+        await bot.send_message(chat_id, text)
+    except TelegramAPIError:
+        logger.warning("Albom natijasini admin chatiga yuborib bo'lmadi")
+
+
+async def _save_album_after_idle(key: tuple[int, str]) -> None:
+    """Yangi a'zo kelmasa, yig'ilgan albomni arxivga va DBga saqlaydi."""
+    try:
+        await asyncio.sleep(ALBUM_COLLECT_DELAY)
+    except asyncio.CancelledError:
+        return
+
+    current_task = asyncio.current_task()
+    async with _pending_albums_lock:
+        pending = _pending_albums.get(key)
+        if pending is None or pending.task is not current_task:
+            return
+        _pending_albums.pop(key, None)
+
+    message_ids = sorted(pending.message_ids)
+    try:
+        data = await prepare_media_group(pending.bot, pending.chat_id, message_ids)
+        await add_content(
+            pending.item_id, data["type"], data["file_id"], data["text_html"]
+        )
+        total = await count_contents(pending.item_id)
+    except ContentArchiveNotConfiguredError:
+        await _send_album_notice(
+            pending.bot,
+            pending.chat_id,
+            "❗️ Albom uchun arxiv kanal sozlanmagan. "
+            "Admin CONTENT_ARCHIVE_CHAT_ID ni kiritsin.",
+        )
+    except TelegramAPIError:
+        await _send_album_notice(
+            pending.bot,
+            pending.chat_id,
+            "❗️ Albom arxiv kanaliga nusxalanmadi. Botni o'sha kanalda admin qiling "
+            "va kanal ID sini tekshiring.",
+        )
+    except ValueError as exc:
+        await _send_album_notice(pending.bot, pending.chat_id, f"❗️ Albom saqlanmadi: {exc}")
+    except Exception:
+        logger.exception("Albomni saqlashda kutilmagan xato")
+        await _send_album_notice(
+            pending.bot, pending.chat_id, "❗️ Albomni saqlashda kutilmagan xato yuz berdi."
+        )
+    else:
+        await _send_album_notice(
+            pending.bot,
+            pending.chat_id,
+            f"✅ Albom saqlandi: <b>{len(message_ids)}</b> ta media. "
+            f"Jami: <b>{total}</b> ta.",
+        )
+
+
+async def _collect_album_part(message: Message, item_id: int) -> None:
+    """Bir albom a'zosini yig'adi va saqlash taymerini yangilaydi."""
+    group_id = message.media_group_id
+    if group_id is None:
+        return
+    key = (message.chat.id, group_id)
+    async with _pending_albums_lock:
+        pending = _pending_albums.get(key)
+        if pending is None:
+            pending = PendingAlbum(
+                bot=message.bot,
+                chat_id=message.chat.id,
+                item_id=item_id,
+            )
+            _pending_albums[key] = pending
+        pending.message_ids.add(message.message_id)
+        if pending.task is not None:
+            pending.task.cancel()
+        pending.task = asyncio.create_task(_save_album_after_idle(key))
 
 ASK_ROW_SIZE_TEXT = (
     "🧩 <b>Tugma ko'rinishi</b>\n\n"
@@ -572,6 +674,14 @@ async def content_done(message: Message, state: FSMContext) -> None:
 
 @router.message(MenuSG.waiting_content, NOT_COMMAND)
 async def content_received(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    if item_id is None:
+        await show_node(message, state, None)
+        return
+    if message.media_group_id:
+        await _collect_album_part(message, item_id)
+        return
+
     try:
         data = await prepare_content(message.bot, message)
     except ContentArchiveNotConfiguredError:
@@ -590,10 +700,6 @@ async def content_received(message: Message, state: FSMContext) -> None:
         return
     if data is None:
         await message.answer("❗️ Bu turdagi kontent qo'llab-quvvatlanmaydi.")
-        return
-    item_id = await _node_id(state)
-    if item_id is None:
-        await show_node(message, state, None)
         return
     await add_content(item_id, data["type"], data["file_id"], data["text_html"])
     total = await count_contents(item_id)

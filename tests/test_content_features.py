@@ -12,12 +12,14 @@ from keyboards.admin_kb import button_style_kb, row_size_ask_kb, row_size_kb
 from keyboards.user_kb import menu_kb, subscribe_kb
 from utils.content import (
     COPIED_MESSAGE_PREFIX,
+    COPIED_MESSAGE_GROUP_PREFIX,
     FORMATTED_TEXT_PREFIX,
     RICH_MESSAGE_COPY_MARKER,
     ContentArchiveNotConfiguredError,
     extract_button_text_and_icon,
     extract_content,
     prepare_content,
+    prepare_media_group,
     send_content,
 )
 from utils.referral import render_my_points_text
@@ -115,6 +117,52 @@ class RichMessageCopyTest(unittest.IsolatedAsyncioTestCase):
             from_chat_id=-100123,
             message_id=77,
             reply_markup=None,
+        )
+
+
+class MediaGroupCopyTest(unittest.IsolatedAsyncioTestCase):
+    async def test_album_is_archived_as_one_copy_group(self) -> None:
+        bot = SimpleNamespace(
+            copy_messages=AsyncMock(
+                return_value=[
+                    SimpleNamespace(message_id=71),
+                    SimpleNamespace(message_id=72),
+                    SimpleNamespace(message_id=73),
+                ]
+            )
+        )
+
+        with unittest.mock.patch("utils.content.CONTENT_ARCHIVE_CHAT_ID", -100123):
+            data = await prepare_media_group(bot, source_chat_id=456, source_message_ids=[4, 2, 3])
+
+        self.assertEqual(
+            data,
+            {
+                "type": "message_group",
+                "file_id": f"{COPIED_MESSAGE_GROUP_PREFIX}-100123:71,72,73",
+                "text_html": None,
+            },
+        )
+        bot.copy_messages.assert_awaited_once_with(
+            chat_id=-100123,
+            from_chat_id=456,
+            message_ids=[2, 3, 4],
+        )
+
+    async def test_saved_album_is_copied_as_group(self) -> None:
+        bot = SimpleNamespace(copy_messages=AsyncMock())
+        content = SimpleNamespace(
+            type="message_group",
+            file_id=f"{COPIED_MESSAGE_GROUP_PREFIX}-100123:71,72,73",
+            text_html=None,
+        )
+
+        await send_content(bot, chat_id=456, content=content)
+
+        bot.copy_messages.assert_awaited_once_with(
+            chat_id=456,
+            from_chat_id=-100123,
+            message_ids=[71, 72, 73],
         )
 
 

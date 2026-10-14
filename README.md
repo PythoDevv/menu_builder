@@ -79,6 +79,15 @@ keyin foydalanuvchiga o'sha nusxani yuboradi.
 Bu faqat yangi rich-postlarga tegishli. Avvaldan saqlangan matn, media va stiker
 postlari o'zining eski yuborish usulida ishlashda davom etadi.
 
+### Albomlar
+
+Admin menyu kontenti qo'shilayotgan paytda Telegram albomi yuborilsa, uning 2–10
+ta media a'zosi alohida postlar emas, bitta **Albom** kontenti bo'lib saqlanadi.
+Bot albomni arxiv kanaliga va foydalanuvchiga `copyMessages` bilan nusxalaydi,
+shuning uchun Telegramdagi kollaj ko'rinishi va captionlar saqlanadi. Albom
+yuborilgach `✅ Albom saqlandi` xabarini kuting; bu odatda bir soniyadan kam vaqt
+oladi. Bu imkoniyat menyu tugmasi ichidagi kontent uchun ishlaydi.
+
 ### Polling xavfsizligi
 
 Telegram Bot API aiogram hali tanimaydigan yangi formatdagi update yuborsa, bitta

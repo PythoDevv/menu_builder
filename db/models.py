@@ -133,7 +133,8 @@ class Content(Base):
     menu_item_id: Mapped[int] = mapped_column(
         ForeignKey("menu_items.id", ondelete="CASCADE"), index=True
     )
-    # text / photo / video / document / audio / voice / animation / video_note / sticker
+    # text / photo / video / document / audio / voice / animation / video_note /
+    # sticker / message_copy / message_group
     type: Mapped[str] = mapped_column(String(20))
     file_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     # Eski yozuvlarda HTML; yangi yozuvlarda tg_entities_v1 JSON formati.
