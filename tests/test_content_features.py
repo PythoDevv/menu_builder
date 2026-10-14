@@ -1,20 +1,27 @@
 import unittest
+import json
 from types import SimpleNamespace
 from unittest.mock import AsyncMock
 
+from aiogram import Bot
+from aiogram.methods import GetUpdates
 from aiogram.types import Chat, Message, MessageEntity, User
 
 from db.models import Channel, MenuItem, SubscriptionButton
 from keyboards.admin_kb import button_style_kb, row_size_ask_kb, row_size_kb
 from keyboards.user_kb import menu_kb, subscribe_kb
 from utils.content import (
+    COPIED_MESSAGE_PREFIX,
     FORMATTED_TEXT_PREFIX,
+    ContentArchiveNotConfiguredError,
     extract_button_text_and_icon,
     extract_content,
+    prepare_content,
     send_content,
 )
 from utils.referral import render_my_points_text
 from utils.rating import rating_limits, render_rating_text
+from utils.polling import FaultTolerantSession
 
 
 class PremiumStickerTest(unittest.TestCase):
@@ -58,6 +65,98 @@ class PremiumStickerSendingTest(unittest.IsolatedAsyncioTestCase):
             "premium-sticker-file-id",
             reply_markup=None,
         )
+
+
+class RichMessageCopyTest(unittest.IsolatedAsyncioTestCase):
+    async def test_rich_message_is_archived_and_saved_as_copy_reference(self) -> None:
+        message = SimpleNamespace(
+            rich_message=object(),
+            chat=SimpleNamespace(id=101),
+            message_id=42,
+        )
+        bot = SimpleNamespace(copy_message=AsyncMock(return_value=SimpleNamespace(message_id=77)))
+
+        with unittest.mock.patch("utils.content.CONTENT_ARCHIVE_CHAT_ID", -100123):
+            data = await prepare_content(bot, message)
+
+        self.assertEqual(
+            data,
+            {
+                "type": "message_copy",
+                "file_id": f"{COPIED_MESSAGE_PREFIX}-100123:77",
+                "text_html": None,
+            },
+        )
+        bot.copy_message.assert_awaited_once_with(
+            chat_id=-100123,
+            from_chat_id=101,
+            message_id=42,
+        )
+
+    async def test_rich_message_requires_archive_channel(self) -> None:
+        message = SimpleNamespace(rich_message=object())
+        with unittest.mock.patch("utils.content.CONTENT_ARCHIVE_CHAT_ID", None):
+            with self.assertRaises(ContentArchiveNotConfiguredError):
+                await prepare_content(SimpleNamespace(), message)
+
+    async def test_saved_rich_message_is_copied_to_user(self) -> None:
+        bot = SimpleNamespace(copy_message=AsyncMock())
+        content = SimpleNamespace(
+            type="message_copy",
+            file_id=f"{COPIED_MESSAGE_PREFIX}-100123:77",
+            text_html=None,
+        )
+
+        await send_content(bot, chat_id=456, content=content)
+
+        bot.copy_message.assert_awaited_once_with(
+            chat_id=456,
+            from_chat_id=-100123,
+            message_id=77,
+            reply_markup=None,
+        )
+
+
+class FaultTolerantPollingTest(unittest.TestCase):
+    def test_unknown_update_does_not_block_following_updates(self) -> None:
+        bot = Bot("123456:ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghi")
+        session = FaultTolerantSession()
+        payload = {
+            "ok": True,
+            "result": [
+                {
+                    "update_id": 10,
+                    "message": {
+                        "message_id": 1,
+                        "date": 0,
+                        "chat": {"id": 1, "type": "private"},
+                        "rich_message": {"blocks": [{"type": "future_block", "text": "x"}]},
+                    },
+                },
+                {
+                    "update_id": 11,
+                    "message": {
+                        "message_id": 2,
+                        "date": 0,
+                        "chat": {"id": 1, "type": "private"},
+                        "text": "keyingi xabar",
+                    },
+                },
+            ],
+        }
+
+        with self.assertLogs("utils.polling", level="ERROR") as logs:
+            response = session.check_response(
+                bot,
+                GetUpdates(timeout=30),
+                200,
+                json.dumps(payload),
+            )
+
+        self.assertEqual([update.update_id for update in response.result], [10, 11])
+        self.assertIsNone(response.result[0].message)
+        self.assertEqual(response.result[1].message.text, "keyingi xabar")
+        self.assertIn("10", logs.output[0])
 
 
 class CustomEmojiContentTest(unittest.IsolatedAsyncioTestCase):

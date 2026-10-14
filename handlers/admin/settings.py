@@ -1,7 +1,7 @@
 from html import escape
 
 from aiogram import F
-from aiogram.exceptions import TelegramBadRequest
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.fsm.context import FSMContext
 from aiogram.types import LinkPreviewOptions, Message
 
@@ -78,9 +78,10 @@ from keyboards.user_kb import BTN_BACK as USER_BACK
 from keyboards.user_kb import BTN_HOME as USER_HOME
 from keyboards.user_kb import menu_kb, share_kb, subscribe_kb
 from utils.content import (
+    ContentArchiveNotConfiguredError,
     TYPE_LABELS,
     extract_button_text_and_icon,
-    extract_content,
+    prepare_content,
     send_raw_content,
 )
 from utils.referral import ref_link, render_my_points_text
@@ -154,7 +155,22 @@ async def delete_no(message: Message, state: FSMContext) -> None:
 
 @router.message(StartSG.waiting_message, NOT_COMMAND)
 async def save_start(message: Message, state: FSMContext) -> None:
-    data = extract_content(message)
+    try:
+        data = await prepare_content(message.bot, message)
+    except ContentArchiveNotConfiguredError:
+        await message.answer(
+            "❗️ Rich-formatdagi post uchun arxiv kanal sozlanmagan. "
+            "Admin CONTENT_ARCHIVE_CHAT_ID ni kiritsin.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    except TelegramAPIError:
+        await message.answer(
+            "❗️ Post arxiv kanaliga nusxalanmadi. Botni o'sha kanalda admin qiling "
+            "va kanal ID sini tekshiring.",
+            reply_markup=cancel_kb(),
+        )
+        return
     if data is None:
         await message.answer(
             "❗️ Bu turdagi xabar qo'llab-quvvatlanmaydi.", reply_markup=cancel_kb()
@@ -281,7 +297,22 @@ async def reset_no(message: Message, state: FSMContext) -> None:
 
 @router.message(SubSG.waiting_message, NOT_COMMAND)
 async def save_sub(message: Message, state: FSMContext) -> None:
-    data = extract_content(message)
+    try:
+        data = await prepare_content(message.bot, message)
+    except ContentArchiveNotConfiguredError:
+        await message.answer(
+            "❗️ Rich-formatdagi post uchun arxiv kanal sozlanmagan. "
+            "Admin CONTENT_ARCHIVE_CHAT_ID ni kiritsin.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    except TelegramAPIError:
+        await message.answer(
+            "❗️ Post arxiv kanaliga nusxalanmadi. Botni o'sha kanalda admin qiling "
+            "va kanal ID sini tekshiring.",
+            reply_markup=cancel_kb(),
+        )
+        return
     if data is None:
         await message.answer(
             "❗️ Bu turdagi xabar qo'llab-quvvatlanmaydi.", reply_markup=cancel_kb()

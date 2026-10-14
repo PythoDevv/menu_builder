@@ -29,6 +29,7 @@ from middlewares.user_mw import UserMiddleware
 from utils.admins import admin_ids, is_super_admin, refresh_admins
 from utils.commands import set_admin_commands, set_default_commands
 from utils.maintenance import MaintenanceMiddleware
+from utils.polling import FaultTolerantSession
 from utils.scheduler import start_scheduler, stop_scheduler
 
 logger = logging.getLogger(__name__)
@@ -48,7 +49,11 @@ async def main() -> None:
     if not BOT_TOKEN:
         raise SystemExit("❌ .env faylida BOT_TOKEN yo'q")
 
-    bot = Bot(BOT_TOKEN, default=DefaultBotProperties(parse_mode=ParseMode.HTML))
+    bot = Bot(
+        BOT_TOKEN,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+        session=FaultTolerantSession(),
+    )
     dp = Dispatcher(storage=MemoryStorage())
 
     # middlewarelar. Obuna ekrani inline bo'lgani uchun callback ham tekshiriladi.

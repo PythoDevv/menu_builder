@@ -3,6 +3,7 @@ from typing import Optional
 
 from aiogram import F
 from aiogram.fsm.context import FSMContext
+from aiogram.exceptions import TelegramAPIError
 from aiogram.types import Message
 
 from db.queries import (
@@ -74,7 +75,12 @@ from keyboards.admin_kb import (
     row_size_kb,
     row_size_label,
 )
-from utils.content import extract_button_text_and_icon, extract_content, send_content
+from utils.content import (
+    ContentArchiveNotConfiguredError,
+    extract_button_text_and_icon,
+    prepare_content,
+    send_content,
+)
 
 router = admin_router()
 
@@ -566,7 +572,22 @@ async def content_done(message: Message, state: FSMContext) -> None:
 
 @router.message(MenuSG.waiting_content, NOT_COMMAND)
 async def content_received(message: Message, state: FSMContext) -> None:
-    data = extract_content(message)
+    try:
+        data = await prepare_content(message.bot, message)
+    except ContentArchiveNotConfiguredError:
+        await message.answer(
+            "❗️ Rich-formatdagi post uchun arxiv kanal sozlanmagan. "
+            "Admin CONTENT_ARCHIVE_CHAT_ID ni kiritsin.",
+            reply_markup=content_add_kb(),
+        )
+        return
+    except TelegramAPIError:
+        await message.answer(
+            "❗️ Post arxiv kanaliga nusxalanmadi. Botni o'sha kanalda admin qiling "
+            "va kanal ID sini tekshiring.",
+            reply_markup=content_add_kb(),
+        )
+        return
     if data is None:
         await message.answer("❗️ Bu turdagi kontent qo'llab-quvvatlanmaydi.")
         return

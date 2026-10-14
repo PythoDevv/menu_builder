@@ -59,6 +59,34 @@ python migrate.py                # avval dump oladi, keyin migratsiyani qo'llayd
 supervisorctl restart menu_builder_bot
 ```
 
+### Rich-formatdagi forward postlar
+
+Telegramning yangi rich-format postlari (masalan, yig'iladigan quote va premium
+emoji/stikerli postlar) oddiy `file_id` sifatida saqlanmaydi. Ularning ko'rinishi
+to'liq saqlanishi uchun bot ular kelishi bilan yopiq arxiv kanaliga nusxa oladi va
+keyin foydalanuvchiga o'sha nusxani yuboradi.
+
+1. Faqat bot uchun yopiq kanal yarating va botni unda xabar yubora oladigan admin
+   qiling.
+2. Kanal ID sini oling (`-100...` ko'rinishida) va serverdagi `.env` ga yozing:
+
+   ```env
+   CONTENT_ARCHIVE_CHAT_ID=-1001234567890
+   ```
+
+3. Botni qayta ishga tushiring. Arxiv kanalidagi xabarlarni o'chirmang.
+
+Bu faqat yangi rich-postlarga tegishli. Avvaldan saqlangan matn, media va stiker
+postlari o'zining eski yuborish usulida ishlashda davom etadi.
+
+### Polling xavfsizligi
+
+Telegram Bot API aiogram hali tanimaydigan yangi formatdagi update yuborsa, bitta
+xabar butun polling navbatini qayta-qayta buzib qo'ymaydi. Bot bunday update ID
+si haqida logga xato yozib, uni o'tkazib yuboradi va keyingi xabarlarni ishlashda
+davom etadi. Muhim post o'tkazib yuborilgan bo'lsa, aiogram yangilangach uni
+qaytadan forward qilish kerak bo'ladi.
+
 `migrate.py` qaysi fayl qo'llanganini `schema_migrations` jadvalida saqlaydi —
 qayta ishga tushirsangiz bajarilgani takrorlanmaydi.
 

@@ -12,6 +12,7 @@ from aiogram.types import (
     ReplyKeyboardRemove,
 )
 
+from config import CONTENT_ARCHIVE_CHAT_ID
 from db.models import Content
 
 Markup = Union[InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove]
@@ -19,6 +20,7 @@ Markup = Union[InlineKeyboardMarkup, ReplyKeyboardMarkup, ReplyKeyboardRemove]
 # Custom emoji ID va boshqa entitylarni HTML parserdan o'tkazmay, aynan Telegramga
 # qaytarish uchun text_html ustunida saqlanadigan versiyalangan format.
 FORMATTED_TEXT_PREFIX = "tg_entities_v1:"
+COPIED_MESSAGE_PREFIX = "tg_copy_v1:"
 
 TYPE_LABELS = {
     "text": "📝 Matn",
@@ -30,7 +32,28 @@ TYPE_LABELS = {
     "animation": "🎞 GIF",
     "video_note": "⭕️ Video xabar",
     "sticker": "🌟 Stiker",
+    "message_copy": "📋 Asl post nusxasi",
 }
+
+
+class ContentArchiveNotConfiguredError(RuntimeError):
+    """Rich post uchun arxiv kanal belgilanmaganda ko'tariladi."""
+
+
+def _copied_message_ref(chat_id: int, message_id: int) -> str:
+    """DBdagi file_id ustunida nusxa olinadigan xabarning manzilini saqlaydi."""
+    return f"{COPIED_MESSAGE_PREFIX}{chat_id}:{message_id}"
+
+
+def _parse_copied_message_ref(value: Optional[str]) -> Optional[tuple[int, int]]:
+    """Arxiv xabari manzilini xavfsiz o'qiydi."""
+    if not value or not value.startswith(COPIED_MESSAGE_PREFIX):
+        return None
+    try:
+        chat_id, message_id = value[len(COPIED_MESSAGE_PREFIX) :].rsplit(":", 1)
+        return int(chat_id), int(message_id)
+    except (TypeError, ValueError):
+        return None
 
 
 def extract_button_text_and_icon(message: Message) -> tuple[str, Optional[str]]:
@@ -110,6 +133,11 @@ def extract_content(message: Message) -> Optional[dict]:
     custom emoji ID si ham parse qilinmay, yuborishda Telegramga qaytariladi.
     Eski HTML kontentlar avvalgidek ishlashda davom etadi.
     """
+    # Rich messages oddiy text/entitylarga aylanmaydi. Ularni Telegramning o'zi
+    # nusxalashi kerak, aks holda premium emoji va bloklar yo'qolishi mumkin.
+    if getattr(message, "rich_message", None) is not None:
+        return {"type": "rich_message", "file_id": None, "text_html": None}
+
     caption = _stored_text(
         message.caption,
         getattr(message, "caption_entities", None),
@@ -141,6 +169,34 @@ def extract_content(message: Message) -> Optional[dict]:
     return None
 
 
+async def prepare_content(bot: Bot, message: Message) -> Optional[dict]:
+    """Kontentni saqlashga tayyorlaydi; rich postni doimiy arxivga ko'chiradi.
+
+    Oddiy xabarlar avvalgi ``file_id`` va entitylar mexanizmi bilan qaytadi.
+    Rich post esa arxivdagi chat/message ID bilan qaytadi: keyin foydalanuvchiga
+    ``copyMessage`` qilinadi va Telegram formati to'liq saqlanadi.
+    """
+    data = extract_content(message)
+    if data is None or data["type"] != "rich_message":
+        return data
+
+    if CONTENT_ARCHIVE_CHAT_ID is None:
+        raise ContentArchiveNotConfiguredError(
+            "CONTENT_ARCHIVE_CHAT_ID sozlanmagan"
+        )
+
+    copied = await bot.copy_message(
+        chat_id=CONTENT_ARCHIVE_CHAT_ID,
+        from_chat_id=message.chat.id,
+        message_id=message.message_id,
+    )
+    return {
+        "type": "message_copy",
+        "file_id": _copied_message_ref(CONTENT_ARCHIVE_CHAT_ID, copied.message_id),
+        "text_html": None,
+    }
+
+
 async def send_content(
     bot: Bot,
     chat_id: int,
@@ -154,6 +210,19 @@ async def send_content(
     formatted = _deserialize_formatted_text(text)
     rendered_text = formatted[0] if formatted else text
     rendered_entities = formatted[1] if formatted else None
+
+    if t == "message_copy":
+        source = _parse_copied_message_ref(fid)
+        if source is None:
+            raise ValueError("Saqlangan post manzili noto'g'ri")
+        await bot.copy_message(
+            chat_id=chat_id,
+            from_chat_id=source[0],
+            message_id=source[1],
+            reply_markup=reply_markup,
+        )
+        return
+
     caption_options = (
         {"caption_entities": rendered_entities, "parse_mode": None}
         if formatted
