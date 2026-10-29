@@ -101,7 +101,7 @@ class MenuItem(Base):
 
 
 class Content(Base):
-    """Tugma ichidagi tayyor kontent: file_id + HTML matn."""
+    """Tugma kontenti: file_id yoki Telegram manba xabari + HTML matn."""
 
     __tablename__ = "contents"
 
@@ -112,6 +112,8 @@ class Content(Base):
     # text / photo / video / document / audio / voice / animation / video_note / sticker
     type: Mapped[str] = mapped_column(String(20))
     file_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    source_chat_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
+    source_message_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     text_html: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 
