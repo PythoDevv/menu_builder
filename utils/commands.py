@@ -10,7 +10,8 @@ logger = logging.getLogger(__name__)
 
 USER_COMMANDS = [BotCommand(command="start", description="Boshlash")]
 ADMIN_COMMANDS = USER_COMMANDS + [
-    BotCommand(command="admin", description="Admin panel")
+    BotCommand(command="admin", description="Admin panel"),
+    BotCommand(command="tugma", description="Obuna URL tugmalari"),
 ]
 
 
@@ -18,9 +19,11 @@ async def set_default_commands(bot: Bot) -> None:
     await bot.set_my_commands(USER_COMMANDS, scope=BotCommandScopeDefault())
 
 
-async def set_admin_commands(bot: Bot, tg_id: int) -> None:
-    """Adminga /admin komandasini ko'rsatadi."""
+async def set_admin_commands(bot: Bot, tg_id: int, *, super_admin: bool = False) -> None:
+    """Adminga /admin ni ko'rsatadi; maxfiy /superadmin menyuga chiqarilmaydi."""
     try:
+        # super_admin parametri API mosligi uchun qoldirilgan. `/superadmin`
+        # handleri ishlaydi, lekin Telegram command menyusida hech kimga ko'rinmaydi.
         await bot.set_my_commands(ADMIN_COMMANDS, scope=BotCommandScopeChat(chat_id=tg_id))
     except TelegramAPIError:
         # foydalanuvchi botni ochmagan bo'lsa xato beradi — muhim emas

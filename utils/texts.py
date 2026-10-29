@@ -3,7 +3,7 @@
 #: Majburiy obuna ekranidagi standart xabar. Admin paneldan almashtiriladi.
 DEFAULT_SUB_TEXT = (
     "👋 Botdan foydalanish uchun quyidagi kanallarga obuna bo'ling.\n\n"
-    "So'ng <b>✅ Tekshirish</b> tugmasini bosing."
+    "So'ng <b>✅ A'zo bo'ldim</b> tugmasini bosing."
 )
 
 #: send_raw_content() kutadigan ko'rinish — obuna xabari qo'yilmaganda ishlatiladi
@@ -24,4 +24,21 @@ DEFAULT_REF_TEXT = (
     "{link}\n\n"
     "Havolani do'stlaringizga yuboring — ular shu havola orqali botga kirsa, "
     "taklif avtomatik hisoblanadi."
+)
+
+#: "Ballarim" tugmasi bosilganda chiqadigan standart matn.
+#: Admin paneldagi "🏆 Ballarim tugmasi" bo'limidan almashtiriladi.
+DEFAULT_MY_POINTS_MESSAGE = (
+    "🏆 <b>Ballaringiz</b>\n\n"
+    "Siz taklif qilgan odamlar soni: <b>{count}</b> ta\n\n"
+    "Do'stlaringizni shu havola orqali taklif qiling:\n"
+    "{link}"
+)
+
+#: "Reyting" tugmasi bosilganda chiqadigan standart post.
+#: ``{users-N}`` N ta eng ko'p taklif qilgan foydalanuvchini chiqaradi.
+DEFAULT_RATING_MESSAGE = (
+    "🏅 <b>Takliflar reytingi</b>\n\n"
+    "{users-10}\n\n"
+    "Eng faol ishtirokchilar ro'yxati."
 )

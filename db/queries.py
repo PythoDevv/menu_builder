@@ -9,7 +9,16 @@ from sqlalchemy.dialects.postgresql import insert as pg_insert
 
 from config import TIMEZONE
 from db.base import session_maker
-from db.models import Admin, Channel, Content, JoinRequest, MenuItem, Setting, User
+from db.models import (
+    Admin,
+    Channel,
+    Content,
+    JoinRequest,
+    MenuItem,
+    Setting,
+    SubscriptionButton,
+    User,
+)
 
 TZ = ZoneInfo(TIMEZONE)
 
@@ -21,8 +30,29 @@ K_ASK_PHONE = "ask_phone"
 K_SUB_TYPE = "sub_type"
 K_SUB_FILE = "sub_file_id"
 K_SUB_TEXT = "sub_text"
+K_SUB_CHECK_TEXT = "sub_check_text"
+K_SUB_CHECK_ICON = "sub_check_icon_custom_emoji_id"
+K_FORCE_SUB_ON_START = "force_sub_on_start"
 K_REF_TEXT = "ref_text"
-K_MENU_COLUMNS = "menu_columns"
+K_MY_POINTS_ENABLED = "my_points_enabled"
+K_MY_POINTS_TEXT = "my_points_text"
+K_MY_POINTS_STYLE = "my_points_style"
+K_MY_POINTS_ICON = "my_points_icon_custom_emoji_id"
+K_MY_POINTS_MESSAGE = "my_points_message"
+K_RATING_ENABLED = "rating_enabled"
+K_RATING_TEXT = "rating_text"
+K_RATING_STYLE = "rating_style"
+K_RATING_ICON = "rating_icon_custom_emoji_id"
+K_RATING_MESSAGE = "rating_message"
+K_RATING_ROW_SIZE = "rating_row_size"
+K_WINNERS_LIMIT = "winners_limit"
+
+DEFAULT_MY_POINTS_TEXT = "🏆 Ballarim"
+DEFAULT_RATING_TEXT = "🏅 Reyting"
+DEFAULT_SUB_CHECK_TEXT = "✅ A'zo bo'ldim"
+BUTTON_STYLES = {"primary", "success", "danger"}
+DEFAULT_WINNERS_LIMIT = 10
+MAX_WINNERS_LIMIT = 20
 
 
 # ============================================================================ USERS
@@ -149,7 +179,7 @@ async def get_top_referrers(limit: int = 5) -> list[tuple[User, int]]:
             select(User.referred_by, func.count(User.id).label("cnt"))
             .where(User.referred_by.is_not(None))
             .group_by(User.referred_by)
-            .order_by(func.count(User.id).desc())
+            .order_by(func.count(User.id).desc(), User.referred_by.asc())
             .limit(limit)
         )
         pairs = list(rows)
@@ -160,6 +190,23 @@ async def get_top_referrers(limit: int = 5) -> list[tuple[User, int]]:
             u.tg_id: u for u in await s.scalars(select(User).where(User.tg_id.in_(ids)))
         }
         return [(users[tg_id], count) for tg_id, count in pairs if tg_id in users]
+
+
+async def reset_referral_points() -> int:
+    """Barcha taklif ballarini nolga tushiradi va o'zgargan qatorlar sonini beradi.
+
+    Chaqiruvchi bu funksiyadan oldin dump yaratishi shart. Alohida funksiya bo'lishi
+    resetni bitta DB tranzaksiyasida bajarish va backup xatosida unga umuman
+    tegmaslik imkonini beradi.
+    """
+    async with session_maker() as s:
+        result = await s.execute(
+            update(User)
+            .where(User.referred_by.is_not(None))
+            .values(referred_by=None)
+        )
+        await s.commit()
+        return result.rowcount or 0
 
 
 # =========================================================================== ADMINS
@@ -260,9 +307,50 @@ async def toggle_channel(channel_id: int) -> Optional[Channel]:
         return ch
 
 
+async def set_channel_icon(
+    channel_id: int, icon_custom_emoji_id: Optional[str]
+) -> None:
+    """Majburiy obuna inline tugmasining premium emoji ikonkasini saqlaydi."""
+    async with session_maker() as s:
+        await s.execute(
+            update(Channel)
+            .where(Channel.id == channel_id)
+            .values(icon_custom_emoji_id=icon_custom_emoji_id)
+        )
+        await s.commit()
+
+
 async def delete_channel(channel_id: int) -> None:
     async with session_maker() as s:
         await s.execute(delete(Channel).where(Channel.id == channel_id))
+        await s.commit()
+
+
+# ========================================================== SUBSCRIPTION BUTTONS
+async def get_subscription_buttons() -> list[SubscriptionButton]:
+    async with session_maker() as s:
+        query = select(SubscriptionButton).order_by(SubscriptionButton.id)
+        return list(await s.scalars(query))
+
+
+async def get_subscription_button(button_id: int) -> Optional[SubscriptionButton]:
+    async with session_maker() as s:
+        return await s.get(SubscriptionButton, button_id)
+
+
+async def add_subscription_button(title: str, url: str) -> SubscriptionButton:
+    async with session_maker() as s:
+        button = SubscriptionButton(title=title, url=url)
+        s.add(button)
+        await s.commit()
+        return button
+
+
+async def delete_subscription_button(button_id: int) -> None:
+    async with session_maker() as s:
+        await s.execute(
+            delete(SubscriptionButton).where(SubscriptionButton.id == button_id)
+        )
         await s.commit()
 
 
@@ -302,8 +390,14 @@ async def get_item(item_id: int) -> Optional[MenuItem]:
 
 
 async def add_item(
-    parent_id: Optional[int], title: str, required_referrals: int = 0
+    parent_id: Optional[int],
+    title: str,
+    required_referrals: int = 0,
+    icon_custom_emoji_id: Optional[str] = None,
+    row_size: int = 2,
 ) -> MenuItem:
+    if row_size not in {1, 2, 3, 4}:
+        raise ValueError(f"Noto'g'ri qator o'lchami: {row_size}")
     async with session_maker() as s:
         cond = MenuItem.parent_id.is_(None) if parent_id is None else MenuItem.parent_id == parent_id
         last = await s.scalar(select(func.coalesce(func.max(MenuItem.position), 0)).where(cond))
@@ -312,6 +406,8 @@ async def add_item(
             title=title,
             position=(last or 0) + 1,
             required_referrals=max(required_referrals, 0),
+            icon_custom_emoji_id=icon_custom_emoji_id,
+            row_size=row_size,
         )
         s.add(item)
         await s.commit()
@@ -331,7 +427,7 @@ async def set_item_referrals(item_id: int, count: int) -> None:
 
 async def set_item_style(item_id: int, style: Optional[str]) -> None:
     """Telegram tugma uslubi. None -> oddiy ko'rinish."""
-    if style is not None and style not in {"primary", "success", "danger"}:
+    if style is not None and style not in BUTTON_STYLES:
         raise ValueError(f"Noto'g'ri tugma uslubi: {style}")
     async with session_maker() as s:
         await s.execute(
@@ -340,9 +436,26 @@ async def set_item_style(item_id: int, style: Optional[str]) -> None:
         await s.commit()
 
 
-async def rename_item(item_id: int, title: str) -> None:
+async def set_item_row_size(item_id: int, row_size: int) -> None:
+    """Tugma joylashadigan qatordagi tugmalar sonini (1..4) saqlaydi."""
+    if row_size not in {1, 2, 3, 4}:
+        raise ValueError(f"Noto'g'ri qator o'lchami: {row_size}")
     async with session_maker() as s:
-        await s.execute(update(MenuItem).where(MenuItem.id == item_id).values(title=title))
+        await s.execute(
+            update(MenuItem).where(MenuItem.id == item_id).values(row_size=row_size)
+        )
+        await s.commit()
+
+
+async def rename_item(
+    item_id: int, title: str, icon_custom_emoji_id: Optional[str] = None
+) -> None:
+    async with session_maker() as s:
+        await s.execute(
+            update(MenuItem)
+            .where(MenuItem.id == item_id)
+            .values(title=title, icon_custom_emoji_id=icon_custom_emoji_id)
+        )
         await s.commit()
 
 
@@ -528,6 +641,46 @@ async def delete_sub_message() -> None:
     await set_setting(K_SUB_TEXT, None)
 
 
+async def get_sub_check_button() -> dict[str, Optional[str]]:
+    """Majburiy obunadagi tekshirish tugmasining matni va premium ikonkasini beradi."""
+    keys = (K_SUB_CHECK_TEXT, K_SUB_CHECK_ICON)
+    async with session_maker() as s:
+        rows = await s.execute(
+            select(Setting.key, Setting.value).where(Setting.key.in_(keys))
+        )
+        values = {key: value for key, value in rows}
+    return {
+        "text": values.get(K_SUB_CHECK_TEXT) or DEFAULT_SUB_CHECK_TEXT,
+        "icon_custom_emoji_id": values.get(K_SUB_CHECK_ICON),
+    }
+
+
+async def set_sub_check_button(
+    text: str, icon_custom_emoji_id: Optional[str] = None
+) -> None:
+    value = text.strip()
+    if not value or len(value) > 64:
+        raise ValueError("Tugma matni 1–64 ta belgi bo'lishi kerak")
+    await set_setting(K_SUB_CHECK_TEXT, value)
+    await set_setting(K_SUB_CHECK_ICON, icon_custom_emoji_id)
+
+
+async def reset_sub_check_button() -> None:
+    await set_setting(K_SUB_CHECK_TEXT, None)
+    await set_setting(K_SUB_CHECK_ICON, None)
+
+
+async def is_force_sub_on_start_enabled() -> bool:
+    """A'zo bo'lsa ham har `/start` da obuna ekranini ko'rsatish sozlamasi."""
+    return (await get_setting(K_FORCE_SUB_ON_START, "0")) == "1"
+
+
+async def toggle_force_sub_on_start() -> bool:
+    enabled = not await is_force_sub_on_start_enabled()
+    await set_setting(K_FORCE_SUB_ON_START, "1" if enabled else "0")
+    return enabled
+
+
 async def get_ref_text() -> Optional[str]:
     """Admin qo'ygan taklif matni. Qo'yilmagan bo'lsa None (standart ishlatiladi)."""
     return await get_setting(K_REF_TEXT)
@@ -542,16 +695,145 @@ async def delete_ref_text() -> None:
     await set_setting(K_REF_TEXT, None)
 
 
-async def get_menu_columns() -> int:
-    """Menyu tugmalari qatorda nechtadan chiqishi: 1 yoki 2 (standart — 2)."""
-    return 2 if (await get_setting(K_MENU_COLUMNS, "2")) == "2" else 1
+async def get_my_points_settings() -> dict[str, object]:
+    """Asosiy menyudagi "Ballarim" tugmasi sozlamalari."""
+    keys = (
+        K_MY_POINTS_ENABLED,
+        K_MY_POINTS_TEXT,
+        K_MY_POINTS_STYLE,
+        K_MY_POINTS_ICON,
+        K_MY_POINTS_MESSAGE,
+    )
+    async with session_maker() as s:
+        rows = await s.execute(
+            select(Setting.key, Setting.value).where(Setting.key.in_(keys))
+        )
+        values = {key: value for key, value in rows}
+
+    style = values.get(K_MY_POINTS_STYLE)
+    if style not in BUTTON_STYLES:
+        style = None
+    return {
+        "enabled": values.get(K_MY_POINTS_ENABLED, "1") != "0",
+        "text": values.get(K_MY_POINTS_TEXT) or DEFAULT_MY_POINTS_TEXT,
+        "style": style,
+        "icon_custom_emoji_id": values.get(K_MY_POINTS_ICON),
+        "message": values.get(K_MY_POINTS_MESSAGE),
+    }
 
 
-async def set_menu_columns(columns: int) -> int:
-    """Saqlangan qiymatni qaytaradi (2 dan boshqasi — bitta ustun)."""
-    value = 2 if columns == 2 else 1
-    await set_setting(K_MENU_COLUMNS, str(value))
-    return value
+async def set_my_points_enabled(enabled: bool) -> None:
+    await set_setting(K_MY_POINTS_ENABLED, "1" if enabled else "0")
+
+
+async def set_my_points_text(
+    text: str, icon_custom_emoji_id: Optional[str] = None
+) -> None:
+    value = text.strip()
+    if not value or len(value) > 64:
+        raise ValueError("Tugma matni 1–64 ta belgi bo'lishi kerak")
+    await set_setting(K_MY_POINTS_TEXT, value)
+    await set_setting(K_MY_POINTS_ICON, icon_custom_emoji_id)
+
+
+async def set_my_points_style(style: Optional[str]) -> None:
+    if style is not None and style not in BUTTON_STYLES:
+        raise ValueError(f"Noto'g'ri tugma uslubi: {style}")
+    await set_setting(K_MY_POINTS_STYLE, style)
+
+
+async def set_my_points_message(text_html: str) -> None:
+    await set_setting(K_MY_POINTS_MESSAGE, text_html)
+
+
+async def delete_my_points_message() -> None:
+    await set_setting(K_MY_POINTS_MESSAGE, None)
+
+
+async def get_rating_settings() -> dict[str, object]:
+    """Asosiy menyudagi reyting tugmasi va posti sozlamalari."""
+    keys = (
+        K_RATING_ENABLED,
+        K_RATING_TEXT,
+        K_RATING_STYLE,
+        K_RATING_ICON,
+        K_RATING_MESSAGE,
+        K_RATING_ROW_SIZE,
+    )
+    async with session_maker() as s:
+        rows = await s.execute(
+            select(Setting.key, Setting.value).where(Setting.key.in_(keys))
+        )
+        values = {key: value for key, value in rows}
+
+    style = values.get(K_RATING_STYLE)
+    if style not in BUTTON_STYLES:
+        style = None
+    try:
+        row_size = int(values.get(K_RATING_ROW_SIZE) or "2")
+    except ValueError:
+        row_size = 2
+    if row_size not in {1, 2, 3, 4}:
+        row_size = 2
+    return {
+        "enabled": values.get(K_RATING_ENABLED, "1") != "0",
+        "text": values.get(K_RATING_TEXT) or DEFAULT_RATING_TEXT,
+        "style": style,
+        "icon_custom_emoji_id": values.get(K_RATING_ICON),
+        "message": values.get(K_RATING_MESSAGE),
+        "row_size": row_size,
+    }
+
+
+async def set_rating_enabled(enabled: bool) -> None:
+    await set_setting(K_RATING_ENABLED, "1" if enabled else "0")
+
+
+async def set_rating_text(
+    text: str, icon_custom_emoji_id: Optional[str] = None
+) -> None:
+    value = text.strip()
+    if not value or len(value) > 64:
+        raise ValueError("Tugma matni 1–64 ta belgi bo'lishi kerak")
+    await set_setting(K_RATING_TEXT, value)
+    await set_setting(K_RATING_ICON, icon_custom_emoji_id)
+
+
+async def set_rating_style(style: Optional[str]) -> None:
+    if style is not None and style not in BUTTON_STYLES:
+        raise ValueError(f"Noto'g'ri tugma uslubi: {style}")
+    await set_setting(K_RATING_STYLE, style)
+
+
+async def set_rating_message(text_html: str) -> None:
+    await set_setting(K_RATING_MESSAGE, text_html)
+
+
+async def delete_rating_message() -> None:
+    await set_setting(K_RATING_MESSAGE, None)
+
+
+async def set_rating_row_size(row_size: int) -> None:
+    if row_size not in {1, 2, 3, 4}:
+        raise ValueError(f"Noto'g'ri qator o'lchami: {row_size}")
+    await set_setting(K_RATING_ROW_SIZE, str(row_size))
+
+
+async def get_winners_limit() -> int:
+    """Bitta Telegram xabarida ko'rsatiladigan g'oliblar soni."""
+    try:
+        value = int(await get_setting(K_WINNERS_LIMIT, str(DEFAULT_WINNERS_LIMIT)) or "")
+    except ValueError:
+        value = DEFAULT_WINNERS_LIMIT
+    return min(max(value, 1), MAX_WINNERS_LIMIT)
+
+
+async def set_winners_limit(limit: int) -> None:
+    if not 1 <= limit <= MAX_WINNERS_LIMIT:
+        raise ValueError(
+            f"G'oliblar soni 1..{MAX_WINNERS_LIMIT} oralig'ida bo'lishi kerak"
+        )
+    await set_setting(K_WINNERS_LIMIT, str(limit))
 
 
 async def is_phone_required() -> bool:

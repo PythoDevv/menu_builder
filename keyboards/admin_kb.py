@@ -14,7 +14,7 @@ from aiogram.types import (
     ReplyKeyboardMarkup,
 )
 
-from db.models import Admin, Channel, Content, MenuItem
+from db.models import Admin, Channel, Content, MenuItem, SubscriptionButton
 from utils.content import content_label
 
 # ------------------------------------------------------------------ umumiy tugmalar
@@ -31,6 +31,7 @@ BTN_OFF = "🔴 O'chirish"
 
 # ------------------------------------------------------------------- bosh sahifa
 BTN_CHANNELS = "📢 Kanallar"
+BTN_SUB_BUTTONS = "🔗 Tugma"
 BTN_MENU = "🗂 Menyu tugmalari"
 BTN_START_MSG = "✏️ Start xabar"
 BTN_SUB_MSG = "📌 Obuna xabari"
@@ -40,7 +41,24 @@ BTN_EXCEL = "📊 Excel"
 BTN_STATS = "👥 Statistika"
 BTN_ADMINS = "👮 Adminlar"
 BTN_REF_TEXT = "✍️ Taklif matni"
-BTN_LAYOUT = "🧩 Menyu ko'rinishi"
+BTN_POINTS = "🏆 Ballarim tugmasi"
+BTN_RATING = "🏅 Reyting tugmasi"
+BTN_WINNERS = "🏆 G'oliblar"
+
+# --------------------------------------------------------------- super admin
+BTN_POINTS_RESET = "🧹 Ballarni 0 qilish"
+BTN_DUMPS = "🗄 Dumplar / restore"
+BTN_SUPER_ADMIN = "🔐 Superadmin panel"
+BTN_RESTORE = "♻️ Shu dumpni tiklash"
+BTN_CONFIRM_RESET = "⚠️ Ha, dump olib 0 qil"
+BTN_CONFIRM_RESTORE = "⚠️ Ha, bazani tiklash"
+
+# -------------------------------------------------------------------- g'oliblar
+BTN_WINNERS_VIEW = "📋 G'oliblarni chiqarish"
+BTN_WINNERS_COUNT = "🔢 G'oliblar soni"
+BTN_DIRECT_MESSAGE = "✉️ ID bo'yicha xabar"
+BTN_WINNERS_BACK = "⬅️ G'oliblar"
+BTN_WINNERS_RESET = "🧹 Barcha ballarni 0 qilish"
 
 # ---------------------------------------------------------------------- kanallar
 BTN_CH_ADD = "➕ Kanal qo'shish"
@@ -49,6 +67,12 @@ BTN_CH_ENABLE = "🟢 Faollashtirish"
 BTN_CH_DISABLE = "🔴 To'xtatish"
 BTN_CH_PUBLIC = "📢 Ochiq kanal"
 BTN_CH_PRIVATE = "🔒 Yopiq (qo'shilish so'rovi)"
+BTN_CH_ICON = "🌟 Tugma premium emoji"
+BTN_CH_ICON_CLEAR = "🚫 Premium emojini olib tashlash"
+
+# ---------------------------------------------------------- obuna URL tugmalari
+BTN_SB_ADD = "➕ Tugma qo'shish"
+BTN_SB_LIST = "⬅️ Tugmalar"
 
 # ------------------------------------------------------------------------- menyu
 BTN_MN_ADD = "➕ Tugma qo'shish"
@@ -58,6 +82,7 @@ BTN_MN_HIDE = "🚫 Yashirish"
 BTN_MN_UP = "⬆️ Yuqoriga"
 BTN_MN_DOWN = "⬇️ Pastga"
 BTN_MN_STYLE = "🎨 Tugma rangi"
+BTN_MN_ROW_SIZE = "🧩 Tugma joylashuvi"
 BTN_CONTENT = "📎 Kontent"  # yoniga soni qo'shiladi: "📎 Kontent (3)"
 BTN_CNT_ADD = "➕ Kontent qo'shish"
 BTN_CNT_DONE = "✅ Tugatish"
@@ -81,6 +106,18 @@ BUTTON_STYLE_LABELS = {
     "danger": "🔴 Qizil",
 }
 
+BTN_ROW_ONE = "1️⃣ Bittalik"
+BTN_ROW_TWO = "2️⃣ Ikkitalik"
+BTN_ROW_THREE = "3️⃣ Uch talik"
+BTN_ROW_FOUR = "4️⃣ To'rt talik"
+
+BUTTON_ROW_SIZE_OPTIONS = {
+    BTN_ROW_ONE: 1,
+    BTN_ROW_TWO: 2,
+    BTN_ROW_THREE: 3,
+    BTN_ROW_FOUR: 4,
+}
+
 # ------------------------------------------------------------------ taklif sharti
 BTN_MN_REF = "👥 Taklif sharti"  # yoniga soni qo'shiladi: "👥 Taklif sharti: 5 ta"
 BTN_REF_YES = "✅ Ha"
@@ -92,10 +129,23 @@ BTN_REF_RESET = "♻️ Standartga qaytarish"
 BTN_ST_EDIT = "✏️ O'zgartirish"
 BTN_ST_ADD = "➕ Qo'shish"
 BTN_SUB_RESET = "♻️ Standartga qaytarish"
+BTN_SUB_CHECK = "✅ Tekshirish tugmasi"
+BTN_SUB_CHECK_RESET = "♻️ Tugmani standartga qaytarish"
+BTN_SUB_FORCE_ON = "🟢 Har /start da ko'rsatish"
+BTN_SUB_FORCE_OFF = "🔴 Faqat a'zo bo'lmaganga"
 
-# ------------------------------------------------------------- menyu ko'rinishi
-BTN_LT_ONE = "1️⃣ Bittadan"
-BTN_LT_TWO = "2️⃣ Ikkitadan"
+# ----------------------------------------------------------- Ballarim tugmasi
+BTN_POINTS_RENAME = "✏️ Tugma nomi"
+BTN_POINTS_STYLE = "🎨 Rangini o'zgartirish"
+BTN_POINTS_MESSAGE = "📝 Natija xabari"
+BTN_POINTS_MESSAGE_RESET = "♻️ Xabarni standartga qaytarish"
+
+# ------------------------------------------------------------ Reyting tugmasi
+BTN_RATING_RENAME = "✏️ Reyting tugmasi nomi"
+BTN_RATING_STYLE = "🎨 Reyting tugmasi rangi"
+BTN_RATING_ROW_SIZE = "🧩 Reyting joylashuvi"
+BTN_RATING_MESSAGE = "📝 Reyting posti"
+BTN_RATING_MESSAGE_RESET = "♻️ Reyting postini standartga qaytarish"
 
 # ---------------------------------------------------------------------- broadcast
 BTN_BC_SEND = "✅ Yuborish"
@@ -127,16 +177,56 @@ def _list_rows(labels: Sequence[str]) -> list[list[str]]:
 def admin_home_kb() -> ReplyKeyboardMarkup:
     return _kb(
         [
-            [BTN_CHANNELS, BTN_MENU],
+            [BTN_CHANNELS, BTN_SUB_BUTTONS],
+            [BTN_MENU],
             [BTN_START_MSG, BTN_SUB_MSG],
             [BTN_PHONE, BTN_REF_TEXT],
             [BTN_BROADCAST, BTN_EXCEL],
-            [BTN_STATS, BTN_ADMINS],
-            [BTN_LAYOUT],
+            [BTN_STATS, BTN_WINNERS],
+            [BTN_ADMINS],
+            [BTN_POINTS, BTN_RATING],
             [BTN_EXIT],
         ],
         "Bo'limni tanlang",
     )
+
+
+def winners_kb(can_reset_points: bool = False) -> ReplyKeyboardMarkup:
+    rows = [
+        [BTN_WINNERS_VIEW],
+        [BTN_WINNERS_COUNT, BTN_DIRECT_MESSAGE],
+    ]
+    if can_reset_points:
+        rows.append([BTN_WINNERS_RESET])
+    rows.append([BTN_HOME])
+    return _kb(rows)
+
+
+def winner_send_confirm_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_BC_SEND], [BTN_WINNERS_BACK]], "Xabarni tasdiqlang")
+
+
+def super_admin_kb() -> ReplyKeyboardMarkup:
+    return _kb(
+        [[BTN_POINTS_RESET], [BTN_DUMPS], [BTN_HOME]],
+        "Superadmin amalini tanlang",
+    )
+
+
+def dumps_kb(labels: Sequence[str]) -> ReplyKeyboardMarkup:
+    return _kb(_list_rows(labels) + [[BTN_SUPER_ADMIN]], "Dumpni tanlang")
+
+
+def dump_one_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_RESTORE], [BTN_DUMPS, BTN_SUPER_ADMIN]])
+
+
+def reset_points_confirm_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_CONFIRM_RESET], [BTN_SUPER_ADMIN]], "Tasdiqlang")
+
+
+def restore_confirm_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_CONFIRM_RESTORE], [BTN_DUMPS]], "Tasdiqlang")
 
 
 def cancel_kb() -> ReplyKeyboardMarkup:
@@ -182,11 +272,30 @@ def channels_kb(labels: Sequence[str]) -> ReplyKeyboardMarkup:
 
 def channel_one_kb(ch: Channel) -> ReplyKeyboardMarkup:
     toggle = BTN_CH_DISABLE if ch.is_active else BTN_CH_ENABLE
-    return _kb([[toggle, BTN_DELETE], [BTN_CH_LIST]])
+    return _kb([[toggle, BTN_DELETE], [BTN_CH_ICON], [BTN_CH_LIST]])
+
+
+def channel_icon_kb(has_icon: bool) -> ReplyKeyboardMarkup:
+    rows = [[BTN_CH_ICON_CLEAR]] if has_icon else []
+    rows.append([BTN_BACK, BTN_HOME])
+    return _kb(rows, "Premium emoji yuboring")
 
 
 def channel_type_kb() -> ReplyKeyboardMarkup:
     return _kb([[BTN_CH_PUBLIC], [BTN_CH_PRIVATE], [BTN_CANCEL]], "Turini tanlang")
+
+
+# ---------------------------------------------------------- OBUNA URL TUGMALARI
+def subscription_button_label(button: SubscriptionButton, index: int) -> str:
+    return f"{index}. 🔗 {button.title}"
+
+
+def subscription_buttons_kb(labels: Sequence[str]) -> ReplyKeyboardMarkup:
+    return _kb(_list_rows(labels) + [[BTN_SB_ADD], [BTN_HOME]])
+
+
+def subscription_button_one_kb() -> ReplyKeyboardMarkup:
+    return _kb([[BTN_DELETE], [BTN_SB_LIST]])
 
 
 # Bot kanalga admin qilinganda o'sha adminga tushadigan so'rov — inline,
@@ -235,7 +344,7 @@ def menu_node_kb(
         rows.append([BTN_HOME])
     else:
         rows.append([content_button(content_count), ref_button(item.required_referrals)])
-        rows.append([BTN_MN_STYLE])
+        rows.append([BTN_MN_STYLE, BTN_MN_ROW_SIZE])
         rows.append([BTN_MN_RENAME, BTN_MN_HIDE if item.is_active else BTN_MN_SHOW])
         rows.append([BTN_MN_UP, BTN_MN_DOWN, BTN_DELETE])
         rows.append([BTN_BACK, BTN_HOME])
@@ -247,13 +356,45 @@ def button_style_label(style: Optional[str]) -> str:
 
 
 def button_style_kb() -> ReplyKeyboardMarkup:
+    return ReplyKeyboardMarkup(
+        keyboard=[
+            [KeyboardButton(text=BTN_STYLE_DEFAULT)],
+            [
+                KeyboardButton(text=BTN_STYLE_PRIMARY, style="primary"),
+                KeyboardButton(text=BTN_STYLE_SUCCESS, style="success"),
+                KeyboardButton(text=BTN_STYLE_DANGER, style="danger"),
+            ],
+            [KeyboardButton(text=BTN_BACK), KeyboardButton(text=BTN_HOME)],
+        ],
+        resize_keyboard=True,
+        input_field_placeholder="Tugma rangini tanlang",
+    )
+
+
+def row_size_label(row_size: int) -> str:
+    labels = {
+        1: "1️⃣ bittalik",
+        2: "2️⃣ ikkitalik",
+        3: "3️⃣ uch talik",
+        4: "4️⃣ to'rt talik",
+    }
+    return labels.get(row_size, labels[1])
+
+
+def row_size_ask_kb() -> ReplyKeyboardMarkup:
+    """Yangi tugmada faqat eng ko'p ishlatiladigan 1/2 variantini so'raydi."""
+    return _kb([[BTN_ROW_ONE, BTN_ROW_TWO], [BTN_CANCEL]], "Ko'rinishni tanlang")
+
+
+def row_size_kb() -> ReplyKeyboardMarkup:
+    """Mavjud tugma uchun 1..4 qator sig'imini tanlatadi."""
     return _kb(
         [
-            [BTN_STYLE_DEFAULT],
-            [BTN_STYLE_PRIMARY, BTN_STYLE_SUCCESS, BTN_STYLE_DANGER],
+            [BTN_ROW_ONE, BTN_ROW_TWO],
+            [BTN_ROW_THREE, BTN_ROW_FOUR],
             [BTN_BACK, BTN_HOME],
         ],
-        "Tugma rangini tanlang",
+        "Qatordagi tugmalar sonini tanlang",
     )
 
 
@@ -308,12 +449,25 @@ def start_msg_kb(exists: bool) -> ReplyKeyboardMarkup:
 
 
 # ------------------------------------------------------------------ OBUNA XABARI
-def sub_msg_kb(custom: bool) -> ReplyKeyboardMarkup:
+def sub_msg_kb(custom: bool, force_on_start: bool) -> ReplyKeyboardMarkup:
     """custom — admin o'z xabarini qo'yganmi (yo'q bo'lsa standart ishlaydi)."""
-    rows = [[BTN_ST_EDIT if custom else BTN_ST_ADD], [BTN_VIEW]]
+    rows = [
+        [BTN_SUB_FORCE_OFF if force_on_start else BTN_SUB_FORCE_ON],
+        [BTN_ST_EDIT if custom else BTN_ST_ADD],
+        [BTN_VIEW],
+        [BTN_SUB_CHECK],
+    ]
     if custom:
         rows.append([BTN_SUB_RESET])
     rows.append([BTN_HOME])
+    return _kb(rows)
+
+
+def sub_check_kb(custom: bool) -> ReplyKeyboardMarkup:
+    rows = [[BTN_ST_EDIT]]
+    if custom:
+        rows.append([BTN_SUB_CHECK_RESET])
+    rows.append([BTN_BACK, BTN_HOME])
     return _kb(rows)
 
 
@@ -322,10 +476,31 @@ def phone_settings_kb(enabled: bool) -> ReplyKeyboardMarkup:
     return _kb([[BTN_OFF if enabled else BTN_ON], [BTN_HOME]])
 
 
-# ----------------------------------------------------------------- MENYU KO'RINISHI
-def layout_kb() -> ReplyKeyboardMarkup:
-    """Ikkala variant ham turadi; qaysi biri faolligi xabar matnida yoziladi."""
-    return _kb([[BTN_LT_ONE, BTN_LT_TWO], [BTN_VIEW], [BTN_HOME]], "Ko'rinishni tanlang")
+# ----------------------------------------------------------- BALLARIM TUGMASI
+def my_points_settings_kb(enabled: bool, custom_message: bool) -> ReplyKeyboardMarkup:
+    rows = [
+        [BTN_OFF if enabled else BTN_ON],
+        [BTN_POINTS_RENAME, BTN_POINTS_STYLE],
+        [BTN_POINTS_MESSAGE, BTN_VIEW],
+    ]
+    if custom_message:
+        rows.append([BTN_POINTS_MESSAGE_RESET])
+    rows.append([BTN_HOME])
+    return _kb(rows)
+
+
+# ------------------------------------------------------------ REYTING TUGMASI
+def rating_settings_kb(enabled: bool, custom_message: bool) -> ReplyKeyboardMarkup:
+    rows = [
+        [BTN_OFF if enabled else BTN_ON],
+        [BTN_RATING_RENAME, BTN_RATING_STYLE],
+        [BTN_RATING_ROW_SIZE],
+        [BTN_RATING_MESSAGE, BTN_VIEW],
+    ]
+    if custom_message:
+        rows.append([BTN_RATING_MESSAGE_RESET])
+    rows.append([BTN_HOME])
+    return _kb(rows)
 
 
 # ---------------------------------------------------------------------- BROADCAST

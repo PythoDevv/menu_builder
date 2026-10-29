@@ -6,9 +6,9 @@ from aiogram.filters import CommandStart
 from aiogram.fsm.context import FSMContext
 from aiogram.types import CallbackQuery, Message, ReplyKeyboardRemove
 
-from db.queries import get_items, get_menu_columns, get_start_message, set_phone
-from handlers.menu import EMPTY_TEXT, KEY_NODE, MENU_TEXT
-from keyboards.user_kb import CB_CHECK_SUB, menu_kb, phone_kb
+from db.queries import get_items, get_start_message, set_phone
+from handlers.menu import EMPTY_TEXT, KEY_NODE, MENU_TEXT, build_menu_kb
+from keyboards.user_kb import CB_CHECK_SUB, phone_kb
 from utils.content import send_raw_content
 
 router = Router()
@@ -21,7 +21,7 @@ async def send_start_screen(bot: Bot, chat_id: int, state: FSMContext) -> None:
 
     start_msg = await get_start_message()
     items = await get_items(None, active_only=True)
-    kb = menu_kb(items, is_root=True, columns=await get_menu_columns())
+    kb = await build_menu_kb(items, is_root=True)
 
     if start_msg:
         await send_raw_content(bot, chat_id, start_msg, reply_markup=kb)
@@ -36,7 +36,7 @@ async def cmd_start(message: Message, state: FSMContext) -> None:
     await send_start_screen(message.bot, message.chat.id, state)
 
 
-@router.callback_query(F.data == CB_CHECK_SUB)
+@router.callback_query(F.data.startswith(CB_CHECK_SUB))
 async def check_sub(callback: CallbackQuery, state: FSMContext) -> None:
     # bu yergacha yetib kelgan bo'lsa — obuna tekshiruvidan o'tgan
     await callback.answer("✅ Rahmat!")

@@ -1,51 +1,91 @@
 from html import escape
 
 from aiogram import F
+from aiogram.exceptions import TelegramAPIError, TelegramBadRequest
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import LinkPreviewOptions, Message
 
 from db.queries import (
+    DEFAULT_SUB_CHECK_TEXT,
+    delete_my_points_message,
     delete_start_message,
     delete_sub_message,
     get_channels,
     get_items,
-    get_menu_columns,
+    get_my_points_settings,
+    get_rating_settings,
+    get_referral_count,
+    get_sub_check_button,
+    get_subscription_buttons,
     get_start_message,
     get_sub_message,
+    is_force_sub_on_start_enabled,
     is_phone_required,
-    set_menu_columns,
+    reset_sub_check_button,
+    set_my_points_enabled,
+    set_my_points_message,
+    set_my_points_style,
+    set_my_points_text,
     set_start_message,
+    set_sub_check_button,
     set_sub_message,
     toggle_phone_required,
+    toggle_force_sub_on_start,
 )
 from handlers.admin.common import NOT_COMMAND, admin_router
-from handlers.admin.states import LayoutSG, PanelSG, PhoneSG, StartSG, SubSG
+from handlers.admin.states import (
+    MyPointsSG,
+    PanelSG,
+    PhoneSG,
+    StartSG,
+    SubSG,
+)
 from keyboards.admin_kb import (
+    BUTTON_STYLE_OPTIONS,
+    BTN_BACK,
     BTN_DELETE,
-    BTN_LAYOUT,
-    BTN_LT_ONE,
-    BTN_LT_TWO,
     BTN_NO,
     BTN_OFF,
     BTN_ON,
     BTN_PHONE,
+    BTN_POINTS,
+    BTN_POINTS_MESSAGE,
+    BTN_POINTS_MESSAGE_RESET,
+    BTN_POINTS_RENAME,
+    BTN_POINTS_STYLE,
     BTN_ST_ADD,
     BTN_ST_EDIT,
     BTN_START_MSG,
     BTN_SUB_MSG,
+    BTN_SUB_CHECK,
+    BTN_SUB_CHECK_RESET,
+    BTN_SUB_FORCE_OFF,
+    BTN_SUB_FORCE_ON,
     BTN_SUB_RESET,
     BTN_VIEW,
     BTN_YES_DELETE,
     cancel_kb,
+    button_style_kb,
+    button_style_label,
     confirm_delete_kb,
-    layout_kb,
+    my_points_settings_kb,
     phone_settings_kb,
     start_msg_kb,
+    sub_check_kb,
     sub_msg_kb,
 )
-from keyboards.user_kb import menu_kb, subscribe_kb
-from utils.content import TYPE_LABELS, extract_content, send_raw_content
-from utils.texts import DEFAULT_SUB_MESSAGE
+from keyboards.user_kb import BTN_BACK as USER_BACK
+from keyboards.user_kb import BTN_HOME as USER_HOME
+from keyboards.user_kb import menu_kb, share_kb, subscribe_kb
+from utils.content import (
+    ContentArchiveNotConfiguredError,
+    TYPE_LABELS,
+    extract_button_text_and_icon,
+    prepare_content,
+    send_raw_content,
+)
+from utils.referral import ref_link, render_my_points_text
+from utils.texts import DEFAULT_MY_POINTS_MESSAGE, DEFAULT_SUB_MESSAGE
 
 router = admin_router()
 
@@ -115,7 +155,22 @@ async def delete_no(message: Message, state: FSMContext) -> None:
 
 @router.message(StartSG.waiting_message, NOT_COMMAND)
 async def save_start(message: Message, state: FSMContext) -> None:
-    data = extract_content(message)
+    try:
+        data = await prepare_content(message.bot, message)
+    except ContentArchiveNotConfiguredError:
+        await message.answer(
+            "❗️ Rich-formatdagi post uchun arxiv kanal sozlanmagan. "
+            "Admin CONTENT_ARCHIVE_CHAT_ID ni kiritsin.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    except TelegramAPIError:
+        await message.answer(
+            "❗️ Post arxiv kanaliga nusxalanmadi. Botni o'sha kanalda admin qiling "
+            "va kanal ID sini tekshiring.",
+            reply_markup=cancel_kb(),
+        )
+        return
     if data is None:
         await message.answer(
             "❗️ Bu turdagi xabar qo'llab-quvvatlanmaydi.", reply_markup=cancel_kb()
@@ -129,16 +184,25 @@ async def save_start(message: Message, state: FSMContext) -> None:
 # ------------------------------------------------------------------ OBUNA XABARI
 SUB_EDIT_TEXT = (
     "📌 <b>Obuna xabari</b>\n\n"
-    "Yangi xabarni yuboring — matn, rasm, video, fayl...\n"
+    "Yangi xabarni yuboring — matn, rasm, video, fayl yoki premium stiker...\n"
     "Rasm/videoga izoh (caption) yozsangiz, u ham saqlanadi.\n"
-    "Formatlash (qalin, kursiv, havola) o'zgarmasdan saqlanadi.\n\n"
-    "⚠️ Kanal tugmalari va <b>✅ Tekshirish</b> xabar ostiga avtomatik qo'shiladi — "
+    "Formatlash va premium custom emojilar o'zgarmasdan saqlanadi.\n\n"
+    "⚠️ Kanal tugmalari va tekshirish tugmasi xabar ostiga avtomatik qo'shiladi — "
     "ularni o'zingiz yozishingiz shart emas."
+)
+
+SUB_CHECK_EDIT_TEXT = (
+    "✅ <b>Tekshirish tugmasi</b>\n\n"
+    "Yangi tugma matnini yuboring. Premium custom emoji ishlatsangiz, "
+    "uni matn bilan birga yuboring. Birinchi premium emoji tugma ikonkasiga aylanadi.\n\n"
+    "Maksimum: 64 ta belgi."
 )
 
 
 async def show_sub(message: Message, state: FSMContext) -> None:
     data = await get_sub_message()
+    check_button = await get_sub_check_button()
+    force_on_start = await is_force_sub_on_start_enabled()
     if data:
         text = (
             "📌 <b>Obuna xabari</b>\n\n"
@@ -153,12 +217,29 @@ async def show_sub(message: Message, state: FSMContext) -> None:
             "Majburiy obuna talab qilinganda ko'rsatiladigan xabar.\n"
             "O'zingizning matningiz yoki rasm/videoli postni qo'yishingiz mumkin."
         )
+    check_icon = "✅ bor" if check_button["icon_custom_emoji_id"] else "yo'q"
+    text += (
+        "\n\n"
+        "A'zo bo'lganlarga har /start da qayta ko'rsatish: "
+        f"<b>{'🟢 YOQILGAN' if force_on_start else '🔴 O‘CHIRILGAN'}</b>\n"
+        f"Tekshirish tugmasi: <b>{escape(check_button['text'] or DEFAULT_SUB_CHECK_TEXT)}</b>\n"
+        f"Tugma premium emojisi: <b>{check_icon}</b>"
+    )
     await state.set_state(SubSG.show)
-    await message.answer(text, reply_markup=sub_msg_kb(bool(data)))
+    await message.answer(
+        text, reply_markup=sub_msg_kb(bool(data), force_on_start)
+    )
 
 
 @router.message(PanelSG.home, F.text == BTN_SUB_MSG)
 async def open_sub(message: Message, state: FSMContext) -> None:
+    await show_sub(message, state)
+
+
+@router.message(SubSG.show, F.text.in_({BTN_SUB_FORCE_ON, BTN_SUB_FORCE_OFF}))
+async def toggle_force_sub(message: Message, state: FSMContext) -> None:
+    await toggle_force_sub_on_start()
+    await message.answer("✅ O'zgartirildi")
     await show_sub(message, state)
 
 
@@ -172,12 +253,24 @@ async def ask_sub(message: Message, state: FSMContext) -> None:
 async def preview_sub(message: Message, state: FSMContext) -> None:
     data = await get_sub_message() or DEFAULT_SUB_MESSAGE
     channels = await get_channels(active_only=True)
+    link_buttons = await get_subscription_buttons()
+    check_button = await get_sub_check_button()
     await message.answer("👇 Foydalanuvchi shu ko'rinishda ko'radi:")
     await send_raw_content(
-        message.bot, message.chat.id, data, reply_markup=subscribe_kb(channels)
+        message.bot,
+        message.chat.id,
+        data,
+        reply_markup=subscribe_kb(
+            channels,
+            link_buttons=link_buttons,
+            check_text=check_button["text"] or DEFAULT_SUB_CHECK_TEXT,
+            check_icon_custom_emoji_id=check_button["icon_custom_emoji_id"],
+        ),
     )
-    if not channels:
+    if not channels and not link_buttons:
         await message.answer("ℹ️ Hozircha faol kanal yo'q — tugmalar bo'sh ko'rinadi.")
+    elif not channels:
+        await message.answer("ℹ️ Faol kanal yo'q — faqat oddiy URL tugmalar ko'rinadi.")
     await show_sub(message, state)
 
 
@@ -204,7 +297,22 @@ async def reset_no(message: Message, state: FSMContext) -> None:
 
 @router.message(SubSG.waiting_message, NOT_COMMAND)
 async def save_sub(message: Message, state: FSMContext) -> None:
-    data = extract_content(message)
+    try:
+        data = await prepare_content(message.bot, message)
+    except ContentArchiveNotConfiguredError:
+        await message.answer(
+            "❗️ Rich-formatdagi post uchun arxiv kanal sozlanmagan. "
+            "Admin CONTENT_ARCHIVE_CHAT_ID ni kiritsin.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    except TelegramAPIError:
+        await message.answer(
+            "❗️ Post arxiv kanaliga nusxalanmadi. Botni o'sha kanalda admin qiling "
+            "va kanal ID sini tekshiring.",
+            reply_markup=cancel_kb(),
+        )
+        return
     if data is None:
         await message.answer(
             "❗️ Bu turdagi xabar qo'llab-quvvatlanmaydi.", reply_markup=cancel_kb()
@@ -212,6 +320,58 @@ async def save_sub(message: Message, state: FSMContext) -> None:
         return
     await set_sub_message(data["type"], data["file_id"], data["text_html"])
     await message.answer("✅ Obuna xabari saqlandi")
+    await show_sub(message, state)
+
+
+async def show_sub_check(message: Message, state: FSMContext) -> None:
+    button = await get_sub_check_button()
+    text = button["text"] or DEFAULT_SUB_CHECK_TEXT
+    icon = button["icon_custom_emoji_id"]
+    custom = text != DEFAULT_SUB_CHECK_TEXT or bool(icon)
+    await state.set_state(SubSG.check_button)
+    await message.answer(
+        "✅ <b>Tekshirish tugmasi</b>\n\n"
+        f"Matni: <b>{escape(text)}</b>\n"
+        f"Premium emoji: <b>{'✅ bor' if icon else 'yo‘q'}</b>",
+        reply_markup=sub_check_kb(custom),
+    )
+
+
+@router.message(SubSG.show, F.text == BTN_SUB_CHECK)
+async def open_sub_check(message: Message, state: FSMContext) -> None:
+    await show_sub_check(message, state)
+
+
+@router.message(SubSG.check_button, F.text == BTN_ST_EDIT)
+async def ask_sub_check(message: Message, state: FSMContext) -> None:
+    await state.set_state(SubSG.waiting_check_button)
+    await message.answer(SUB_CHECK_EDIT_TEXT, reply_markup=cancel_kb())
+
+
+@router.message(SubSG.waiting_check_button, NOT_COMMAND)
+async def save_sub_check(message: Message, state: FSMContext) -> None:
+    text, icon_custom_emoji_id = extract_button_text_and_icon(message)
+    if not text or len(text) > 64:
+        await message.answer(
+            "❗️ Tugma matni bo'sh bo'lmasin va 64 ta belgidan oshmasin. "
+            "Premium emoji yuborsangiz, yoniga tugma matnini ham yozing.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    await set_sub_check_button(text, icon_custom_emoji_id)
+    await message.answer("✅ Tekshirish tugmasi saqlandi")
+    await show_sub_check(message, state)
+
+
+@router.message(SubSG.check_button, F.text == BTN_SUB_CHECK_RESET)
+async def reset_sub_check(message: Message, state: FSMContext) -> None:
+    await reset_sub_check_button()
+    await message.answer("♻️ Tekshirish tugmasi standartga qaytarildi")
+    await show_sub_check(message, state)
+
+
+@router.message(SubSG.check_button, F.text == BTN_BACK)
+async def sub_check_back(message: Message, state: FSMContext) -> None:
     await show_sub(message, state)
 
 
@@ -243,52 +403,229 @@ async def toggle_phone(message: Message, state: FSMContext) -> None:
     await show_phone(message, state, enabled)
 
 
-# ------------------------------------------------------------- menyu ko'rinishi
-async def show_layout(message: Message, state: FSMContext, columns: int) -> None:
-    if columns == 2:
-        hint = "Tugmalar bir qatorga <b>ikkitadan</b> joylashadi."
-    else:
-        hint = "Har bir tugma alohida qatorda, butun kenglikda chiqadi."
-
-    await state.set_state(LayoutSG.show)
+# ----------------------------------------------------------- Ballarim tugmasi
+async def show_my_points(message: Message, state: FSMContext) -> None:
+    settings = await get_my_points_settings()
+    enabled = bool(settings["enabled"])
+    custom_message = bool(settings["message"])
+    icon_status = "✅ bor" if settings["icon_custom_emoji_id"] else "yo'q"
+    await state.set_state(MyPointsSG.show)
     await message.answer(
-        "🧩 <b>Menyu ko'rinishi</b>\n\n"
-        f"Holat: <b>{'2️⃣ ikkitadan' if columns == 2 else '1️⃣ bittadan'}</b>\n\n"
-        f"{hint}\n\n"
-        "Bu sozlama foydalanuvchi ko'radigan menyuga tegishli.",
-        reply_markup=layout_kb(),
+        "🏆 <b>Ballarim tugmasi</b>\n\n"
+        f"Holat: <b>{'🟢 KO‘RINADI' if enabled else '🔴 YASHIRILGAN'}</b>\n"
+        f"Matni: <b>{escape(str(settings['text']))}</b>\n"
+        f"Premium emoji: <b>{icon_status}</b>\n"
+        f"Rangi: <b>{button_style_label(settings['style'])}</b>\n\n"
+        f"Xabar: <b>{'admin o‘rnatgan' if custom_message else 'standart matn'}</b>\n\n"
+        "Telegram faqat oddiy, ko‘k, yashil va qizil uslublarni qo‘llaydi; "
+        "sariq fon Bot API’da mavjud emas.",
+        reply_markup=my_points_settings_kb(enabled, custom_message),
     )
 
 
-@router.message(PanelSG.home, F.text == BTN_LAYOUT)
-async def open_layout(message: Message, state: FSMContext) -> None:
-    await show_layout(message, state, await get_menu_columns())
+@router.message(PanelSG.home, F.text == BTN_POINTS)
+async def open_my_points(message: Message, state: FSMContext) -> None:
+    await show_my_points(message, state)
 
 
-@router.message(LayoutSG.show, F.text.in_({BTN_LT_ONE, BTN_LT_TWO}))
-async def choose_layout(message: Message, state: FSMContext) -> None:
-    columns = await set_menu_columns(1 if message.text == BTN_LT_ONE else 2)
-    await message.answer("✅ Saqlandi")
-    await show_layout(message, state, columns)
+@router.message(MyPointsSG.show, F.text.in_({BTN_ON, BTN_OFF}))
+async def toggle_my_points(message: Message, state: FSMContext) -> None:
+    settings = await get_my_points_settings()
+    await set_my_points_enabled(not bool(settings["enabled"]))
+    await message.answer("✅ O'zgartirildi")
+    await show_my_points(message, state)
 
 
-@router.message(LayoutSG.show, F.text == BTN_VIEW)
-async def preview_layout(message: Message, state: FSMContext) -> None:
-    """Asosiy menyuni haqiqiy klaviatura sifatida ko'rsatadi."""
-    columns = await get_menu_columns()
-    items = await get_items(None, active_only=True)
-    if not items:
-        await message.answer("❗️ Asosiy menyuda faol tugma yo'q")
+@router.message(MyPointsSG.show, F.text == BTN_POINTS_RENAME)
+async def ask_my_points_text(message: Message, state: FSMContext) -> None:
+    await state.set_state(MyPointsSG.waiting_text)
+    await message.answer(
+        "✏️ Yangi tugma nomini yuboring.\n\n"
+        "Premium custom emoji ishlatsangiz, uni nom bilan birga yuboring — "
+        "birinchi premium emoji tugma ikonkasiga aylanadi.\n\n"
+        "Maksimum: 64 ta belgi.",
+        reply_markup=cancel_kb(),
+    )
+
+
+@router.message(MyPointsSG.waiting_text, NOT_COMMAND)
+async def save_my_points_text(message: Message, state: FSMContext) -> None:
+    text, icon_custom_emoji_id = extract_button_text_and_icon(message)
+    if not text or len(text) > 64:
+        await message.answer(
+            "❗️ Tugma nomi bo'sh bo'lmasin va 64 ta belgidan oshmasin. "
+            "Premium emoji yuborsangiz, uning yoniga tugma nomini ham yozing.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    if text in {USER_BACK, USER_HOME}:
+        await message.answer(
+            "❗️ Bu matn menyuning xizmat tugmasi uchun band. Boshqa nom yuboring.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    root_items = await get_items(None)
+    rating_settings = await get_rating_settings()
+    if any(item.title == text for item in root_items) or text == rating_settings["text"]:
+        await message.answer(
+            "❗️ Asosiy menyuda bunday nomli tugma bor. Boshqa nom yuboring.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    settings = await get_my_points_settings()
+    try:
+        await message.answer(
+            "👇 Tugma shunday ko'rinadi:",
+            reply_markup=menu_kb(
+                [],
+                is_root=True,
+                my_points_text=text,
+                my_points_style=settings["style"],
+                my_points_icon_custom_emoji_id=icon_custom_emoji_id,
+            ),
+        )
+    except TelegramBadRequest:
+        await message.answer(
+            "❗️ Telegram premium emojini tugmada qabul qilmadi. Bot egasida "
+            "Telegram Premium faol ekanini tekshiring yoki oddiy emoji yuboring.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    await set_my_points_text(text, icon_custom_emoji_id)
+    await message.answer("✅ Tugma matni saqlandi")
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.show, F.text == BTN_POINTS_MESSAGE)
+async def ask_my_points_message(message: Message, state: FSMContext) -> None:
+    settings = await get_my_points_settings()
+    template = str(settings["message"] or DEFAULT_MY_POINTS_MESSAGE)
+    link = await ref_link(message.bot, message.from_user.id)
+    count = await get_referral_count(message.from_user.id)
+    await state.set_state(MyPointsSG.waiting_message)
+    await message.answer(
+        "📝 <b>Ballarim xabari</b>\n\n"
+        "Yangi matnni Telegram formatida yuboring. Premium custom emoji, qalin, "
+        "kursiv va havolalar saqlanadi.\n\n"
+        "<code>{count}</code> — foydalanuvchining ballari\n"
+        "<code>{link}</code> — foydalanuvchining taklif havolasi\n\n"
+        "Matnda <code>{link}</code> bo'lishi shart.",
+        reply_markup=cancel_kb(),
+    )
+    await message.answer(
+        "👇 Hozirgi ko'rinish:",
+    )
+    await message.answer(
+        render_my_points_text(template, count=count, link=link),
+        reply_markup=share_kb(link),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    )
+
+
+@router.message(MyPointsSG.waiting_message, NOT_COMMAND)
+async def save_my_points_message(message: Message, state: FSMContext) -> None:
+    if not message.text:
+        await message.answer(
+            "❗️ Matn yuboring. Premium emoji matn ichida bo'lishi kerak; "
+            "alohida sticker bu yerda ishlamaydi.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    if len(message.text) > 3000:
+        await message.answer(
+            "❗️ Matn 3000 ta belgidan oshmasin.", reply_markup=cancel_kb()
+        )
         return
 
+    template = message.html_text
+    if "{link}" not in template:
+        await message.answer(
+            "❗️ Matnda <code>{link}</code> kaliti bo'lishi shart. Uni kerakli "
+            "joyga qo'shib, matnni qayta yuboring.",
+            reply_markup=cancel_kb(),
+        )
+        return
+
+    link = await ref_link(message.bot, message.from_user.id)
+    count = await get_referral_count(message.from_user.id)
+    rendered = render_my_points_text(template, count=count, link=link)
+    await message.answer("👇 Foydalanuvchi shu ko'rinishda ko'radi:")
+    try:
+        await message.answer(
+            rendered,
+            reply_markup=share_kb(link),
+            link_preview_options=LinkPreviewOptions(is_disabled=True),
+        )
+    except TelegramBadRequest:
+        await message.answer(
+            "❗️ Xabar saqlanmadi. Format yoki premium emoji Telegram tomonidan "
+            "qabul qilinmadi. Bot egasida Telegram Premium faol ekanini tekshiring.",
+            reply_markup=cancel_kb(),
+        )
+        return
+
+    await set_my_points_message(template)
+    await message.answer("✅ Ballarim xabari saqlandi")
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.show, F.text == BTN_VIEW)
+async def preview_my_points_message(message: Message, state: FSMContext) -> None:
+    settings = await get_my_points_settings()
+    template = str(settings["message"] or DEFAULT_MY_POINTS_MESSAGE)
+    link = await ref_link(message.bot, message.from_user.id)
+    count = await get_referral_count(message.from_user.id)
+    await message.answer("👇 Foydalanuvchi shu ko'rinishda ko'radi:")
     await message.answer(
-        "👇 Foydalanuvchi asosiy menyuni shunday ko'radi:\n\n"
-        "Istalgan tugmani bossangiz sozlamaga qaytasiz.",
-        reply_markup=menu_kb(items, is_root=True, columns=columns),
+        render_my_points_text(template, count=count, link=link),
+        reply_markup=share_kb(link),
+        link_preview_options=LinkPreviewOptions(is_disabled=True),
+    )
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.show, F.text == BTN_POINTS_MESSAGE_RESET)
+async def ask_reset_my_points_message(message: Message, state: FSMContext) -> None:
+    await state.set_state(MyPointsSG.confirm_message_reset)
+    await message.answer(
+        "♻️ Ballarim xabari standart matnga qaytarilsinmi?",
+        reply_markup=confirm_delete_kb(),
     )
 
 
-@router.message(LayoutSG.show, NOT_COMMAND)
-async def back_from_preview(message: Message, state: FSMContext) -> None:
-    """Namunadagi tugma bosilsa — sozlama ekraniga qaytamiz."""
-    await show_layout(message, state, await get_menu_columns())
+@router.message(MyPointsSG.confirm_message_reset, F.text == BTN_YES_DELETE)
+async def reset_my_points_message(message: Message, state: FSMContext) -> None:
+    await delete_my_points_message()
+    await message.answer("♻️ Standart matnga qaytarildi")
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.confirm_message_reset, F.text == BTN_NO)
+async def cancel_reset_my_points_message(message: Message, state: FSMContext) -> None:
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.show, F.text == BTN_POINTS_STYLE)
+async def ask_my_points_style(message: Message, state: FSMContext) -> None:
+    settings = await get_my_points_settings()
+    await state.set_state(MyPointsSG.style)
+    await message.answer(
+        "🎨 <b>Ballarim tugmasi rangi</b>\n\n"
+        f"Hozir: <b>{button_style_label(settings['style'])}</b>\n\n"
+        "Telegram ruxsat bergan ranglardan birini tanlang. "
+        "Sariq rang Bot API’da yo‘q.",
+        reply_markup=button_style_kb(),
+    )
+
+
+@router.message(MyPointsSG.style, F.text.in_(set(BUTTON_STYLE_OPTIONS)))
+async def save_my_points_style(message: Message, state: FSMContext) -> None:
+    style = BUTTON_STYLE_OPTIONS[message.text]
+    await set_my_points_style(style)
+    await message.answer(f"✅ Tugma rangi: <b>{button_style_label(style)}</b>")
+    await show_my_points(message, state)
+
+
+@router.message(MyPointsSG.style, F.text == BTN_BACK)
+async def my_points_style_back(message: Message, state: FSMContext) -> None:
+    await show_my_points(message, state)

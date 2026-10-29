@@ -1,8 +1,12 @@
+import asyncio
+import logging
+from dataclasses import dataclass, field
 from html import escape
 from typing import Optional
 
-from aiogram import F
+from aiogram import Bot, F
 from aiogram.fsm.context import FSMContext
+from aiogram.exceptions import TelegramAPIError
 from aiogram.types import Message
 
 from db.queries import (
@@ -15,9 +19,12 @@ from db.queries import (
     get_item,
     get_item_path,
     get_items,
+    get_my_points_settings,
+    get_rating_settings,
     move_item,
     rename_item,
     set_item_referrals,
+    set_item_row_size,
     set_item_style,
     toggle_item,
 )
@@ -42,6 +49,7 @@ from keyboards.admin_kb import (
     BTN_MN_HIDE,
     BTN_MN_REF,
     BTN_MN_RENAME,
+    BTN_MN_ROW_SIZE,
     BTN_MN_SHOW,
     BTN_MN_STYLE,
     BTN_MN_UP,
@@ -53,6 +61,7 @@ from keyboards.admin_kb import (
     BTN_ST_EDIT,
     BTN_VIEW,
     BTN_YES_DELETE,
+    BUTTON_ROW_SIZE_OPTIONS,
     BUTTON_STYLE_OPTIONS,
     button_style_kb,
     button_style_label,
@@ -65,18 +74,135 @@ from keyboards.admin_kb import (
     menu_item_label,
     menu_node_kb,
     ref_ask_kb,
+    row_size_ask_kb,
+    row_size_kb,
+    row_size_label,
 )
-from utils.content import extract_content, send_content
+from utils.content import (
+    ContentArchiveNotConfiguredError,
+    extract_button_text_and_icon,
+    prepare_content,
+    prepare_media_group,
+    send_content,
+)
 
 router = admin_router()
+logger = logging.getLogger(__name__)
 
 TITLE_LIMIT = 60
 
 #: Taklif sharti uchun eng katta qiymat — xato terilgan raqamdan saqlaydi
 REF_LIMIT = 10_000
 
-#: Yangi tugma nomi taklif sharti so'ralayotgan paytda shu yerda turadi
+#: Yangi tugma yaratilguncha nomi, ikonkasi va ko'rinishi FSMda turadi
 KEY_TITLE = "new_title"
+KEY_ICON = "new_icon_custom_emoji_id"
+KEY_ROW_SIZE = "new_row_size"
+
+# Telegram albomni bir nechta alohida update qilib yuboradi. Oxirgi a'zo
+# kelganidan keyin qisqa kutish barcha rasmlar bitta guruhga yig'ilishini beradi.
+ALBUM_COLLECT_DELAY = 0.8
+
+
+@dataclass
+class PendingAlbum:
+    bot: Bot
+    chat_id: int
+    item_id: int
+    message_ids: set[int] = field(default_factory=set)
+    task: Optional[asyncio.Task[None]] = None
+
+
+_pending_albums: dict[tuple[int, str], PendingAlbum] = {}
+_pending_albums_lock = asyncio.Lock()
+
+
+async def _send_album_notice(bot: Bot, chat_id: int, text: str) -> None:
+    """Fon taskidagi natijani adminga xabar qiladi."""
+    try:
+        await bot.send_message(chat_id, text)
+    except TelegramAPIError:
+        logger.warning("Albom natijasini admin chatiga yuborib bo'lmadi")
+
+
+async def _save_album_after_idle(key: tuple[int, str]) -> None:
+    """Yangi a'zo kelmasa, yig'ilgan albomni arxivga va DBga saqlaydi."""
+    try:
+        await asyncio.sleep(ALBUM_COLLECT_DELAY)
+    except asyncio.CancelledError:
+        return
+
+    current_task = asyncio.current_task()
+    async with _pending_albums_lock:
+        pending = _pending_albums.get(key)
+        if pending is None or pending.task is not current_task:
+            return
+        _pending_albums.pop(key, None)
+
+    message_ids = sorted(pending.message_ids)
+    try:
+        data = await prepare_media_group(pending.bot, pending.chat_id, message_ids)
+        await add_content(
+            pending.item_id, data["type"], data["file_id"], data["text_html"]
+        )
+        total = await count_contents(pending.item_id)
+    except ContentArchiveNotConfiguredError:
+        await _send_album_notice(
+            pending.bot,
+            pending.chat_id,
+            "❗️ Albom uchun arxiv kanal sozlanmagan. "
+            "Admin CONTENT_ARCHIVE_CHAT_ID ni kiritsin.",
+        )
+    except TelegramAPIError:
+        await _send_album_notice(
+            pending.bot,
+            pending.chat_id,
+            "❗️ Albom arxiv kanaliga nusxalanmadi. Botni o'sha kanalda admin qiling "
+            "va kanal ID sini tekshiring.",
+        )
+    except ValueError as exc:
+        await _send_album_notice(pending.bot, pending.chat_id, f"❗️ Albom saqlanmadi: {exc}")
+    except Exception:
+        logger.exception("Albomni saqlashda kutilmagan xato")
+        await _send_album_notice(
+            pending.bot, pending.chat_id, "❗️ Albomni saqlashda kutilmagan xato yuz berdi."
+        )
+    else:
+        await _send_album_notice(
+            pending.bot,
+            pending.chat_id,
+            f"✅ Albom saqlandi: <b>{len(message_ids)}</b> ta media. "
+            f"Jami: <b>{total}</b> ta.",
+        )
+
+
+async def _collect_album_part(message: Message, item_id: int) -> None:
+    """Bir albom a'zosini yig'adi va saqlash taymerini yangilaydi."""
+    group_id = message.media_group_id
+    if group_id is None:
+        return
+    key = (message.chat.id, group_id)
+    async with _pending_albums_lock:
+        pending = _pending_albums.get(key)
+        if pending is None:
+            pending = PendingAlbum(
+                bot=message.bot,
+                chat_id=message.chat.id,
+                item_id=item_id,
+            )
+            _pending_albums[key] = pending
+        pending.message_ids.add(message.message_id)
+        if pending.task is not None:
+            pending.task.cancel()
+        pending.task = asyncio.create_task(_save_album_after_idle(key))
+
+ASK_ROW_SIZE_TEXT = (
+    "🧩 <b>Tugma ko'rinishi</b>\n\n"
+    "Tugma qatorda qanday joylashsin?\n\n"
+    "1️⃣ <b>Bittalik</b> — alohida qatorda, to'liq kenglikda.\n"
+    "2️⃣ <b>Ikkitalik</b> — oldingi yoki keyingi ikkitalik tugma bilan "
+    "bir qatorda chiqadi."
+)
 
 ASK_REF_TEXT = (
     "👥 <b>Taklif sharti</b>\n\n"
@@ -91,6 +217,15 @@ ASK_COUNT_TEXT = (
     f"0 dan katta butun son yuboring (1 dan {REF_LIMIT} gacha).\n"
     "Masalan: <code>5</code>"
 )
+
+
+async def _is_reserved_root_title(parent_id: Optional[int], title: str) -> bool:
+    """Ildizda doimiy Ballarim/Reyting tugmalari bilan nom to'qnashmasin."""
+    if parent_id is not None:
+        return False
+    points = await get_my_points_settings()
+    rating = await get_rating_settings()
+    return title in {points["text"], rating["text"]}
 
 BAD_COUNT_TEXT = (
     "❗️ Faqat <b>0 dan katta</b> butun son yuboring.\n"
@@ -128,7 +263,13 @@ async def show_node(message: Message, state: FSMContext, node_id: Optional[int])
         lines.append("")
         lines.append(f"📎 Kontent: <b>{content_count}</b> ta")
         lines.append(f"Holat: {'👁 ko‘rinadi' if item.is_active else '🚫 yashirin'}")
+        lines.append(
+            "Premium emoji: <b>✅ bor</b>"
+            if item.icon_custom_emoji_id
+            else "Premium emoji: yo'q"
+        )
         lines.append(f"🎨 Tugma rangi: <b>{button_style_label(item.button_style)}</b>")
+        lines.append(f"🧩 Ko'rinishi: <b>{row_size_label(item.row_size)}</b>")
         lines.append(
             f"👥 Taklif sharti: <b>{item.required_referrals}</b> ta odam"
             if item.required_referrals
@@ -178,37 +319,79 @@ async def open_root(message: Message, state: FSMContext) -> None:
 async def ask_title(message: Message, state: FSMContext) -> None:
     await state.set_state(MenuSG.waiting_title)
     await message.answer(
-        f"➕ Yangi tugma nomini yuboring (max {TITLE_LIMIT} belgi):",
+        f"➕ Yangi tugma nomini yuboring (max {TITLE_LIMIT} belgi).\n"
+        "Premium custom emoji ishlatsangiz, uni nom bilan birga yuboring:",
         reply_markup=cancel_kb(),
     )
 
 
 @router.message(MenuSG.waiting_title, NOT_COMMAND)
 async def add_title(message: Message, state: FSMContext) -> None:
-    title = (message.text or "").strip()
+    title, icon_custom_emoji_id = extract_button_text_and_icon(message)
     if not title or len(title) > TITLE_LIMIT:
         await message.answer(
             f"❗️ Nom bo'sh bo'lmasin va {TITLE_LIMIT} belgidan oshmasin.",
             reply_markup=cancel_kb(),
         )
         return
-    # nomi olindi — endi taklif sharti kerakmi, deb so'raymiz
-    await state.update_data({KEY_TITLE: title})
+    parent_id = (await state.get_data()).get(KEY_NODE)
+    if await _is_reserved_root_title(parent_id, title):
+        await message.answer(
+            "❗️ Bu nom asosiy menyudagi doimiy tugma uchun band. Boshqa nom yuboring.",
+            reply_markup=cancel_kb(),
+        )
+        return
+    # Yangi tugma standart 2 talik. Istasa admin keyin tugma ichidan 1..4 ga
+    # o'zgartirishi mumkin.
+    await state.update_data(
+        {KEY_TITLE: title, KEY_ICON: icon_custom_emoji_id, KEY_ROW_SIZE: 2}
+    )
     await state.set_state(MenuSG.ask_ref)
     await message.answer(
         ASK_REF_TEXT.format(title=escape(title)), reply_markup=ref_ask_kb()
     )
 
 
+@router.message(
+    MenuSG.ask_row_size,
+    F.text.in_(
+        {label for label, size in BUTTON_ROW_SIZE_OPTIONS.items() if size <= 2}
+    ),
+)
+async def choose_new_row_size(message: Message, state: FSMContext) -> None:
+    await state.update_data({KEY_ROW_SIZE: BUTTON_ROW_SIZE_OPTIONS[message.text]})
+    title = (await state.get_data()).get(KEY_TITLE) or ""
+    await state.set_state(MenuSG.ask_ref)
+    await message.answer(
+        ASK_REF_TEXT.format(title=escape(title)), reply_markup=ref_ask_kb()
+    )
+
+
+@router.message(MenuSG.ask_row_size, NOT_COMMAND)
+async def ask_row_size_again(message: Message, state: FSMContext) -> None:
+    await message.answer(
+        "❗️ <b>1️⃣ Bittalik</b> yoki <b>2️⃣ Ikkitalik</b> tugmasini tanlang.",
+        reply_markup=row_size_ask_kb(),
+    )
+
+
 async def _create_item(message: Message, state: FSMContext, required: int) -> None:
     data = await state.get_data()
     title = (data.get(KEY_TITLE) or "").strip()
+    icon_custom_emoji_id = data.get(KEY_ICON)
+    row_size = data.get(KEY_ROW_SIZE, 2)
     parent_id = data.get(KEY_NODE)
     if not title:
         await show_node(message, state, parent_id)
         return
-    await add_item(parent_id, title, required)
-    await state.update_data({KEY_TITLE: None})
+    await add_item(
+        parent_id,
+        title,
+        required,
+        icon_custom_emoji_id,
+        row_size=row_size,
+    )
+    await state.update_data({KEY_TITLE: None, KEY_ICON: None, KEY_ROW_SIZE: None})
     if required:
         await message.answer(
             f"✅ Tugma qo'shildi.\n👥 Taklif sharti: <b>{required}</b> ta odam."
@@ -265,12 +448,16 @@ async def ask_rename(message: Message, state: FSMContext) -> None:
         await show_node(message, state, None)
         return
     await state.set_state(MenuSG.waiting_rename)
-    await message.answer("✏️ Yangi nomni yuboring:", reply_markup=cancel_kb())
+    await message.answer(
+        "✏️ Yangi nomni yuboring. Premium custom emoji ishlatsangiz, "
+        "uni nom bilan birga yuboring:",
+        reply_markup=cancel_kb(),
+    )
 
 
 @router.message(MenuSG.waiting_rename, NOT_COMMAND)
 async def rename(message: Message, state: FSMContext) -> None:
-    title = (message.text or "").strip()
+    title, icon_custom_emoji_id = extract_button_text_and_icon(message)
     if not title or len(title) > TITLE_LIMIT:
         await message.answer(
             f"❗️ Nom bo'sh bo'lmasin va {TITLE_LIMIT} belgidan oshmasin.",
@@ -279,7 +466,15 @@ async def rename(message: Message, state: FSMContext) -> None:
         return
     item_id = await _node_id(state)
     if item_id is not None:
-        await rename_item(item_id, title)
+        item = await get_item(item_id)
+        if item and await _is_reserved_root_title(item.parent_id, title):
+            await message.answer(
+                "❗️ Bu nom asosiy menyudagi doimiy tugma uchun band. "
+                "Boshqa nom yuboring.",
+                reply_markup=cancel_kb(),
+            )
+            return
+        await rename_item(item_id, title, icon_custom_emoji_id)
         await message.answer("✅ Nom o'zgartirildi")
     await show_node(message, state, item_id)
 
@@ -332,6 +527,39 @@ async def save_style(message: Message, state: FSMContext) -> None:
 
 @router.message(MenuSG.style, F.text == BTN_BACK)
 async def style_back(message: Message, state: FSMContext) -> None:
+    await show_node(message, state, await _node_id(state))
+
+
+# -------------------------------------------------------------- qator ko'rinishi
+@router.message(MenuSG.node, F.text == BTN_MN_ROW_SIZE)
+async def show_row_size(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    item = await get_item(item_id) if item_id is not None else None
+    if item is None:
+        await show_node(message, state, None)
+        return
+    await state.set_state(MenuSG.row_size)
+    await message.answer(
+        f"🧩 <b>{escape(item.title)}</b> — tugma ko'rinishi\n\n"
+        f"Hozir: <b>{row_size_label(item.row_size)}</b>\n\n"
+        "Ketma-ket bir xil ko'rinishdagi tugmalar tanlangan songacha "
+        "bitta qatorda chiqadi.",
+        reply_markup=row_size_kb(),
+    )
+
+
+@router.message(MenuSG.row_size, F.text.in_(set(BUTTON_ROW_SIZE_OPTIONS)))
+async def save_row_size(message: Message, state: FSMContext) -> None:
+    item_id = await _node_id(state)
+    if item_id is not None:
+        row_size = BUTTON_ROW_SIZE_OPTIONS[message.text]
+        await set_item_row_size(item_id, row_size)
+        await message.answer(f"✅ Tugma ko'rinishi: <b>{row_size_label(row_size)}</b>")
+    await show_node(message, state, item_id)
+
+
+@router.message(MenuSG.row_size, F.text == BTN_BACK)
+async def row_size_back(message: Message, state: FSMContext) -> None:
     await show_node(message, state, await _node_id(state))
 
 
@@ -446,13 +674,32 @@ async def content_done(message: Message, state: FSMContext) -> None:
 
 @router.message(MenuSG.waiting_content, NOT_COMMAND)
 async def content_received(message: Message, state: FSMContext) -> None:
-    data = extract_content(message)
-    if data is None:
-        await message.answer("❗️ Bu turdagi kontent qo'llab-quvvatlanmaydi.")
-        return
     item_id = await _node_id(state)
     if item_id is None:
         await show_node(message, state, None)
+        return
+    if message.media_group_id:
+        await _collect_album_part(message, item_id)
+        return
+
+    try:
+        data = await prepare_content(message.bot, message)
+    except ContentArchiveNotConfiguredError:
+        await message.answer(
+            "❗️ Rich-formatdagi post uchun arxiv kanal sozlanmagan. "
+            "Admin CONTENT_ARCHIVE_CHAT_ID ni kiritsin.",
+            reply_markup=content_add_kb(),
+        )
+        return
+    except TelegramAPIError:
+        await message.answer(
+            "❗️ Post arxiv kanaliga nusxalanmadi. Botni o'sha kanalda admin qiling "
+            "va kanal ID sini tekshiring.",
+            reply_markup=content_add_kb(),
+        )
+        return
+    if data is None:
+        await message.answer("❗️ Bu turdagi kontent qo'llab-quvvatlanmaydi.")
         return
     await add_content(item_id, data["type"], data["file_id"], data["text_html"])
     total = await count_contents(item_id)

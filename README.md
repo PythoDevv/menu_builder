@@ -8,13 +8,18 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 ## Imkoniyatlar
 
 - **Adminlar** — paneldan telegram ID raqami orqali qo'shiladi/o'chiriladi. `.env` dagilar asosiy admin bo'lib qoladi.
-- **Obuna tekshiruvi** — ochiq va yopiq (qo'shilish so'rovi) kanallar. Zayafka tashlagan odamdan qayta so'ralmaydi.
-- **Obuna xabari** — majburiy obuna ekranidagi post admin paneldan almashtiriladi: matn, rasm, video, fayl (`file_id` bilan). Qo'yilmagan bo'lsa standart matn chiqadi. Kanal tugmalari va **✅ Tekshirish** xabar ostiga avtomatik qo'shiladi.
+- **Obuna tekshiruvi** — odatda faqat hali a'zo bo'lmagan foydalanuvchiga ochiq va yopiq kanallar ko'rsatiladi. Admin obuna xabari bo'limidan **har `/start` da qayta ko'rsatish** rejimini yoqishi mumkin; bunda oldindan a'zo bo'lgan odam ham menyuga **A'zo bo'ldim** tugmasidan keyin o'tadi. Yopiq kanalga zayafka tashlash tekshiruvdan o'tish uchun yetarli.
+- **Obuna xabari** — majburiy obuna ekranidagi post admin paneldan almashtiriladi: matn, rasm, video, fayl (`file_id` bilan). Matn/captiondagi premium custom emojilar saqlanadi. Kanal tugmalari va matni o'zgaradigan **A'zo bo'ldim** tugmasi xabar ostiga avtomatik qo'shiladi; ikkala turdagi tugmaga ham premium emoji ikonka qo'yish mumkin.
+- **Obuna URL tugmalari** — admin `/tugma` yoki **🔗 Tugma** bo'limidan nom va link kiritib, kanalga bog'liq bo'lmagan tugmalar qo'shadi. Ular kanal tugmalaridan keyin, **A'zo bo'ldim** tugmasidan oldin chiqadi va alohida jadvalda saqlanadi.
 - **Start xabar** — admin paneldan qo'shiladi / o'zgartiriladi / o'chiriladi. Qo'yilmagan bo'lsa ko'rsatilmaydi.
-- **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga kontent (rasm/video/fayl/matn) biriktiriladi.
-- **Menyu ko'rinishi** — tugmalar qatorda **bittadan** yoki **ikkitadan** chiqishi admin paneldan tanlanadi. Ikkitadan rejimida nomi uzun tugma qatorni o'zi egallaydi (matni siqilib ketmaydi).
-- **Kontent** — `file_id` + HTML holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi). Oddiy va premium stikerlar ham qo'llanadi.
+- **Menyu tugmalari** — cheksiz darajali daraxt. Har bir tugmaga premium custom emoji ikonka va kontent (rasm/video/fayl/matn) biriktiriladi.
+- **Menyu ko'rinishi** — yangi tugmalar standart **2 talik** yaratiladi; keyin har birini **1, 2, 3 yoki 4 talik** qilib sozlash mumkin. Ketma-ket bir xil turdagi tugmalar bitta qatorga guruhlanadi.
+- **Kontent** — `file_id` + Telegram entitylari holida saqlanadi, foydalanuvchiga o'sha holicha yuboriladi (qayta yuklanmaydi). Premium custom emoji ID si ham yo'qolmaydi. Oddiy va premium stikerlar ham qo'llanadi.
 - **Tugma rangi** — har bir menyu tugmasi uchun oddiy, ko'k, yashil yoki qizil Telegram uslubini tanlash mumkin.
+- **Ballarim tugmasi** — admin paneldan ko'rsatish/yashirish, nomi, rangi va bosilganda chiqadigan xabarni o'zgartirish mumkin. Tugma ikonkasida va xabarda premium custom emoji saqlanadi.
+- **Reyting tugmasi** — ko'rsatish/yashirish, nomi, premium emoji ikonka, rangi va 1–4 talik joylashuvi boshqariladi. Reyting posti formatlash/premium emojilarni saqlaydi; `{users-10}` kabi kalit top foydalanuvchilarni chiqaradi.
+- **G'oliblar** — admin 1–20 oralig'ida natija sonini belgilaydi; tanlangan TOP foydalanuvchilarning ism, username, Telegram ID va ballari bitta xabarda chiqadi. Alohida ID bo'yicha xabar bo'limidan botdagi istalgan odamga matn/media/fayl yuboriladi.
+- **Superadmin** — faqat `.env` dagi `ADMINS` uchun `/superadmin`: dump olib ballarni nolga tushirish va raqamlangan dumpni tanlab bazani qayta tiklash.
 - **Taklif (referal) sharti** — tugma faqat N ta odam taklif qilgandan keyin ochiladi. Shart tugma qo'shilayotganda so'raladi, keyin ham o'zgartiriladi. Shart bajarilmaganda chiqadigan matn admin paneldan sozlanadi.
 - **Telefon so'rash** — admin paneldan yoqiladi/o'chiriladi. Bir marta olingan raqam qayta so'ralmaydi.
 - **Hammaga xabar** — bloklaganlar avtomatik belgilanadi.
@@ -50,12 +55,68 @@ cd /root/menu_builder            # serverdagi papka
 git pull
 source venv/bin/activate
 pip install -r requirements.txt
-python migrate.py                # yangi jadvallarni qo'shadi
+python migrate.py                # avval dump oladi, keyin migratsiyani qo'llaydi
 supervisorctl restart menu_builder_bot
 ```
 
+### Rich-formatdagi forward postlar
+
+Telegramning yangi rich-format postlari (masalan, yig'iladigan quote va premium
+emoji/stikerli postlar) oddiy `file_id` sifatida saqlanmaydi. Ularning ko'rinishi
+to'liq saqlanishi uchun bot ular kelishi bilan yopiq arxiv kanaliga nusxa oladi va
+keyin foydalanuvchiga o'sha nusxani yuboradi.
+
+1. Faqat bot uchun yopiq kanal yarating va botni unda xabar yubora oladigan admin
+   qiling.
+2. Kanal ID sini oling (`-100...` ko'rinishida) va serverdagi `.env` ga yozing:
+
+   ```env
+   CONTENT_ARCHIVE_CHAT_ID=-1001234567890
+   ```
+
+3. Botni qayta ishga tushiring. Arxiv kanalidagi xabarlarni o'chirmang.
+
+Bu faqat yangi rich-postlarga tegishli. Avvaldan saqlangan matn, media va stiker
+postlari o'zining eski yuborish usulida ishlashda davom etadi.
+
+### Albomlar
+
+Admin menyu kontenti qo'shilayotgan paytda Telegram albomi yuborilsa, uning 2–10
+ta media a'zosi alohida postlar emas, bitta **Albom** kontenti bo'lib saqlanadi.
+Bot albomni arxiv kanaliga va foydalanuvchiga `copyMessages` bilan nusxalaydi,
+shuning uchun Telegramdagi kollaj ko'rinishi va captionlar saqlanadi. Albom
+yuborilgach `✅ Albom saqlandi` xabarini kuting; bu odatda bir soniyadan kam vaqt
+oladi. Bu imkoniyat menyu tugmasi ichidagi kontent uchun ishlaydi.
+
+### Polling xavfsizligi
+
+Telegram Bot API aiogram hali tanimaydigan yangi formatdagi update yuborsa, bitta
+xabar butun polling navbatini qayta-qayta buzib qo'ymaydi. Yangi rich-postning
+ichki bloki tanilmasa ham post yo'qolmaydi: bot uni Telegram orqali arxiv kanaliga
+nusxalaydi. Rich postga aloqasi bo'lmagan mutlaqo yaroqsiz update esa logga yozilib,
+o'tkazib yuboriladi va keyingi xabarlar ishlashda davom etadi.
+
 `migrate.py` qaysi fayl qo'llanganini `schema_migrations` jadvalida saqlaydi —
 qayta ishga tushirsangiz bajarilgani takrorlanmaydi.
+
+`migrate.py` har ishga tushganda, SQL ishlashidan **oldin** baza `dumps/` papkasiga
+`backup_0001_YYYYMMDD_HHMMSS_pre_migrate.dump` ko'rinishida saqlanadi. `pg_dump`
+muvaffaqiyatsiz tugasa migratsiya umuman boshlanmaydi. Yangi migratsiya bo'lmasa
+ham dump yaratiladi, SQL esa qayta bajarilmaydi. Serverda PostgreSQL client
+(`pg_dump`, `pg_restore`) o'rnatilgan bo'lishi kerak.
+
+Dumpni qayta tiklash:
+
+```bash
+supervisorctl stop menu_builder_bot
+python3 restore.py
+supervisorctl start menu_builder_bot
+```
+
+`restore.py` raqamlangan dumplarni eng yangisidan boshlab ko'rsatadi (Enter bosilsa
+oxirgisi tanlanadi). Tanlangan dump yozilishidan oldin bazaning joriy holati ham
+`pre_restore` nomi bilan avtomatik dump qilinadi. Yakuniy tasdiq uchun `RESTORE`
+so'zini yozish kerak.
 
 Yangi migratsiya qo'shish uchun `migrations/` ichiga `002_...sql` ko'rinishida
 fayl tashlang (nomi bo'yicha tartib bilan bajariladi).
@@ -69,17 +130,24 @@ oddiy foydalanuvchi menyusini ko'radi.
 | Bo'lim | Nima qiladi |
 |---|---|
 | 👮 Adminlar | ID raqami orqali admin qo'shish / adminlikdan olish |
-| 📢 Kanallar | Qo'shish / o'chirish / yoqish-o'chirish. Bot kanalda **admin** bo'lishi shart. |
+| 📢 Kanallar | Qo'shish / o'chirish / yoqish-o'chirish va obuna tugmasiga premium emoji qo'yish. Bot kanalda **admin** bo'lishi shart. |
+| 🔗 Tugma | Majburiy obuna postiga nomi va linki alohida saqlanadigan oddiy URL tugmalarni qo'shish/o'chirish (`/tugma` bilan ham ochiladi) |
 | 🆕 Avtomatik so'rov | Bot kanalga admin qilinsa, **admin qilgan odamning o'ziga** "qo'shilsinmi?" so'rovi keladi (pastda) |
-| 🗂 Menyu tugmalari | Tugma qo'shish, nomini/rangini o'zgartirish, tartiblash, yashirish, o'chirish, kontent biriktirish, **taklif sharti** |
+| 🗂 Menyu tugmalari | Tugma qo'shish, nomini/rangini va **1–4 talik ko'rinishini** o'zgartirish, tartiblash, yashirish, o'chirish, kontent biriktirish, **taklif sharti** |
 | ✏️ Start xabar | Ko'rish / o'zgartirish / o'chirish |
-| 📌 Obuna xabari | Majburiy obuna postini qo'yish (matn/rasm/video), ko'rish, standartga qaytarish |
+| 📌 Obuna xabari | Majburiy obuna postini sozlash, **har `/start` da a'zoga ham qayta ko'rsatish** rejimini yoqish/o'chirish va **Tekshirish** tugmasini o'zgartirish |
 | ✍️ Taklif matni | Taklif sharti bajarilmaganda chiqadigan matn: ko'rish, o'zgartirish, standartga qaytarish |
 | ☎️ Telefon so'rash | ON / OFF |
-| 🧩 Menyu ko'rinishi | Tugmalar 1 tadan yoki 2 tadan chiqishi + namunani ko'rish |
+| 🏆 Ballarim tugmasi | Ko'rsatish/yashirish, nomi, rangi, premium emoji va natija xabarini o'zgartirish |
+| 🏅 Reyting tugmasi | Ko'rsatish/yashirish, nomi, rangi, premium emoji, joylashuvi va `{users-N}` kalitli postni o'zgartirish |
+| 🏆 G'oliblar | Natijalar sonini sozlash, to'liq TOP ro'yxatni bitta xabarda olish va Telegram ID bo'yicha bitta odamga xabar yuborish |
 | 📨 Xabar yuborish | Hamma faol foydalanuvchiga |
 | 📊 Excel | Faylni olish yoki qo'lda yangilash |
 | 👥 Statistika | Jami / faol / bugun / 7 kun |
+
+`/superadmin` Telegram komandalar ro'yxatida hech kimga ko'rinmaydi. Uni qo'lda
+yozganda esa faqat `.env` dagi `ADMINS` uchun handler ishlaydi. Ballarni tozalashdan oldin
+`pre_points_reset`, restore oldidan esa `pre_restore` dump avtomatik yaratiladi.
 
 ## Taklif (referal) sharti
 
@@ -102,9 +170,31 @@ Ro'yxatda shartli tugmalar `🔒5` belgisi bilan ko'rinadi.
 (ostida **📤 Do'stlarga yuborish** tugmasi bilan). Talab bajarilgach tugma
 o'z-o'zidan ochiladi — hech narsani qayta bosish shart emas.
 
-Bundan tashqari, asosiy menyu tagida doimiy **🏆 Ballarim** tugmasi bor —
-hech qanday shartli tugmaga bog'liq bo'lmasdan, istalgan vaqtda taklif
-qilinganlar sonini va shaxsiy havolani ko'rsatadi.
+Bundan tashqari, asosiy menyu tagidagi **🏆 Ballarim** tugmasi hech qanday shartli
+tugmaga bog'liq bo'lmasdan taklif qilinganlar sonini va shaxsiy havolani ko'rsatadi.
+Admin uning ko'rinishini, matnini va Telegram ruxsat bergan rangini o'zgartira oladi.
+Telegram Bot API sariq fon bermaydi; sariq urg'u kerak bo'lsa tugma matnida `🟡`
+emoji ishlatish mumkin, lekin tugmaning haqiqiy foni sariq bo'lmaydi.
+
+Ballarim xabarida `{count}` foydalanuvchining takliflari soniga, `{link}` esa uning
+shaxsiy taklif havolasiga almashtiriladi. `{link}` kaliti xabarda bo'lishi shart.
+Telegram ichida formatlangan premium custom emoji yuborilsa, uning
+`custom_emoji_id` qiymati HTML shablon bilan birga saqlanadi. Tugma nomidagi
+birinchi premium custom emoji alohida ikonka sifatida saqlanadi. Buning ishlashi
+uchun bot egasining Telegram Premium obunasi faol bo'lishi kerak.
+
+## Reyting posti
+
+Admin panel → **🏅 Reyting tugmasi** orqali tugma va post sozlanadi. Post ichida
+`{users-N}` yozilsa, shu joyga eng ko'p odam taklif qilgan N ta foydalanuvchi
+joylanadi. Masalan, `{users-10}` — top 10. N qiymati 1–50 oralig'ida xavfsiz
+chegaralanadi. Ro'yxatning tepasi va pastida aynan bittadan bo'sh qator avtomatik
+qoldiriladi.
+
+Post Telegram formatida saqlanadi: qalin/kursiv matn, havola va premium custom
+emojilar ishlaydi. Tugma nomiga qo'shilgan birinchi premium custom emoji alohida
+ikonka sifatida ishlatiladi. 2 talik joylashuvda standart holatda **Ballarim** va
+**Reyting** bitta qatorda chiqadi.
 
 Matnda ishlatiladigan o'rinbosarlar:
 
@@ -156,14 +246,19 @@ qo'shilsinmi?"* — **✅ Ha** / **❌ Yo'q** tugmalari bilan.
 - Kanal qo'shishdan oldin botni o'sha kanalga **admin** qiling (yopiq kanalda "Invite Users via Link" huquqi ham kerak — zayafkali havola shu orqali yaratiladi).
 - Yopiq kanalda so'rovni ushlash uchun bot admin bo'lishi shart, aks holda `chat_join_request` kelmaydi.
 - Obuna xabari `settings` jadvalida `sub_type` / `sub_file_id` / `sub_text` kalitlarida
-  saqlanadi — media `file_id` bilan, matn esa HTML formatlashi bilan. Foydalanuvchiga
-  admin qanday yuborgan bo'lsa, o'sha holicha ko'rsatiladi.
+  saqlanadi — media `file_id` bilan, matn esa Telegram entitylari (premium emoji IDlari
+  bilan) holida. Foydalanuvchiga admin qanday yuborgan bo'lsa, o'sha holicha ko'rsatiladi.
+- Tekshirish tugmasi `sub_check_text` / `sub_check_icon_custom_emoji_id` sozlamalarida,
+  kanal tugmasining premium emojisi esa `channels.icon_custom_emoji_id` ustunida saqlanadi.
+  Kanal ikonkalari uchun `006_channel_button_custom_emoji.sql` migratsiyasini qo'llash kerak.
+- Oddiy obuna URL tugmalari alohida `subscription_buttons` jadvalida saqlanadi.
+  Eski bazada jadval `008_subscription_buttons.sql` migratsiyasi bilan yaratiladi.
 - Taklif matni `settings` jadvalidagi `ref_text` kalitida turadi; taklif soni
   `menu_items.required_referrals`, kim kimni taklif qilgani `users.referred_by`
   ustunida. Eski bazada bu ustunlar `python migrate.py` (002) bilan qo'shiladi.
-- Menyu ko'rinishi `settings` jadvalida `menu_columns` kalitida saqlanadi (`1` yoki `2`,
-  standart — `2`). Yangi migratsiya kerak emas. Juftlash chegarasi —
-  `keyboards/user_kb.py` dagi `SHORT_TITLE` (emoji ikki belgi hisoblanadi).
+- Har bir tugmaning ko'rinishi `menu_items.row_size` ustunida saqlanadi (`1`–`4`).
+  `005_menu_item_row_size.sql` migratsiyasi eski tugmalarga `1` qiymatini beradi.
+  Bir xil `row_size` qiymatli ketma-ket tugmalar tanlangan songacha bitta qatorda chiqadi.
 - Admin qaysi ekranda turgani FSM holatida saqlanadi (xotirada). Bot qayta ishga
   tushsa panel bosh sahifadan boshlanadi — `/admin` bosilsa kifoya.
 
@@ -172,6 +267,8 @@ qo'shilsinmi?"* — **✅ Ha** / **❌ Yo'q** tugmalari bilan.
 ```
 main.py            — polling, middleware va routerlarni ulash
 migrate.py         — SQL migratsiyalarni qo'llash
+restore.py         — raqamlangan dumpni tanlab bazaga qayta tiklash
+db_backup.py       — pg_dump/pg_restore va dump raqamlash logikasi
 config.py          — .env sozlamalari
 db/                — modellar va barcha so'rovlar
 migrations/        — .sql migratsiyalar

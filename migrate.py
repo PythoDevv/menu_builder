@@ -1,10 +1,11 @@
-"""SQL migratsiyalarni qo'llaydi.
+"""Bazani dump qilib, so'ng SQL migratsiyalarni qo'llaydi.
 
     python migrate.py
 
 `migrations/` papkasidagi `.sql` fayllar nomi bo'yicha tartib bilan bajariladi.
 Qaysi biri qo'llangani `schema_migrations` jadvalida saqlanadi, shuning uchun
 skriptni xohlagancha qayta ishga tushirish mumkin — bajarilgani takrorlanmaydi.
+Har ishga tushganda, birinchi SQL buyrug'idan oldin `dumps/` ga pg_dump olinadi.
 
 Fayl ichidagi buyruqlar `;` bilan ajratiladi (asyncpg bir so'rovda bitta
 buyruqni bajaradi), shuning uchun SQL ichida `;` faqat buyruq oxirida turishi kerak.
@@ -19,6 +20,7 @@ from pathlib import Path
 from sqlalchemy import text
 
 from db.base import close_db, engine
+from db_backup import create_backup
 
 logger = logging.getLogger("migrate")
 
@@ -53,10 +55,27 @@ async def _run() -> int:
         logger.info("Migratsiya fayllari topilmadi")
         return 0
 
+    async with engine.connect() as conn:
+        exists = await conn.scalar(text("SELECT to_regclass('public.schema_migrations')"))
+        if exists:
+            rows = await conn.execute(text("SELECT name FROM schema_migrations"))
+            applied = {r[0] for r in rows}
+        else:
+            applied = set()
+
+    logger.info("⏳ Migratsiyadan oldin baza dump qilinmoqda...")
+    backup_path = await asyncio.to_thread(create_backup, reason="pre_migrate")
+    logger.info("✅ Dump tayyor: %s", backup_path)
+
+    pending = [path for path in files if path.name not in applied]
+    if not pending:
+        for path in files:
+            logger.info("↷ %s — allaqachon qo'llangan", path.name)
+        logger.info("Yakun: yangi migratsiya yo'q; faqat dump yaratildi")
+        return 0
+
     async with engine.begin() as conn:
         await conn.execute(text(CREATE_HISTORY))
-        rows = await conn.execute(text("SELECT name FROM schema_migrations"))
-        applied = {r[0] for r in rows}
 
     new = 0
     for path in files:

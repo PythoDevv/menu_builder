@@ -6,7 +6,14 @@ from aiogram.exceptions import TelegramAPIError
 from aiogram.fsm.context import FSMContext
 from aiogram.types import Message, MessageOriginChannel, MessageOriginChat
 
-from db.queries import add_channel, delete_channel, get_channel, get_channels, toggle_channel
+from db.queries import (
+    add_channel,
+    delete_channel,
+    get_channel,
+    get_channels,
+    set_channel_icon,
+    toggle_channel,
+)
 from handlers.admin.common import (
     KEY_ITEM,
     NOT_COMMAND,
@@ -17,9 +24,12 @@ from handlers.admin.common import (
 )
 from handlers.admin.states import ChannelSG, PanelSG
 from keyboards.admin_kb import (
+    BTN_BACK,
     BTN_CH_ADD,
     BTN_CH_DISABLE,
     BTN_CH_ENABLE,
+    BTN_CH_ICON,
+    BTN_CH_ICON_CLEAR,
     BTN_CH_LIST,
     BTN_CH_PRIVATE,
     BTN_CH_PUBLIC,
@@ -28,6 +38,7 @@ from keyboards.admin_kb import (
     BTN_NO,
     BTN_YES_DELETE,
     cancel_kb,
+    channel_icon_kb,
     channel_label,
     channel_one_kb,
     channel_type_kb,
@@ -35,6 +46,7 @@ from keyboards.admin_kb import (
     confirm_delete_kb,
 )
 from utils.channels import is_bot_admin, resolve_invite_link
+from utils.content import extract_button_text_and_icon
 from utils.subscription import clear_cache
 
 router = admin_router()
@@ -76,6 +88,7 @@ async def show_one(message: Message, state: FSMContext, channel_id: Optional[int
         f"ID: <code>{ch.chat_id}</code>\n"
         f"Username: {('@' + ch.username) if ch.username else '—'}\n"
         f"Havola: {ch.invite_link or '—'}\n"
+        f"Premium emoji: {'✅ bor' if ch.icon_custom_emoji_id else 'yo‘q'}\n"
         f"Holat: {'🟢 faol' if ch.is_active else '🔴 o‘chirilgan'}",
         reply_markup=channel_one_kb(ch),
     )
@@ -110,6 +123,55 @@ async def toggle(message: Message, state: FSMContext) -> None:
         await toggle_channel(channel_id)
         clear_cache()
         await message.answer("✅ O'zgartirildi")
+    await show_one(message, state, channel_id)
+
+
+@router.message(ChannelSG.one, F.text == BTN_CH_ICON)
+async def open_channel_icon(message: Message, state: FSMContext) -> None:
+    channel_id = (await state.get_data()).get(KEY_ITEM)
+    ch = await get_channel(channel_id) if channel_id is not None else None
+    if ch is None:
+        await show_list(message, state)
+        return
+    await state.set_state(ChannelSG.icon)
+    await message.answer(
+        f"🌟 <b>{escape(ch.title)}</b> — tugma premium emojisi\n\n"
+        "Inline tugmada kanal nomidan oldin chiqadigan premium custom emojini "
+        "yuboring. Xabardagi birinchi premium emoji olinadi.",
+        reply_markup=channel_icon_kb(bool(ch.icon_custom_emoji_id)),
+    )
+
+
+@router.message(ChannelSG.icon, F.text == BTN_CH_ICON_CLEAR)
+async def clear_channel_icon(message: Message, state: FSMContext) -> None:
+    channel_id = (await state.get_data()).get(KEY_ITEM)
+    if channel_id is not None:
+        await set_channel_icon(channel_id, None)
+        clear_cache()
+        await message.answer("✅ Premium emoji olib tashlandi")
+    await show_one(message, state, channel_id)
+
+
+@router.message(ChannelSG.icon, F.text == BTN_BACK)
+async def channel_icon_back(message: Message, state: FSMContext) -> None:
+    await show_one(message, state, (await state.get_data()).get(KEY_ITEM))
+
+
+@router.message(ChannelSG.icon, NOT_COMMAND)
+async def save_channel_icon(message: Message, state: FSMContext) -> None:
+    channel_id = (await state.get_data()).get(KEY_ITEM)
+    _, icon_custom_emoji_id = extract_button_text_and_icon(message)
+    if not icon_custom_emoji_id:
+        ch = await get_channel(channel_id) if channel_id is not None else None
+        await message.answer(
+            "❗️ Premium custom emoji topilmadi. Premium emojini yuboring.",
+            reply_markup=channel_icon_kb(bool(ch and ch.icon_custom_emoji_id)),
+        )
+        return
+    if channel_id is not None:
+        await set_channel_icon(channel_id, icon_custom_emoji_id)
+        clear_cache()
+        await message.answer("✅ Kanal tugmasining premium emojisi saqlandi")
     await show_one(message, state, channel_id)
 
 

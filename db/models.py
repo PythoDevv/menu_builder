@@ -4,6 +4,7 @@ from typing import Optional
 from sqlalchemy import (
     BigInteger,
     Boolean,
+    CheckConstraint,
     DateTime,
     ForeignKey,
     Integer,
@@ -58,9 +59,24 @@ class Channel(Base):
     title: Mapped[str] = mapped_column(String(255), default="")
     username: Mapped[Optional[str]] = mapped_column(String(64), nullable=True)
     invite_link: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    # Majburiy obuna inline tugmasida kanal nomidan oldin chiqadigan premium emoji.
+    icon_custom_emoji_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     # True -> yopiq kanal (qo'shilish so'rovi yuboriladi)
     is_private: Mapped[bool] = mapped_column(Boolean, default=False, server_default="false")
     is_active: Mapped[bool] = mapped_column(Boolean, default=True, server_default="true")
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
+class SubscriptionButton(Base):
+    """Majburiy obuna postidagi kanalga bog'liq bo'lmagan URL tugma."""
+
+    __tablename__ = "subscription_buttons"
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    title: Mapped[str] = mapped_column(String(64))
+    url: Mapped[str] = mapped_column(String(2048))
     created_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now()
     )
@@ -86,6 +102,9 @@ class MenuItem(Base):
     """Menyu tugmasi. parent_id=None -> asosiy menyu."""
 
     __tablename__ = "menu_items"
+    __table_args__ = (
+        CheckConstraint("row_size BETWEEN 1 AND 4", name="ck_menu_items_row_size"),
+    )
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     parent_id: Mapped[Optional[int]] = mapped_column(
@@ -98,10 +117,15 @@ class MenuItem(Base):
     required_referrals: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
     # Telegram tugma uslubi: primary / success / danger. None -> oddiy.
     button_style: Mapped[Optional[str]] = mapped_column(String(16), nullable=True)
+    # Tugma matnidan alohida ko'rsatiladigan Telegram Premium custom emoji.
+    icon_custom_emoji_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
+    # Shu tugma qatorida nechta bir xil turdagi tugma joylashishi kerak (1..4).
+    # Yangi tugmalar standart holatda qatorda 2 tadan chiqadi.
+    row_size: Mapped[int] = mapped_column(Integer, default=2, server_default="2")
 
 
 class Content(Base):
-    """Tugma kontenti: file_id yoki Telegram manba xabari + HTML matn."""
+    """Tugma kontenti: file_id, Telegram manba xabari yoki formatlangan matn."""
 
     __tablename__ = "contents"
 
@@ -109,11 +133,13 @@ class Content(Base):
     menu_item_id: Mapped[int] = mapped_column(
         ForeignKey("menu_items.id", ondelete="CASCADE"), index=True
     )
-    # text / photo / video / document / audio / voice / animation / video_note / sticker
+    # text / photo / video / document / audio / voice / animation / video_note /
+    # sticker / message_copy / message_group
     type: Mapped[str] = mapped_column(String(20))
     file_id: Mapped[Optional[str]] = mapped_column(String(255), nullable=True)
     source_chat_id: Mapped[Optional[int]] = mapped_column(BigInteger, nullable=True)
     source_message_id: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # Eski yozuvlarda HTML; yangi yozuvlarda tg_entities_v1 JSON formati.
     text_html: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
     position: Mapped[int] = mapped_column(Integer, default=0, server_default="0")
 

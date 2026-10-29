@@ -9,7 +9,7 @@ from aiogram.exceptions import (
     TelegramRetryAfter,
 )
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message
+from aiogram.types import InlineKeyboardMarkup, Message
 
 from config import BROADCAST_DELAY
 from db.queries import get_active_user_ids, set_user_active
@@ -28,7 +28,8 @@ logger = logging.getLogger(__name__)
 ASK_TEXT = (
     "📨 <b>Hammaga xabar</b>\n\n"
     "Yubormoqchi bo'lgan xabaringizni shu yerga tashlang.\n"
-    "Matn, rasm, video, fayl — hammasi bo'ladi."
+    "Matn, rasm, video, fayl — hammasi bo'ladi.\n"
+    "Inline link-tugmalari ham aynan o'ziday yuboriladi."
 )
 
 
@@ -40,7 +41,17 @@ async def ask_message(message: Message, state: FSMContext) -> None:
 
 @router.message(BroadcastSG.waiting_message, NOT_COMMAND)
 async def got_message(message: Message, state: FSMContext) -> None:
-    await state.update_data(from_chat_id=message.chat.id, message_id=message.message_id)
+    # copyMessage asl xabarning inline tugmalarini avtomatik olib o'tmaydi.
+    # Shu sabab post manzili bilan birga klaviaturani ham JSON sifatida saqlaymiz:
+    # URL tugmalari, qatorlar va ularning tartibi aynan o'ziday qoladi.
+    markup = message.reply_markup
+    await state.update_data(
+        from_chat_id=message.chat.id,
+        message_id=message.message_id,
+        reply_markup=(
+            markup.model_dump(mode="json", exclude_none=True) if markup else None
+        ),
+    )
     await state.set_state(BroadcastSG.confirm)
     total = len(await get_active_user_ids())
     await message.answer(
@@ -49,15 +60,25 @@ async def got_message(message: Message, state: FSMContext) -> None:
     )
 
 
-async def _send_one(bot: Bot, user_id: int, from_chat_id: int, message_id: int) -> str:
+async def _send_one(
+    bot: Bot,
+    user_id: int,
+    from_chat_id: int,
+    message_id: int,
+    reply_markup: InlineKeyboardMarkup | None = None,
+) -> str:
     """Natija: 'sent' | 'blocked' | 'failed'."""
     try:
-        await bot.copy_message(user_id, from_chat_id, message_id)
+        await bot.copy_message(
+            user_id, from_chat_id, message_id, reply_markup=reply_markup
+        )
         return "sent"
     except TelegramRetryAfter as e:
         await asyncio.sleep(e.retry_after)
         try:
-            await bot.copy_message(user_id, from_chat_id, message_id)
+            await bot.copy_message(
+                user_id, from_chat_id, message_id, reply_markup=reply_markup
+            )
             return "sent"
         except TelegramAPIError:
             return "failed"
@@ -78,12 +99,21 @@ async def send_all(message: Message, state: FSMContext) -> None:
         await show_home(message, state, "❗️ Xabar topilmadi, qaytadan boshlang.")
         return
 
+    stored_markup = data.get("reply_markup")
+    reply_markup = (
+        InlineKeyboardMarkup.model_validate(stored_markup)
+        if isinstance(stored_markup, dict)
+        else None
+    )
+
     users = await get_active_user_ids()
     status = await message.answer(f"📨 Yuborilmoqda... 0/{len(users)}")
 
     sent = blocked = failed = 0
     for i, user_id in enumerate(users, start=1):
-        result = await _send_one(message.bot, user_id, from_chat_id, message_id)
+        result = await _send_one(
+            message.bot, user_id, from_chat_id, message_id, reply_markup
+        )
         if result == "sent":
             sent += 1
         elif result == "blocked":

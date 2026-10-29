@@ -25,6 +25,15 @@ class ChannelSG(StatesGroup):
     confirm_delete = State()
     waiting_chat = State()
     waiting_type = State()
+    icon = State()
+
+
+class SubscriptionButtonSG(StatesGroup):
+    browse = State()
+    one = State()
+    waiting_title = State()
+    waiting_url = State()
+    confirm_delete = State()
 
 
 class MenuSG(StatesGroup):
@@ -32,6 +41,7 @@ class MenuSG(StatesGroup):
     confirm_delete = State()
     contents = State()
     waiting_title = State()
+    ask_row_size = State()
     waiting_rename = State()
     waiting_content = State()
     # taklif sharti: yangi tugma qo'shishda so'raladi va keyin ham o'zgartiriladi
@@ -40,6 +50,7 @@ class MenuSG(StatesGroup):
     ref = State()
     waiting_ref_edit = State()
     style = State()
+    row_size = State()
 
 
 class RefTextSG(StatesGroup):
@@ -60,14 +71,44 @@ class SubSG(StatesGroup):
     show = State()
     confirm_reset = State()
     waiting_message = State()
+    check_button = State()
+    waiting_check_button = State()
 
 
 class PhoneSG(StatesGroup):
     show = State()
 
 
-class LayoutSG(StatesGroup):
+class MyPointsSG(StatesGroup):
     show = State()
+    waiting_text = State()
+    waiting_message = State()
+    confirm_message_reset = State()
+    style = State()
+
+
+class RatingSG(StatesGroup):
+    show = State()
+    waiting_text = State()
+    waiting_message = State()
+    confirm_message_reset = State()
+    style = State()
+    row_size = State()
+
+
+class WinnersSG(StatesGroup):
+    show = State()
+    waiting_limit = State()
+    waiting_id = State()
+    waiting_message = State()
+    confirm_send = State()
+
+
+class SuperAdminSG(StatesGroup):
+    home = State()
+    dumps = State()
+    restore_confirm = State()
+    reset_confirm = State()
 
 
 class BroadcastSG(StatesGroup):
@@ -85,12 +126,16 @@ ALL_STATES = (
     *PanelSG.__all_states__,
     *AdminSG.__all_states__,
     *ChannelSG.__all_states__,
+    *SubscriptionButtonSG.__all_states__,
     *MenuSG.__all_states__,
     *StartSG.__all_states__,
     *SubSG.__all_states__,
     *RefTextSG.__all_states__,
     *PhoneSG.__all_states__,
-    *LayoutSG.__all_states__,
+    *MyPointsSG.__all_states__,
+    *RatingSG.__all_states__,
+    *WinnersSG.__all_states__,
+    *SuperAdminSG.__all_states__,
     *BroadcastSG.__all_states__,
     *ExcelSG.__all_states__,
 )
