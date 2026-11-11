@@ -1,4 +1,9 @@
-"""Har bir update'da foydalanuvchini bazaga yozib/yangilab boradi.
+"""Botning shaxsiy chatida yozgan foydalanuvchini bazaga yozib/yangilab boradi.
+
+Faqat shaxsiy chatdagi xabar va tugma bosish hisoblanadi — ya'ni botga /start
+bosgan odam. Yopiq kanalga zayafka (`chat_join_request`), kanal/guruh
+update'lari va `my_chat_member` foydalanuvchi yaratmaydi: bunday odamga bot
+yoza olmaydi va u statistikaga kirmasligi kerak.
 
 `/start ref<id>` payloadi ham shu yerda o'qiladi — obuna va telefon
 tekshiruvidan oldin ishlagani uchun taklif hech qachon yo'qolmaydi.
@@ -24,6 +29,17 @@ NEW_REFERRAL_TEXT = (
 )
 
 
+def _private_event(update: TelegramObject) -> bool:
+    """Update botning shaxsiy chatidagi xabar yoki tugma bosishmi."""
+    message = getattr(update, "message", None)
+    if message is not None:
+        return message.chat.type == "private"
+    callback = getattr(update, "callback_query", None)
+    if callback is not None and callback.message is not None:
+        return callback.message.chat.type == "private"
+    return False
+
+
 def _referrer_id(event: TelegramObject) -> Optional[int]:
     """Update ichidagi `/start ref<id>` dan taklif qilgan odamning ID sini oladi."""
     message = getattr(event, "message", None)
@@ -41,7 +57,7 @@ class UserMiddleware(BaseMiddleware):
         data: dict[str, Any],
     ) -> Any:
         tg_user: User | None = data.get("event_from_user")
-        if tg_user and not tg_user.is_bot:
+        if tg_user and not tg_user.is_bot and _private_event(event):
             db_user, referrer_id = await get_or_create_user(
                 tg_user.id,
                 tg_user.full_name,

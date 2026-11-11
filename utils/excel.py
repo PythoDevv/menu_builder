@@ -14,6 +14,7 @@ from openpyxl.utils import get_column_letter
 
 from config import EXPORT_FILE
 from db.queries import TZ, get_all_users, get_referral_counts
+from utils.user_status import DEACTIVATED
 
 logger = logging.getLogger(__name__)
 
@@ -70,6 +71,14 @@ def _write(rows: list[list], path: Path) -> None:
     wb.save(path)
 
 
+def _status(user) -> str:
+    if user.is_active:
+        return "Faol"
+    if user.inactive_reason == DEACTIVATED:
+        return "O'chirilgan akkaunt"
+    return "Bloklagan"
+
+
 async def build_excel() -> Path:
     users = await get_all_users()
     referrals = await get_referral_counts()
@@ -83,7 +92,7 @@ async def build_excel() -> Path:
                 u.full_name or "",
                 f"@{u.username}" if u.username else "",
                 u.phone or "",
-                "Faol" if u.is_active else "Bloklagan",
+                _status(u),
                 referrals.get(u.tg_id, 0),
                 u.referred_by or "",
                 created,

@@ -8,7 +8,7 @@ from aiogram.fsm.storage.memory import MemoryStorage
 
 from config import BOT_TOKEN
 from db.base import close_db, init_db
-from handlers import fallback, join_request, menu, start
+from handlers import fallback, join_request, menu, start, user_status
 from handlers.admin import (
     admins,
     broadcast,
@@ -83,6 +83,7 @@ async def main() -> None:
         superadmin.router,
         panel.fallback_router,
         join_request.router,
+        user_status.router,  # shaxsiy chatda blokladi / blokdan chiqardi
         start.router,
         menu.router,
         fallback.router,

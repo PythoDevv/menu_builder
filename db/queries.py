@@ -19,8 +19,12 @@ from db.models import (
     SubscriptionButton,
     User,
 )
+from utils.user_status import BLOCKED, DEACTIVATED, NOT_STARTED
 
 TZ = ZoneInfo(TIMEZONE)
+
+#: Botga /start bosgan foydalanuvchi (faqat zayafka tashlaganlar emas)
+STARTED = User.inactive_reason.is_distinct_from(NOT_STARTED)
 
 # ---------------------------------------------------------------- sozlama kalitlari
 K_START_TYPE = "start_type"
@@ -61,33 +65,51 @@ async def get_or_create_user(
 ) -> tuple[User, Optional[int]]:
     """(user, taklif_hisoblangan_odam_tg_id) qaytaradi.
 
+    Faqat botning shaxsiy chatida yozgan (ya'ni /start bosgan) odam uchun chaqiriladi.
+
     Taklif faqat foydalanuvchi birinchi marta yozilayotganda hisoblanadi:
-    eski foydalanuvchi boshqa havoladan kirsa ham qayta yozilmaydi.
+    eski foydalanuvchi boshqa havoladan kirsa ham qayta yozilmaydi. Bazada
+    `not_started` bo'lib turgan odam (oldin faqat zayafka tashlagan) birinchi
+    marta botga kirsa — u ham yangi foydalanuvchi sifatida qabul qilinadi.
     """
     async with session_maker() as s:
         user = await s.scalar(select(User).where(User.tg_id == tg_id))
+        is_new = user is None or user.inactive_reason == NOT_STARTED
+        referred_by = None
+        if is_new and referrer_id is not None and referrer_id != tg_id:
+            # taklif qilgan odam ham botning foydalanuvchisi bo'lishi kerak
+            exists = await s.scalar(
+                select(User.id).where(User.tg_id == referrer_id, STARTED)
+            )
+            referred_by = referrer_id if exists else None
+
         if user is None:
-            referred_by = None
-            if referrer_id is not None and referrer_id != tg_id:
-                # taklif qilgan odam ham botning foydalanuvchisi bo'lishi kerak
-                exists = await s.scalar(select(User.id).where(User.tg_id == referrer_id))
-                referred_by = referrer_id if exists else None
             user = User(
                 tg_id=tg_id, full_name=full_name, username=username, referred_by=referred_by
             )
             s.add(user)
             await s.commit()
             return user, referred_by
+
+        if is_new:
+            # bugun/7 kunlik statistikada botga kirgan kuni bilan ko'rinsin
+            user.created_at = datetime.now(TZ)
+            if user.referred_by is None:
+                user.referred_by = referred_by
+            else:
+                referred_by = None
         if (
-            user.full_name != full_name
+            is_new
+            or user.full_name != full_name
             or user.username != username
             or not user.is_active
         ):
             user.full_name = full_name
             user.username = username
             user.is_active = True
+            user.inactive_reason = None
             await s.commit()
-        return user, None
+        return user, referred_by
 
 
 async def get_user(tg_id: int) -> Optional[User]:
@@ -101,9 +123,26 @@ async def set_phone(tg_id: int, phone: str) -> None:
         await s.commit()
 
 
-async def set_user_active(tg_id: int, is_active: bool) -> None:
+async def set_user_inactive(tg_id: int, reason: str) -> None:
+    """Xabar yetib bormadi: is_active=False va sababi (utils.user_status)."""
     async with session_maker() as s:
-        await s.execute(update(User).where(User.tg_id == tg_id).values(is_active=is_active))
+        await s.execute(
+            update(User)
+            .where(User.tg_id == tg_id)
+            .values(is_active=False, inactive_reason=reason)
+        )
+        await s.commit()
+
+
+async def set_user_reachable(tg_id: int) -> None:
+    """Botni blokdan chiqardi. Botni hech ochmagan (`not_started`) odamga tegmaydi —
+    u /start bosganda `get_or_create_user` yangi foydalanuvchi sifatida yozadi."""
+    async with session_maker() as s:
+        await s.execute(
+            update(User)
+            .where(User.tg_id == tg_id, STARTED)
+            .values(is_active=True, inactive_reason=None)
+        )
         await s.commit()
 
 
@@ -114,42 +153,42 @@ async def get_active_user_ids() -> list[int]:
 
 
 async def get_all_users() -> list[User]:
+    """Botga /start bosgan barcha foydalanuvchilar (Excel uchun)."""
     async with session_maker() as s:
-        rows = await s.scalars(select(User).order_by(User.id))
+        rows = await s.scalars(select(User).where(STARTED).order_by(User.id))
         return list(rows)
 
 
 async def get_stats() -> dict:
+    """Faqat botga /start bosganlar hisoblanadi — zayafka tashlaganlar kirmaydi."""
     now = datetime.now(TZ)
     day_start = now.replace(hour=0, minute=0, second=0, microsecond=0)
     week_start = now - timedelta(days=7)
+
+    def count(*conds):
+        return func.count(User.id).filter(*conds) if conds else func.count(User.id)
+
     async with session_maker() as s:
-        total = await s.scalar(select(func.count(User.id)))
-        active = await s.scalar(select(func.count(User.id)).where(User.is_active.is_(True)))
-        today = await s.scalar(
-            select(func.count(User.id)).where(User.created_at >= day_start)
-        )
-        week = await s.scalar(select(func.count(User.id)).where(User.created_at >= week_start))
-        with_phone = await s.scalar(
-            select(func.count(User.id)).where(User.phone.is_not(None))
-        )
-        referred = await s.scalar(
-            select(func.count(User.id)).where(User.referred_by.is_not(None))
-        )
-        inviters = await s.scalar(
-            select(func.count(func.distinct(User.referred_by))).where(
-                User.referred_by.is_not(None)
+        row = (
+            await s.execute(
+                select(
+                    count(),
+                    count(User.is_active.is_(True)),
+                    count(User.inactive_reason == BLOCKED),
+                    count(User.inactive_reason == DEACTIVATED),
+                    count(User.created_at >= day_start),
+                    count(User.created_at >= week_start),
+                    count(User.phone.is_not(None)),
+                    count(User.referred_by.is_not(None)),
+                    func.count(func.distinct(User.referred_by)),
+                ).where(STARTED)
             )
-        )
-    return {
-        "total": total or 0,
-        "active": active or 0,
-        "today": today or 0,
-        "week": week or 0,
-        "with_phone": with_phone or 0,
-        "referred": referred or 0,
-        "inviters": inviters or 0,
-    }
+        ).one()
+    keys = (
+        "total", "active", "blocked", "deactivated",
+        "today", "week", "with_phone", "referred", "inviters",
+    )
+    return {key: value or 0 for key, value in zip(keys, row)}
 
 
 # ====================================================================== REFERRALLAR

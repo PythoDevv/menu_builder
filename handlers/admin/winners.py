@@ -18,7 +18,7 @@ from db.queries import (
     get_top_referrers,
     get_user,
     get_winners_limit,
-    set_user_active,
+    set_user_inactive,
     set_winners_limit,
 )
 from handlers.admin.common import KEY_ITEM, NOT_COMMAND, admin_router
@@ -37,8 +37,15 @@ from keyboards.admin_kb import (
     winners_kb,
 )
 from utils.admins import is_super_admin
+from utils.user_status import BLOCKED, DEACTIVATED, NOT_STARTED, inactive_reason
 
 router = admin_router()
+
+_REASON_TEXT = {
+    BLOCKED: "foydalanuvchi botni bloklagan",
+    DEACTIVATED: "foydalanuvchi akkauntini o'chirgan",
+    NOT_STARTED: "foydalanuvchi botga /start bosmagan",
+}
 
 
 def render_winners_report(rows: list[tuple[User, int]]) -> str:
@@ -225,9 +232,10 @@ async def send_direct_message(message: Message, state: FSMContext) -> None:
 
     try:
         await message.bot.copy_message(tg_id, from_chat_id, message_id)
-    except TelegramForbiddenError:
-        await set_user_active(tg_id, False)
-        await message.answer("❌ Xabar yuborilmadi: foydalanuvchi botni bloklagan.")
+    except TelegramForbiddenError as exc:
+        reason = inactive_reason(exc) or BLOCKED
+        await set_user_inactive(tg_id, reason)
+        await message.answer(f"❌ Xabar yuborilmadi: {_REASON_TEXT[reason]}.")
     except TelegramBadRequest as exc:
         await message.answer(f"❌ Telegram xatosi: {escape(str(exc))}")
     except TelegramAPIError as exc:

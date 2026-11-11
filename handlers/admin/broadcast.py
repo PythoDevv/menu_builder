@@ -2,17 +2,12 @@ import asyncio
 import logging
 
 from aiogram import Bot, F
-from aiogram.exceptions import (
-    TelegramAPIError,
-    TelegramBadRequest,
-    TelegramForbiddenError,
-    TelegramRetryAfter,
-)
+from aiogram.exceptions import TelegramAPIError, TelegramRetryAfter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import InlineKeyboardMarkup, Message
 
 from config import BROADCAST_DELAY
-from db.queries import get_active_user_ids, set_user_active
+from db.queries import get_active_user_ids, set_user_inactive
 from handlers.admin.common import NOT_COMMAND, admin_router, show_home
 from handlers.admin.states import BroadcastSG, PanelSG
 from keyboards.admin_kb import (
@@ -21,6 +16,7 @@ from keyboards.admin_kb import (
     broadcast_confirm_kb,
     cancel_kb,
 )
+from utils.user_status import BLOCKED, DEACTIVATED, NOT_STARTED, inactive_reason
 
 router = admin_router()
 logger = logging.getLogger(__name__)
@@ -67,27 +63,20 @@ async def _send_one(
     message_id: int,
     reply_markup: InlineKeyboardMarkup | None = None,
 ) -> str:
-    """Natija: 'sent' | 'blocked' | 'failed'."""
-    try:
-        await bot.copy_message(
-            user_id, from_chat_id, message_id, reply_markup=reply_markup
-        )
-        return "sent"
-    except TelegramRetryAfter as e:
-        await asyncio.sleep(e.retry_after)
+    """Natija: 'sent' | 'blocked' | 'deactivated' | 'not_started' | 'failed'."""
+    for attempt in range(2):
         try:
             await bot.copy_message(
                 user_id, from_chat_id, message_id, reply_markup=reply_markup
             )
             return "sent"
-        except TelegramAPIError:
-            return "failed"
-    except TelegramForbiddenError:
-        return "blocked"
-    except TelegramBadRequest as e:
-        return "blocked" if "chat not found" in str(e).lower() else "failed"
-    except TelegramAPIError:
-        return "failed"
+        except TelegramRetryAfter as e:
+            if attempt:
+                return "failed"
+            await asyncio.sleep(e.retry_after)
+        except TelegramAPIError as e:
+            return inactive_reason(e) or "failed"
+    return "failed"
 
 
 @router.message(BroadcastSG.confirm, F.text == BTN_BC_SEND)
@@ -109,18 +98,14 @@ async def send_all(message: Message, state: FSMContext) -> None:
     users = await get_active_user_ids()
     status = await message.answer(f"📨 Yuborilmoqda... 0/{len(users)}")
 
-    sent = blocked = failed = 0
+    counts = dict.fromkeys(("sent", BLOCKED, DEACTIVATED, NOT_STARTED, "failed"), 0)
     for i, user_id in enumerate(users, start=1):
         result = await _send_one(
             message.bot, user_id, from_chat_id, message_id, reply_markup
         )
-        if result == "sent":
-            sent += 1
-        elif result == "blocked":
-            blocked += 1
-            await set_user_active(user_id, False)
-        else:
-            failed += 1
+        counts[result] += 1
+        if result in (BLOCKED, DEACTIVATED, NOT_STARTED):
+            await set_user_inactive(user_id, result)
 
         if i % 30 == 0:
             try:
@@ -129,13 +114,18 @@ async def send_all(message: Message, state: FSMContext) -> None:
                 pass
         await asyncio.sleep(BROADCAST_DELAY)
 
-    logger.info("Broadcast: sent=%s blocked=%s failed=%s", sent, blocked, failed)
-    await show_home(
-        message,
-        state,
+    logger.info("Broadcast: %s", counts)
+    text = (
         "✅ <b>Yuborish tugadi</b>\n\n"
-        f"Yuborildi: <b>{sent}</b>\n"
-        f"Bloklaganlar: <b>{blocked}</b>\n"
-        f"Xatolik: <b>{failed}</b>\n"
-        f"Jami: <b>{len(users)}</b>",
+        f"Yuborildi: <b>{counts['sent']}</b>\n"
+        f"Bloklaganlar: <b>{counts[BLOCKED]}</b>\n"
+        f"O'chirilgan akkauntlar: <b>{counts[DEACTIVATED]}</b>\n"
     )
+    if counts[NOT_STARTED]:
+        # zayafka orqali yozilib qolgan, botni ochmagan odamlar — statistikaga kirmaydi
+        text += (
+            f"Botni ochmaganlar (statistikadan chiqarildi): "
+            f"<b>{counts[NOT_STARTED]}</b>\n"
+        )
+    text += f"Xatolik: <b>{counts['failed']}</b>\nJami: <b>{len(users)}</b>"
+    await show_home(message, state, text)
