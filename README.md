@@ -21,6 +21,8 @@ ekrani **inline**, chunki reply tugmaga kanal havolasini (URL) qo'yib bo'lmaydi.
 - **G'oliblar** — admin 1–20 oralig'ida natija sonini belgilaydi; tanlangan TOP foydalanuvchilarning ism, username, Telegram ID va ballari bitta xabarda chiqadi. Alohida ID bo'yicha xabar bo'limidan botdagi istalgan odamga matn/media/fayl yuboriladi.
 - **Superadmin** — faqat `.env` dagi `ADMINS` uchun `/superadmin`: dump olib ballarni nolga tushirish va raqamlangan dumpni tanlab bazani qayta tiklash.
 - **Taklif (referal) sharti** — tugma faqat N ta odam taklif qilgandan keyin ochiladi. Shart tugma qo'shilayotganda so'raladi, keyin ham o'zgartiriladi. Shart bajarilmaganda chiqadigan matn admin paneldan sozlanadi.
+- **Yopiq kanal linki** — foydalanuvchi N ta odam taklif qilganda bot unga yopiq kanalga **shaxsiy, bir martalik** havola yuboradi (`member_limit=1`, boshqaga berilsa ham faqat bitta odam kira oladi). Kanal, N soni va havola posti (`{link}`, `{count}`, `{need}`; matn yoki rasm/video/GIF/fayl) admin paneldan sozlanadi, post ostiga **🔐 Kanalga kirish** tugmasi qo'shiladi (matni va premium emojisini admin o'zgartirishi mumkin, o'zgartirmasa standart qoladi). Havola birinchi odam u orqali kanalga qo'shilgan zahoti eskiradi; vaqt bo'yicha muddati yo'q. Bir odamga bitta kanal uchun faqat bitta havola beriladi. Shartni avvaldan bajarganlar havolani keyingi taklifida yoki **Ballarim** tugmasini bosganda oladi.
+- **Taklif tabrigi** — har bir yangi taklifda taklif qilgan odamga tabrik boradi: kim qo'shildi, +1 ball, jami ballar va yopiq kanalgacha yana nechta qolgani. Matn (`{name}`, `{count}`, `{need}`, `{left}`) admin paneldan o'zgartiriladi.
 - **Telefon so'rash** — admin paneldan yoqiladi/o'chiriladi. Bir marta olingan raqam qayta so'ralmaydi.
 - **Hammaga xabar** — bloklaganlar avtomatik belgilanadi.
 - **Excel** — `exports/users.xlsx`, har kuni cron bilan yangilanadi (yangi fayl ochilmaydi).
@@ -141,6 +143,7 @@ oddiy foydalanuvchi menyusini ko'radi.
 | 🏆 Ballarim tugmasi | Ko'rsatish/yashirish, nomi, rangi, premium emoji va natija xabarini o'zgartirish |
 | 🏅 Reyting tugmasi | Ko'rsatish/yashirish, nomi, rangi, premium emoji, joylashuvi va `{users-N}` kalitli postni o'zgartirish |
 | 🏆 G'oliblar | Natijalar sonini sozlash, to'liq TOP ro'yxatni bitta xabarda olish va Telegram ID bo'yicha bitta odamga xabar yuborish |
+| 🔐 Yopiq kanal linki | Yoqish/o'chirish, kanal (bot u yerda **“Foydalanuvchilarni taklif qilish”** huquqi bilan admin), kerakli takliflar soni, `{link}` li post, post ostidagi kirish tugmasi matni va har bir taklifdagi tabrik xabari. Havola olganlar soni ham ko'rinadi |
 | 📨 Xabar yuborish | Hamma faol foydalanuvchiga |
 | 📊 Excel | Faylni olish yoki qo'lda yangilash |
 | 👥 Statistika | Jami / faol / bugun / 7 kun |

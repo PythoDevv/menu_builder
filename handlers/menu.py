@@ -27,6 +27,7 @@ from db.queries import (
 from keyboards.user_kb import BTN_BACK, BTN_HOME, Keyboard, menu_kb, share_kb
 from utils.admins import is_admin
 from utils.content import send_content
+from utils.private_link import grant_if_earned
 from utils.referral import ref_link, render_my_points_text, render_ref_text
 from utils.rating import rating_limits, render_rating_text
 from utils.texts import DEFAULT_MY_POINTS_MESSAGE, DEFAULT_RATING_MESSAGE, DEFAULT_REF_TEXT
@@ -182,6 +183,8 @@ async def my_points(message: Message) -> None:
         reply_markup=share_kb(link),
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
+    # shart avvalroq bajarilgan, lekin yopiq kanal havolasi hali berilmagan bo'lsa
+    await grant_if_earned(message.bot, user_id, count=count)
 
 
 @router.message(RatingFilter())

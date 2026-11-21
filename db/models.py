@@ -100,6 +100,27 @@ class JoinRequest(Base):
     )
 
 
+class PrivateLinkGrant(Base):
+    """Taklif sharti bajarilganda foydalanuvchiga berilgan yopiq kanal havolasi.
+
+    Havola shaxsiy va bir martalik (`member_limit=1`). Bir odamga bitta kanal uchun
+    faqat bitta havola beriladi; admin kanalni almashtirsa, yangi kanalga yangisi.
+    """
+
+    __tablename__ = "private_link_grants"
+    __table_args__ = (
+        UniqueConstraint("user_tg_id", "chat_id", name="uq_private_link_grant"),
+    )
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    user_tg_id: Mapped[int] = mapped_column(BigInteger, index=True)
+    chat_id: Mapped[int] = mapped_column(BigInteger)
+    invite_link: Mapped[str] = mapped_column(String(255))
+    created_at: Mapped[datetime] = mapped_column(
+        DateTime(timezone=True), server_default=func.now()
+    )
+
+
 class MenuItem(Base):
     """Menyu tugmasi. parent_id=None -> asosiy menyu."""
 

@@ -104,6 +104,19 @@ class WinnersSG(StatesGroup):
     confirm_send = State()
 
 
+class PrivateLinkSG(StatesGroup):
+    """N ta taklif -> yopiq kanalga shaxsiy havola."""
+
+    show = State()
+    waiting_channel = State()
+    waiting_need = State()
+    waiting_post = State()
+    confirm_post_reset = State()
+    waiting_button = State()
+    waiting_notify = State()
+    confirm_notify_reset = State()
+
+
 class SuperAdminSG(StatesGroup):
     home = State()
     dumps = State()
@@ -135,6 +148,7 @@ ALL_STATES = (
     *MyPointsSG.__all_states__,
     *RatingSG.__all_states__,
     *WinnersSG.__all_states__,
+    *PrivateLinkSG.__all_states__,
     *SuperAdminSG.__all_states__,
     *BroadcastSG.__all_states__,
     *ExcelSG.__all_states__,

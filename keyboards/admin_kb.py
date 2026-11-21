@@ -44,6 +44,7 @@ BTN_REF_TEXT = "✍️ Taklif matni"
 BTN_POINTS = "🏆 Ballarim tugmasi"
 BTN_RATING = "🏅 Reyting tugmasi"
 BTN_WINNERS = "🏆 G'oliblar"
+BTN_PRIVATE_LINK = "🔐 Yopiq kanal linki"
 
 # --------------------------------------------------------------- super admin
 BTN_POINTS_RESET = "🧹 Ballarni 0 qilish"
@@ -147,6 +148,18 @@ BTN_RATING_ROW_SIZE = "🧩 Reyting joylashuvi"
 BTN_RATING_MESSAGE = "📝 Reyting posti"
 BTN_RATING_MESSAGE_RESET = "♻️ Reyting postini standartga qaytarish"
 
+# --------------------------------------------------------- Yopiq kanal linki
+BTN_PL_CHANNEL = "📢 Kanalni belgilash"
+BTN_PL_NEED = "👥 Takliflar soni"
+BTN_PL_POST = "📝 Link posti"
+BTN_PL_POST_VIEW = "👁 Postni ko'rish"
+BTN_PL_POST_RESET = "♻️ Postni standartga qaytarish"
+BTN_PL_BUTTON = "🔘 Kirish tugmasi matni"
+BTN_PL_BUTTON_RESET = "♻️ Tugmani standartga qaytarish"
+BTN_PL_NOTIFY = "🎉 Tabrik xabari"
+BTN_PL_NOTIFY_VIEW = "👁 Tabrikni ko'rish"
+BTN_PL_NOTIFY_RESET = "♻️ Tabrikni standartga qaytarish"
+
 # ---------------------------------------------------------------------- broadcast
 BTN_BC_SEND = "✅ Yuborish"
 
@@ -183,7 +196,7 @@ def admin_home_kb() -> ReplyKeyboardMarkup:
             [BTN_PHONE, BTN_REF_TEXT],
             [BTN_BROADCAST, BTN_EXCEL],
             [BTN_STATS, BTN_WINNERS],
-            [BTN_ADMINS],
+            [BTN_ADMINS, BTN_PRIVATE_LINK],
             [BTN_POINTS, BTN_RATING],
             [BTN_EXIT],
         ],
@@ -499,6 +512,30 @@ def rating_settings_kb(enabled: bool, custom_message: bool) -> ReplyKeyboardMark
     ]
     if custom_message:
         rows.append([BTN_RATING_MESSAGE_RESET])
+    rows.append([BTN_HOME])
+    return _kb(rows)
+
+
+# ------------------------------------------------------- YOPIQ KANAL LINKI
+def private_link_kb(
+    enabled: bool, custom_post: bool, custom_notify: bool, custom_button: bool = False
+) -> ReplyKeyboardMarkup:
+    rows = [
+        [BTN_OFF if enabled else BTN_ON],
+        [BTN_PL_CHANNEL, BTN_PL_NEED],
+        [BTN_PL_POST, BTN_PL_POST_VIEW],
+        [BTN_PL_BUTTON],
+        [BTN_PL_NOTIFY, BTN_PL_NOTIFY_VIEW],
+    ]
+    resets = []
+    if custom_post:
+        resets.append(BTN_PL_POST_RESET)
+    if custom_button:
+        resets.append(BTN_PL_BUTTON_RESET)
+    if custom_notify:
+        resets.append(BTN_PL_NOTIFY_RESET)
+    # ikkitadan qatorga — uchta reset bitta qatorga sig'maydi
+    rows.extend(resets[i : i + 2] for i in range(0, len(resets), 2))
     rows.append([BTN_HOME])
     return _kb(rows)
 

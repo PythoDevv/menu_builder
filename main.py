@@ -22,6 +22,7 @@ from handlers.admin import (
     superadmin,
     winners,
 )
+from handlers.admin import private_link as admin_private_link
 from handlers.admin import referral as admin_referral
 from handlers.admin import settings as admin_settings
 from middlewares.sub_mw import PhoneMiddleware, SubscriptionMiddleware
@@ -78,6 +79,7 @@ async def main() -> None:
         rating.router,
         winners.router,
         admin_referral.router,
+        admin_private_link.router,  # N ta taklif -> yopiq kanalga shaxsiy havola
         broadcast.router,
         export.router,
         superadmin.router,

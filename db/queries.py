@@ -15,6 +15,7 @@ from db.models import (
     Content,
     JoinRequest,
     MenuItem,
+    PrivateLinkGrant,
     Setting,
     SubscriptionButton,
     User,
@@ -50,6 +51,18 @@ K_RATING_ICON = "rating_icon_custom_emoji_id"
 K_RATING_MESSAGE = "rating_message"
 K_RATING_ROW_SIZE = "rating_row_size"
 K_WINNERS_LIMIT = "winners_limit"
+# yopiq kanal linki (N ta taklif -> shaxsiy bir martalik havola)
+K_PL_ENABLED = "private_link_enabled"
+K_PL_CHAT_ID = "private_link_chat_id"
+K_PL_CHAT_TITLE = "private_link_chat_title"
+K_PL_NEED = "private_link_need"
+K_PL_TYPE = "private_link_type"
+K_PL_FILE = "private_link_file_id"
+K_PL_TEXT = "private_link_text"
+K_PL_BUTTON_TEXT = "private_link_button_text"
+K_PL_BUTTON_ICON = "private_link_button_icon_custom_emoji_id"
+# har bir yangi taklifda taklif qilganga boradigan tabrik
+K_REF_NOTIFY_TEXT = "ref_notify_text"
 
 DEFAULT_MY_POINTS_TEXT = "🏆 Ballarim"
 DEFAULT_RATING_TEXT = "🏅 Reyting"
@@ -883,3 +896,140 @@ async def toggle_phone_required() -> bool:
     new = not await is_phone_required()
     await set_setting(K_ASK_PHONE, "1" if new else "0")
     return new
+
+
+# ================================================================ YOPIQ KANAL LINKI
+async def get_private_link_settings() -> dict:
+    """Yopiq kanal linki sozlamalari.
+
+    `post` — admin qo'ygan post (send_raw_content formatida) yoki None (standart).
+    """
+    keys = (
+        K_PL_ENABLED,
+        K_PL_CHAT_ID,
+        K_PL_CHAT_TITLE,
+        K_PL_NEED,
+        K_PL_TYPE,
+        K_PL_FILE,
+        K_PL_TEXT,
+        K_PL_BUTTON_TEXT,
+        K_PL_BUTTON_ICON,
+    )
+    async with session_maker() as s:
+        rows = await s.execute(
+            select(Setting.key, Setting.value).where(Setting.key.in_(keys))
+        )
+        values = {key: value for key, value in rows}
+
+    raw_chat_id = (values.get(K_PL_CHAT_ID) or "").strip()
+    chat_id = int(raw_chat_id) if raw_chat_id.lstrip("-").isdigit() else None
+    raw_need = (values.get(K_PL_NEED) or "").strip()
+    need = int(raw_need) if raw_need.isdigit() else 0
+    post_type = values.get(K_PL_TYPE)
+    post = (
+        {
+            "type": post_type,
+            "file_id": values.get(K_PL_FILE),
+            "text_html": values.get(K_PL_TEXT) or "",
+        }
+        if post_type
+        else None
+    )
+    return {
+        "enabled": values.get(K_PL_ENABLED) == "1",
+        "chat_id": chat_id,
+        "chat_title": values.get(K_PL_CHAT_TITLE) or "",
+        "need": need,
+        "post": post,
+        # None -> standart "🔐 Kanalga kirish" (utils.private_link.BTN_JOIN)
+        "button_text": values.get(K_PL_BUTTON_TEXT),
+        "button_icon": values.get(K_PL_BUTTON_ICON),
+    }
+
+
+async def set_private_link_enabled(enabled: bool) -> None:
+    await set_setting(K_PL_ENABLED, "1" if enabled else "0")
+
+
+async def set_private_link_channel(chat_id: int, title: str) -> None:
+    await set_setting(K_PL_CHAT_ID, str(chat_id))
+    await set_setting(K_PL_CHAT_TITLE, title)
+
+
+async def set_private_link_need(need: int) -> None:
+    if need < 1:
+        raise ValueError("Takliflar soni kamida 1 bo'lishi kerak")
+    await set_setting(K_PL_NEED, str(need))
+
+
+async def set_private_link_post(
+    type_: str, file_id: Optional[str], text_html: Optional[str]
+) -> None:
+    await set_setting(K_PL_TYPE, type_)
+    await set_setting(K_PL_FILE, file_id)
+    await set_setting(K_PL_TEXT, text_html)
+
+
+async def set_private_link_button(text: str, icon_custom_emoji_id: Optional[str]) -> None:
+    value = text.strip()
+    if not value or len(value) > 64:
+        raise ValueError("Tugma matni 1–64 ta belgi bo'lishi kerak")
+    await set_setting(K_PL_BUTTON_TEXT, value)
+    await set_setting(K_PL_BUTTON_ICON, icon_custom_emoji_id)
+
+
+async def delete_private_link_button() -> None:
+    """Standart "🔐 Kanalga kirish" tugmasiga qaytaradi."""
+    await set_setting(K_PL_BUTTON_TEXT, None)
+    await set_setting(K_PL_BUTTON_ICON, None)
+
+
+async def delete_private_link_post() -> None:
+    """Standart postga qaytaradi."""
+    for key in (K_PL_TYPE, K_PL_FILE, K_PL_TEXT):
+        await set_setting(key, None)
+
+
+async def get_private_link_grant(
+    user_tg_id: int, chat_id: int
+) -> Optional[PrivateLinkGrant]:
+    async with session_maker() as s:
+        return await s.scalar(
+            select(PrivateLinkGrant).where(
+                PrivateLinkGrant.user_tg_id == user_tg_id,
+                PrivateLinkGrant.chat_id == chat_id,
+            )
+        )
+
+
+async def add_private_link_grant(user_tg_id: int, chat_id: int, invite_link: str) -> None:
+    async with session_maker() as s:
+        stmt = (
+            pg_insert(PrivateLinkGrant)
+            .values(user_tg_id=user_tg_id, chat_id=chat_id, invite_link=invite_link)
+            .on_conflict_do_nothing(constraint="uq_private_link_grant")
+        )
+        await s.execute(stmt)
+        await s.commit()
+
+
+async def count_private_link_grants(chat_id: int) -> int:
+    async with session_maker() as s:
+        return await s.scalar(
+            select(func.count(PrivateLinkGrant.id)).where(
+                PrivateLinkGrant.chat_id == chat_id
+            )
+        ) or 0
+
+
+async def get_ref_notify_text() -> Optional[str]:
+    """Admin qo'ygan tabrik matni. Qo'yilmagan bo'lsa None (standart ishlatiladi)."""
+    return await get_setting(K_REF_NOTIFY_TEXT)
+
+
+async def set_ref_notify_text(text_html: str) -> None:
+    await set_setting(K_REF_NOTIFY_TEXT, text_html)
+
+
+async def delete_ref_notify_text() -> None:
+    await set_setting(K_REF_NOTIFY_TEXT, None)

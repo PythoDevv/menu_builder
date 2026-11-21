@@ -10,23 +10,16 @@ tekshiruvidan oldin ishlagani uchun taklif hech qachon yo'qolmaydi.
 """
 
 import logging
-from contextlib import suppress
 from typing import Any, Awaitable, Callable, Optional
 
 from aiogram import BaseMiddleware, Bot
-from aiogram.exceptions import TelegramAPIError
 from aiogram.types import TelegramObject, User
 
-from db.queries import get_or_create_user, get_referral_count
+from db.queries import get_or_create_user
+from utils.private_link import notify_referrer
 from utils.referral import parse_ref_payload
 
 logger = logging.getLogger(__name__)
-
-NEW_REFERRAL_TEXT = (
-    "🎉 <b>Yangi taklif!</b>\n\n"
-    "Sizning havolangiz orqali yana bir kishi botga qo'shildi.\n"
-    "👥 Jami takliflaringiz: <b>{count}</b> ta"
-)
 
 
 def _private_event(update: TelegramObject) -> bool:
@@ -66,15 +59,18 @@ class UserMiddleware(BaseMiddleware):
             )
             data["db_user"] = db_user
             if referrer_id is not None:
-                await _notify_referrer(data.get("bot"), referrer_id)
+                await _notify_referrer(data.get("bot"), referrer_id, tg_user.full_name)
         return await handler(event, data)
 
 
-async def _notify_referrer(bot: Optional[Bot], referrer_id: int) -> None:
-    """Taklif qilgan odamga xabar. U botni bloklagan bo'lsa jim o'tib ketamiz."""
+async def _notify_referrer(bot: Optional[Bot], referrer_id: int, new_user_name: str) -> None:
+    """Taklif qilganga tabrik (+ shart bajarilsa yopiq kanal havolasi).
+
+    Bu yerdagi har qanday xato yangi kelgan odamning /start iga xalaqit bermasin.
+    """
     if bot is None:
         return
-    count = await get_referral_count(referrer_id)
-    logger.info("Yangi taklif: %s -> jami %s ta", referrer_id, count)
-    with suppress(TelegramAPIError):
-        await bot.send_message(referrer_id, NEW_REFERRAL_TEXT.format(count=count))
+    try:
+        await notify_referrer(bot, referrer_id, new_user_name)
+    except Exception:  # noqa: BLE001
+        logger.exception("Taklif qilganga xabar yuborishda xato (%s)", referrer_id)

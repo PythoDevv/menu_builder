@@ -42,3 +42,24 @@ DEFAULT_RATING_MESSAGE = (
     "{users-10}\n\n"
     "Eng faol ishtirokchilar ro'yxati."
 )
+
+#: Har bir yangi taklifda taklif qilgan odamga boradigan tabrik.
+#: Admin paneldagi "🔐 Yopiq kanal linki" -> "🎉 Tabrik xabari" dan almashtiriladi.
+#: `{need}` yoki `{left}` bor qator faqat yopiq kanal maqsadi faol bo'lganda chiqadi.
+DEFAULT_REF_NOTIFY_TEXT = (
+    "🎉 <b>Tabriklaymiz!</b>\n\n"
+    "Sizning havolangiz orqali <b>{name}</b> botga qo'shildi.\n"
+    "➕ Sizga <b>+1 ball</b> berildi.\n\n"
+    "🏆 Jami ballaringiz: <b>{count}</b> ta\n"
+    "🔐 Yopiq kanal linkigacha yana <b>{left}</b> ta taklif qoldi."
+)
+
+#: Taklif sharti bajarilganda yuboriladigan post (admin qo'ymagan bo'lsa).
+DEFAULT_PRIVATE_LINK_TEXT = (
+    "🎉 <b>Tabriklaymiz!</b>\n\n"
+    "Siz <b>{count}</b> ta do'stingizni taklif qildingiz va yopiq kanalga "
+    "kirish huquqini qo'lga kiritdingiz.\n\n"
+    "🔐 Sizning shaxsiy havolangiz:\n"
+    "{link}\n\n"
+    "⚠️ Havola faqat siz uchun va bir marta ishlaydi — uni boshqalarga bermang."
+)

@@ -4,7 +4,7 @@ from typing import Optional
 from aiogram import F
 from aiogram.exceptions import TelegramAPIError
 from aiogram.fsm.context import FSMContext
-from aiogram.types import Message, MessageOriginChannel, MessageOriginChat
+from aiogram.types import Message
 
 from db.queries import (
     add_channel,
@@ -45,7 +45,7 @@ from keyboards.admin_kb import (
     channels_kb,
     confirm_delete_kb,
 )
-from utils.channels import is_bot_admin, resolve_invite_link
+from utils.channels import is_bot_admin, parse_chat_target, resolve_invite_link
 from utils.content import extract_button_text_and_icon
 from utils.subscription import clear_cache
 
@@ -202,28 +202,9 @@ async def delete_no(message: Message, state: FSMContext) -> None:
 
 
 # ------------------------------------------------------------------------ qo'shish
-def _parse_target(message: Message):
-    origin = message.forward_origin
-    if isinstance(origin, MessageOriginChannel):
-        return origin.chat.id
-    if isinstance(origin, MessageOriginChat):
-        return origin.sender_chat.id
-
-    text = (message.text or "").strip()
-    if not text:
-        return None
-    if "t.me/" in text:
-        text = "@" + text.rstrip("/").rsplit("/", 1)[-1]
-    if text.startswith("@"):
-        return text
-    if text.lstrip("-").isdigit():
-        return int(text)
-    return None
-
-
 @router.message(ChannelSG.waiting_chat, NOT_COMMAND)
 async def add_channel_step(message: Message, state: FSMContext) -> None:
-    target = _parse_target(message)
+    target = parse_chat_target(message)
     if target is None:
         await message.answer(
             "❗️ Tushunarsiz. Kanaldan post forward qiling yoki @username yuboring.",
