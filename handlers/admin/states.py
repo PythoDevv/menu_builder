@@ -96,6 +96,18 @@ class RatingSG(StatesGroup):
     row_size = State()
 
 
+class ContestSG(StatesGroup):
+    """"Konkursda qatnashish" tugmasi va tarqatish posti."""
+
+    show = State()
+    waiting_text = State()
+    style = State()
+    waiting_post = State()
+    confirm_post_reset = State()
+    waiting_join = State()
+    join_style = State()
+
+
 class WinnersSG(StatesGroup):
     show = State()
     waiting_limit = State()
@@ -147,6 +159,7 @@ ALL_STATES = (
     *PhoneSG.__all_states__,
     *MyPointsSG.__all_states__,
     *RatingSG.__all_states__,
+    *ContestSG.__all_states__,
     *WinnersSG.__all_states__,
     *PrivateLinkSG.__all_states__,
     *SuperAdminSG.__all_states__,

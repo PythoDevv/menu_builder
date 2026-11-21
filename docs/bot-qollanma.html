@@ -1,0 +1,375 @@
+<!doctype html>
+<html lang="uz">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Bot qo'llanmasi</title>
+<style>
+:root{
+  --bg:#eef2f6; --card:#ffffff; --text:#17212b; --muted:#5f6b78; --line:#dde3ea;
+  --accent:#2a8bdb; --accent-soft:#e3f1fc;
+  --chat:#d7e5c9; --bubble:#ffffff; --me:#e1fec6;
+  --kb:#f3f5f7; --kbtn:#ffffff; --kbtn-text:#17212b;
+  --green:#31b545; --blue:#3390ec; --red:#e5534b;
+  --tip:#e8f7ec; --tip-line:#31b545; --warn:#fff6e0; --warn-line:#e0a100;
+  --nav:#ffffff; --shadow:0 1px 3px rgba(0,0,0,.08);
+}
+@media (prefers-color-scheme: dark){
+  :root:not([data-theme="light"]){
+    --bg:#0e1621; --card:#17212b; --text:#e9eef3; --muted:#8a99a8; --line:#253241;
+    --accent:#5eb5f7; --accent-soft:#1c3346;
+    --chat:#0f1a24; --bubble:#182533; --me:#2b5278;
+    --kb:#17212b; --kbtn:#232e3c; --kbtn-text:#e9eef3;
+    --tip:#15301f; --warn:#33290f; --nav:#17212b; --shadow:0 1px 3px rgba(0,0,0,.4);
+  }
+}
+:root[data-theme="dark"]{
+  --bg:#0e1621; --card:#17212b; --text:#e9eef3; --muted:#8a99a8; --line:#253241;
+  --accent:#5eb5f7; --accent-soft:#1c3346;
+  --chat:#0f1a24; --bubble:#182533; --me:#2b5278;
+  --kb:#17212b; --kbtn:#232e3c; --kbtn-text:#e9eef3;
+  --tip:#15301f; --warn:#33290f; --nav:#17212b; --shadow:0 1px 3px rgba(0,0,0,.4);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--bg);color:var(--text);
+  font:16px/1.55 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+  padding-bottom:calc(84px + env(safe-area-inset-bottom))}
+.wrap{max-width:560px;margin:0 auto;padding:0 16px}
+header.top{background:var(--accent);color:#fff;padding:22px 0 18px}
+header.top h1{margin:0;font-size:22px;line-height:1.25}
+header.top p{margin:6px 0 0;opacity:.9;font-size:14px}
+.page{padding:18px 0 8px;scroll-margin-top:8px}
+.page>h2{font-size:21px;margin:0 0 4px;display:flex;align-items:center;gap:8px}
+.lead{color:var(--muted);margin:0 0 14px;font-size:15px}
+h3{font-size:17px;margin:22px 0 8px}
+.card{background:var(--card);border-radius:14px;padding:14px 16px;margin:12px 0;box-shadow:var(--shadow)}
+.card p{margin:6px 0}
+code{background:var(--accent-soft);color:var(--text);padding:1px 6px;border-radius:6px;font-size:14px;
+  font-family:ui-monospace,Menlo,Consolas,monospace;word-break:break-word}
+.badge{display:inline-block;background:var(--green);color:#fff;font-size:11px;font-weight:700;
+  padding:2px 7px;border-radius:20px;vertical-align:middle;letter-spacing:.3px}
+/* qadamlar */
+ol.steps{list-style:none;counter-reset:s;margin:10px 0;padding:0}
+ol.steps>li{counter-increment:s;position:relative;padding:0 0 14px 44px}
+ol.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;
+  background:var(--accent);color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center}
+ol.steps>li:not(:last-child)::after{content:"";position:absolute;left:14px;top:32px;bottom:2px;width:2px;background:var(--line)}
+ol.steps b{display:block;margin-bottom:2px}
+ol.steps p{margin:2px 0 0;color:var(--muted);font-size:15px}
+ul.dots{margin:6px 0;padding-left:20px}
+ul.dots li{margin:4px 0}
+.tip,.warn{border-left:4px solid var(--tip-line);background:var(--tip);border-radius:10px;padding:10px 12px;margin:12px 0;font-size:15px}
+.warn{border-color:var(--warn-line);background:var(--warn)}
+/* jadval */
+table.keys{width:100%;border-collapse:collapse;font-size:15px}
+table.keys td{padding:8px 6px;border-bottom:1px solid var(--line);vertical-align:top}
+table.keys td:first-child{white-space:nowrap;width:1%}
+table.keys tr:last-child td{border-bottom:0}
+/* telefon rasmi */
+.phone{border-radius:18px;overflow:hidden;box-shadow:0 2px 10px rgba(0,0,0,.15);margin:14px 0 4px;
+  border:1px solid var(--line);background:var(--chat)}
+.ph-top{display:flex;align-items:center;gap:10px;padding:9px 12px;background:var(--card);border-bottom:1px solid var(--line)}
+.ava{width:34px;height:34px;border-radius:50%;background:linear-gradient(135deg,#6ec6ff,#2a8bdb);color:#fff;
+  font-weight:700;display:flex;align-items:center;justify-content:center;flex:none}
+.ph-top b{display:block;font-size:15px;line-height:1.2}
+.ph-top small{color:var(--muted);font-size:12px}
+.chat{padding:12px 10px;display:flex;flex-direction:column;gap:8px;font-size:15px}
+.m{max-width:88%;align-self:flex-start}
+.m.me{align-self:flex-end}
+.b{background:var(--bubble);border-radius:14px 14px 14px 4px;padding:8px 11px;box-shadow:0 1px 1px rgba(0,0,0,.08);
+  white-space:pre-line;word-break:break-word}
+.m.me .b{background:var(--me);border-radius:14px 14px 4px 14px}
+.b a,.lnk{color:var(--accent);text-decoration:none;word-break:break-all}
+.pic{height:120px;border-radius:10px;margin:-2px -5px 8px;background:linear-gradient(135deg,#ffcf6b,#ff7a59 55%,#c94fd6);
+  display:flex;align-items:center;justify-content:center;font-size:44px}
+.ikb{display:grid;gap:4px;margin-top:4px}
+.ikb .r{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px}
+.ib{background:rgba(0,0,0,.28);color:#fff;border-radius:10px;padding:8px 6px;text-align:center;font-size:14px;font-weight:600}
+.k{background:var(--kb);padding:6px;display:grid;gap:6px;border-top:1px solid var(--line)}
+.k .r{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:6px}
+.kb{background:var(--kbtn);color:var(--kbtn-text);border-radius:8px;padding:9px 4px;text-align:center;font-size:14px;
+  box-shadow:0 1px 0 rgba(0,0,0,.12);line-height:1.25}
+.green{background:var(--green)!important;color:#fff!important}
+.blue{background:var(--blue)!important;color:#fff!important}
+.red{background:var(--red)!important;color:#fff!important}
+.hl{outline:3px solid #ffb300;outline-offset:1px}
+.cap{font-size:13px;color:var(--muted);text-align:center;margin:4px 0 16px}
+/* mundarija */
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}
+.grid a{background:var(--card);border-radius:14px;padding:12px;text-decoration:none;color:var(--text);box-shadow:var(--shadow);
+  display:flex;flex-direction:column;gap:2px;min-height:78px}
+.grid a span{font-size:22px}
+.grid a b{font-size:15px}
+.grid a small{color:var(--muted);font-size:12.5px;line-height:1.3}
+.pager{display:flex;justify-content:space-between;gap:10px;margin:18px 0 6px}
+.pager a{flex:1;background:var(--card);border-radius:12px;padding:11px 12px;text-decoration:none;color:var(--accent);
+  font-weight:600;font-size:14px;box-shadow:var(--shadow)}
+.pager a.next{text-align:right}
+/* pastki menyu */
+nav.bar{position:fixed;left:0;right:0;bottom:0;background:var(--nav);border-top:1px solid var(--line);
+  padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:10;box-shadow:0 -2px 8px rgba(0,0,0,.06)}
+nav.bar .in{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;max-width:760px;margin:0 auto}
+nav.bar .in::-webkit-scrollbar{display:none}
+nav.bar a{flex:1 1 0;min-width:66px;display:flex;flex-direction:column;align-items:center;gap:1px;text-decoration:none;
+  color:var(--muted);font-size:11.5px;padding:5px 6px;border-radius:10px}
+nav.bar a span{font-size:21px;line-height:1.1}
+nav.bar a.on{color:var(--accent);background:var(--accent-soft);font-weight:700}
+.js .page{display:none}
+.js .page.active{display:block}
+.hint{font-size:12.5px;color:var(--muted);text-align:center;margin:8px 0 0}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <h1>🤖 Bot qo'llanmasi</h1>
+    <p>Botni bo'limma-bo'lim sozlash. Pastdagi menyudan kerakli bo'limni tanlang.</p>
+  </div>
+</header>
+
+<main class="wrap">
+
+<!-- =============================================================== BOSHLASH -->
+<section class="page" id="boshlash">
+  <h2>🏠 Boshlash</h2>
+  <p class="lead">Bot nima qiladi va admin panelga qanday kiriladi.</p>
+
+  <div class="card">
+    <p><b>Bot qisqacha:</b> foydalanuvchi botga kiradi → kanallarga obuna bo'ladi → menyudan kerakli bo'limni ochadi. Do'stlarini <b>shaxsiy havola</b> orqali taklif qilsa, har bir yangi odam uchun <b>+1 ball</b> oladi. Botning hamma narsasi Telegram'dagi <b>admin panel</b> orqali sozlanadi, kod yozish shart emas.</p>
+  </div>
+
+  <ol class="steps">
+    <li><b>Botga <code>/admin</code> deb yozing</b><p>Bu faqat adminlarda ishlaydi. Pastda admin panel tugmalari chiqadi (1-rasm).</p></li>
+    <li><b>Kerakli bo'limni bosing</b><p>Har bir bo'lim nima qilishini shu qo'llanmada ko'rasiz.</p></li>
+    <li><b>Har ekranda 3 ta yordamchi tugma ishlaydi</b><p><code>🏠 Admin panel</code> bosh sahifaga qaytaradi, <code>❌ Bekor qilish</code> amalni to'xtatadi, <code>🚪 Chiqish</code> paneldan chiqadi. Chiqqaningizdan keyin botni oddiy foydalanuvchi ko'zi bilan ko'rasiz.</p></li>
+  </ol>
+
+  <div class="phone">
+    <div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div>
+    <div class="chat">
+      <div class="m me"><div class="b">/admin</div></div>
+      <div class="m"><div class="b">👑 <b>Admin panel</b>
+
+Kerakli bo'limni tanlang:</div></div>
+    </div>
+    <div class="k">
+      <div class="r"><span class="kb">📢 Kanallar</span><span class="kb">🔗 Tugma</span></div>
+      <div class="r"><span class="kb">🗂 Menyu tugmalari</span></div>
+      <div class="r"><span class="kb">✏️ Start xabar</span><span class="kb">📌 Obuna xabari</span></div>
+      <div class="r"><span class="kb">☎️ Telefon so'rash</span><span class="kb">✍️ Taklif matni</span></div>
+      <div class="r"><span class="kb">📨 Xabar yuborish</span><span class="kb">📊 Excel</span></div>
+      <div class="r"><span class="kb">👥 Statistika</span><span class="kb">🏆 G'oliblar</span></div>
+      <div class="r"><span class="kb">👮 Adminlar</span><span class="kb">🔐 Yopiq kanal linki</span></div>
+      <div class="r"><span class="kb">🏆 Ballarim tugmasi</span><span class="kb">🏅 Reyting tugmasi</span></div>
+      <div class="r"><span class="kb hl">🎁 Konkurs tugmasi</span></div>
+      <div class="r"><span class="kb">🚪 Chiqish</span></div>
+    </div>
+  </div>
+  <p class="cap">1-rasm. Admin panel. Sariq ramkadagi <b>🎁 Konkurs tugmasi</b> yangi bo'lim.</p>
+
+  <h3>📚 Bo'limlar</h3>
+  <div class="grid">
+    <a href="#konkurs"><span>🎁</span><b>Konkurs</b><small>Tarqatish posti va shaxsiy havola</small></a>
+    <a href="#ballar"><span>🏆</span><b>Ballar</b><small>Ballarim va Reyting</small></a>
+  </div>
+
+  <div class="pager"><span></span><a class="next" href="#konkurs">Konkurs →</a></div>
+</section>
+
+<!-- ================================================================ KONKURS -->
+<section class="page" id="konkurs">
+  <h2>🎁 Konkurs tugmasi <span class="badge">YANGI</span></h2>
+  <p class="lead">“Konkursda qatnashish” tugmasi har bir odamga <b>o'z shaxsiy havolasi</b> bilan tarqatish posti beradi.</p>
+
+  <h3>👤 Foydalanuvchi uchun qanday ishlaydi</h3>
+  <ol class="steps">
+    <li><b>Menyuda <code>✅ Konkursda qatnashish</code> ni bosadi</b><p>Tugma standart bo'yicha <b>yashil</b> va menyuning <b>eng tepasida</b> turadi.</p></li>
+    <li><b>Bot unga post yuboradi</b><p>Postdagi havola va post ostidagi <code>✅ Qatnashish</code> tugmasi o'sha odamning shaxsiy havolasi. Havola oxirida uning Telegram ID si turadi: <code>?start=ref123456789</code>. Bu Ballarim'dagi havolaning aynan o'zi.</p></li>
+    <li><b>Postni do'stlariga va guruhlarga forward qiladi</b><p>Forward qilinganda post ostidagi tugma ham saqlanadi.</p></li>
+    <li><b>Do'sti tugmani bosib botga kiradi</b><p>Post egasiga darhol tabrik keladi va <b>+1 ball</b> qo'shiladi.</p></li>
+  </ol>
+
+  <div class="phone">
+    <div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div>
+    <div class="chat">
+      <div class="m me"><div class="b">✅ Konkursda qatnashish</div></div>
+      <div class="m"><div class="b">🎁 <b>Katta konkurs boshlandi!</b>
+
+Botga qo'shiling, do'stlaringizni taklif qiling va qimmatbaho sovg'alarni yutib oling 🏆
+
+✅ Qatnashish bepul — bor-yo'g'i bir necha soniya.
+
+👇 Qatnashish uchun havola:
+<span class="lnk">https://t.me/sovga_konkurs_bot?start=ref123456789</span></div>
+        <div class="ikb"><div class="r"><span class="ib green">✅ Qatnashish</span></div></div>
+      </div>
+    </div>
+    <div class="k">
+      <div class="r"><span class="kb green">✅ Konkursda qatnashish</span></div>
+      <div class="r"><span class="kb">📚 Darslar</span><span class="kb">🎁 Sovg'alar</span></div>
+      <div class="r"><span class="kb">🏆 Ballarim</span><span class="kb">🏅 Reyting</span></div>
+    </div>
+  </div>
+  <p class="cap">5-rasm. Standart tarqatish posti. ID 123456789 bo'lgan foydalanuvchining shaxsiy havolasi bilan.</p>
+
+  <h3>⚙️ Admin paneldan sozlash</h3>
+  <p>Admin panel → <code>🎁 Konkurs tugmasi</code>:</p>
+
+  <div class="phone">
+    <div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div>
+    <div class="chat">
+      <div class="m"><div class="b">🎁 <b>Konkurs tugmasi</b>
+
+Holat: <b>🟢 KO'RINADI</b>
+Matni: <b>✅ Konkursda qatnashish</b>
+Premium emoji: <b>yo'q</b>
+Rangi: <b>🟢 Yashil</b>
+Joylashuvi: <b>⬆️ menyuning eng tepasida</b>
+
+Tarqatish posti: <b>standart matn</b>
+Post tugmasi: <b>✅ Qatnashish (standart)</b>
+Post tugmasi rangi: <b>🟢 Yashil</b></div></div>
+    </div>
+    <div class="k">
+      <div class="r"><span class="kb">🔴 O'chirish</span><span class="kb">⬇️ Pastga qo'yish</span></div>
+      <div class="r"><span class="kb">✏️ Tugma nomi</span><span class="kb">🎨 Tugma rangi</span></div>
+      <div class="r"><span class="kb">📝 Tarqatish posti</span><span class="kb">👁 Ko'rish</span></div>
+      <div class="r"><span class="kb">🔘 Post tugmasi</span><span class="kb">🎨 Post tugmasi rangi</span></div>
+      <div class="r"><span class="kb">🏠 Admin panel</span></div>
+    </div>
+  </div>
+  <p class="cap">6-rasm. Konkurs bo'limi standart sozlamalar bilan.</p>
+
+  <table class="keys card">
+    <tr><td><code>🔴 O'chirish</code><br><code>🟢 Yoqish</code></td><td>Tugmani menyuda ko'rsatadi yoki yashiradi.</td></tr>
+    <tr><td><code>⬇️ Pastga qo'yish</code><br><code>⬆️ Tepaga qo'yish</code></td><td>Tugma menyuning eng tepasida (standart) yoki eng pastida tursin.</td></tr>
+    <tr><td><code>✏️ Tugma nomi</code></td><td>Yangi nom yuboring. Nom boshidagi premium emoji ikonkaga aylanadi.</td></tr>
+    <tr><td><code>🎨 Tugma rangi</code></td><td>⚪️ Oddiy, 🔵 Ko'k, 🟢 Yashil yoki 🔴 Qizil.</td></tr>
+    <tr><td><code>📝 Tarqatish posti</code></td><td>Yangi post: matn, rasm, video, GIF yoki fayl (izohi bilan), yoki stiker. Qalin, kursiv va <b>premium emojilar</b> saqlanadi.</td></tr>
+    <tr><td><code>👁 Ko'rish</code></td><td>Postni o'zingizning havolangiz bilan ko'rsatadi, foydalanuvchi ham aynan shuni oladi.</td></tr>
+    <tr><td><code>🔘 Post tugmasi</code></td><td>Post ostidagi tugmaning matni va premium emojisi.</td></tr>
+    <tr><td><code>🎨 Post tugmasi rangi</code></td><td>Post ostidagi tugmaning rangi.</td></tr>
+    <tr><td><code>♻️ … standartga qaytarish</code></td><td>Post yoki post tugmasini o'zgartirgan bo'lsangiz chiqadi va standart holatga qaytaradi.</td></tr>
+  </table>
+
+  <h3>🔑 Post ichidagi kalitlar</h3>
+  <table class="keys card">
+    <tr><td><code>{link}</code></td><td>Foydalanuvchining shaxsiy havolasi, oxirida uning ID si bilan.</td></tr>
+    <tr><td><code>{name}</code></td><td>Postni tarqatayotgan odamning ismi. Masalan: <i>“Ali Valiyev sizni konkursga taklif qilmoqda”</i>.</td></tr>
+  </table>
+
+  <div class="tip">💡 Namuna: rasm yuborib, izohiga <code>🎁 Konkurs! {name} sizni taklif qilmoqda 👇 {link}</code> deb yozing. Matnda <code>{link}</code> bo'lmasa ham havola post ostidagi tugmada bo'ladi.</div>
+  <div class="warn">⚠️ Premium emoji ishlashi uchun bot egasining Telegram Premium obunasi faol bo'lishi kerak. Telegram premium emojini qabul qilmasa, bot saqlamaydi va sizga ogohlantirish beradi.</div>
+
+  <div class="pager"><a href="#boshlash">← Boshlash</a><a class="next" href="#ballar">Ballar →</a></div>
+</section>
+
+<!-- ================================================================= BALLAR -->
+<section class="page" id="ballar">
+  <h2>🏆 Ballar va reyting</h2>
+  <p class="lead">Har bir taklif qilingan yangi odam bitta ball hisoblanadi.</p>
+
+  <h3>🏆 Ballarim tugmasi</h3>
+  <p>Foydalanuvchiga ballari soni va shaxsiy havolasi ko'rsatiladi, ostida <code>📤 Do'stlarga yuborish</code> tugmasi bo'ladi.</p>
+  <div class="phone">
+    <div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div>
+    <div class="chat">
+      <div class="m me"><div class="b">🏆 Ballarim</div></div>
+      <div class="m"><div class="b">🏆 <b>Ballaringiz</b>
+
+Siz taklif qilgan odamlar soni: <b>7</b> ta
+
+Do'stlaringizni shu havola orqali taklif qiling:
+<span class="lnk">https://t.me/sovga_konkurs_bot?start=ref123456789</span></div>
+        <div class="ikb"><div class="r"><span class="ib">📤 Do'stlarga yuborish</span></div></div>
+      </div>
+    </div>
+  </div>
+  <p class="cap">7-rasm. Ballarim xabari (standart matn).</p>
+  <ul class="dots">
+    <li>Admin panel → <code>🏆 Ballarim tugmasi</code>: ko'rsatish/yashirish, nomi, rangi, <code>📝 Natija xabari</code>.</li>
+    <li>Xabarda <code>{count}</code> (ballar soni) va <code>{link}</code> (havola) ishlatiladi. <code>{link}</code> bo'lishi shart.</li>
+  </ul>
+
+  <h3>🏅 Reyting tugmasi</h3>
+  <div class="phone">
+    <div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div>
+    <div class="chat">
+      <div class="m me"><div class="b">🏅 Reyting</div></div>
+      <div class="m"><div class="b">🏅 <b>Takliflar reytingi</b>
+
+1. Ali Valiyev — <b>24</b> ta
+2. Dilnoza Karimova — <b>19</b> ta
+3. Sardor Toshmatov — <b>15</b> ta
+4. Madina Yusupova — <b>11</b> ta
+5. Jasur Rahimov — <b>9</b> ta
+
+Eng faol ishtirokchilar ro'yxati.</div></div>
+    </div>
+  </div>
+  <p class="cap">8-rasm. Reyting posti.</p>
+  <ul class="dots">
+    <li>Postga <code>{users-10}</code> deb yozilsa, o'sha joyda TOP 10 chiqadi. Son 1 dan 50 gacha bo'lishi mumkin.</li>
+    <li>Rangi, nomi, premium emojisi va joylashuvi (1–4 talik) sozlanadi. 2 talik joylashuvda Ballarim va Reyting yonma-yon turadi.</li>
+  </ul>
+
+  <h3>📏 Ball qanday hisoblanadi</h3>
+  <ul class="dots">
+    <li>Ball faqat botga <b>birinchi marta</b> kirgan yangi odam uchun beriladi.</li>
+    <li>O'zini o'zi taklif qilish hisoblanmaydi.</li>
+    <li>Ball odam /start bosgan zahoti yoziladi, obuna bo'lishini kutmaydi.</li>
+    <li>Kim nechta odam taklif qilgani 👥 Statistika va 📊 Excel bo'limlarida ko'rinadi.</li>
+  </ul>
+
+  <div class="pager"><a href="#konkurs">← Konkurs</a><a class="next" href="#boshlash">Boshiga ↑</a></div>
+  <p class="hint">Qo'llanma internetsiz ishlaydi: barcha rasm va matnlar shu faylning ichida.</p>
+</section>
+
+</main>
+
+<nav class="bar" aria-label="Bo'limlar">
+  <div class="in">
+    <a href="#boshlash"><span>🏠</span>Boshlash</a>
+    <a href="#konkurs"><span>🎁</span>Konkurs</a>
+    <a href="#ballar"><span>🏆</span>Ballar</a>
+  </div>
+</nav>
+
+<script>
+/* JavaScript ishlasa: bo'limlar alohida sahifa bo'lib ochiladi.
+   Ishlamasa: hamma bo'lim ketma-ket ko'rinadi, pastki menyu shunchaki o'sha joyga o'tkazadi. */
+(function () {
+  try {
+    var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
+    var links = Array.prototype.slice.call(document.querySelectorAll('nav.bar a'));
+    if (!pages.length) return;
+    document.documentElement.className += ' js';
+
+    function show(id) {
+      var target = id ? document.getElementById(id) : null;
+      var page = target;
+      while (page && !(page.classList && page.classList.contains('page'))) page = page.parentNode;
+      if (!page) page = pages[0];
+      pages.forEach(function (p) { p.classList.toggle('active', p === page); });
+      links.forEach(function (a) {
+        var on = a.getAttribute('href') === '#' + page.id;
+        a.classList.toggle('on', on);
+        if (on && a.scrollIntoView) {
+          try { a.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch (e) {}
+        }
+      });
+      if (target && target !== page && target.scrollIntoView) target.scrollIntoView();
+      else window.scrollTo(0, 0);
+    }
+
+    window.addEventListener('hashchange', function () { show(location.hash.slice(1)); });
+    show(location.hash.slice(1));
+  } catch (e) {
+    document.documentElement.className = document.documentElement.className.replace(' js', '');
+  }
+})();
+</script>
+</body>
+</html>

@@ -63,10 +63,30 @@ K_PL_BUTTON_TEXT = "private_link_button_text"
 K_PL_BUTTON_ICON = "private_link_button_icon_custom_emoji_id"
 # har bir yangi taklifda taklif qilganga boradigan tabrik
 K_REF_NOTIFY_TEXT = "ref_notify_text"
+# "Konkursda qatnashish" tugmasi -> shaxsiy havolali tarqatish posti
+K_CONTEST_ENABLED = "contest_enabled"
+K_CONTEST_TEXT = "contest_text"
+K_CONTEST_STYLE = "contest_style"
+K_CONTEST_ICON = "contest_icon_custom_emoji_id"
+K_CONTEST_POSITION = "contest_position"
+K_CONTEST_POST_TYPE = "contest_post_type"
+K_CONTEST_POST_FILE = "contest_post_file_id"
+K_CONTEST_POST_TEXT = "contest_post_text"
+K_CONTEST_JOIN_TEXT = "contest_join_text"
+K_CONTEST_JOIN_ICON = "contest_join_icon_custom_emoji_id"
+K_CONTEST_JOIN_STYLE = "contest_join_style"
 
 DEFAULT_MY_POINTS_TEXT = "🏆 Ballarim"
 DEFAULT_RATING_TEXT = "🏅 Reyting"
 DEFAULT_SUB_CHECK_TEXT = "✅ A'zo bo'ldim"
+DEFAULT_CONTEST_TEXT = "✅ Konkursda qatnashish"
+#: Post ostidagi havola tugmasi — admin o'zgartirmasa shu matn chiqadi
+DEFAULT_CONTEST_JOIN_TEXT = "✅ Qatnashish"
+#: Konkurs tugmalari standart holatda yashil
+DEFAULT_CONTEST_STYLE = "success"
+CONTEST_TOP = "top"
+CONTEST_BOTTOM = "bottom"
+CONTEST_POSITIONS = {CONTEST_TOP, CONTEST_BOTTOM}
 BUTTON_STYLES = {"primary", "success", "danger"}
 DEFAULT_WINNERS_LIMIT = 10
 MAX_WINNERS_LIMIT = 20
@@ -869,6 +889,139 @@ async def set_rating_row_size(row_size: int) -> None:
     if row_size not in {1, 2, 3, 4}:
         raise ValueError(f"Noto'g'ri qator o'lchami: {row_size}")
     await set_setting(K_RATING_ROW_SIZE, str(row_size))
+
+
+# ================================================================ KONKURS TUGMASI
+CONTEST_KEYS = (
+    K_CONTEST_ENABLED,
+    K_CONTEST_TEXT,
+    K_CONTEST_STYLE,
+    K_CONTEST_ICON,
+    K_CONTEST_POSITION,
+    K_CONTEST_POST_TYPE,
+    K_CONTEST_POST_FILE,
+    K_CONTEST_POST_TEXT,
+    K_CONTEST_JOIN_TEXT,
+    K_CONTEST_JOIN_ICON,
+    K_CONTEST_JOIN_STYLE,
+)
+
+
+def _contest_style(values: dict[str, Optional[str]], key: str) -> Optional[str]:
+    """Kalit umuman yo'q -> standart yashil; "" (admin "Oddiy" tanlagan) -> None."""
+    raw = values[key] if key in values else DEFAULT_CONTEST_STYLE
+    return raw if raw in BUTTON_STYLES else None
+
+
+def parse_contest_settings(values: dict[str, Optional[str]]) -> dict:
+    """`settings` jadvalidagi qatorlardan konkurs sozlamalarini yig'adi.
+
+    `post` — admin qo'ygan post (send_raw_content formatida) yoki None (standart).
+    `join_text` None bo'lsa post ostida standart "✅ Qatnashish" chiqadi.
+    """
+    position = values.get(K_CONTEST_POSITION)
+    post_type = values.get(K_CONTEST_POST_TYPE)
+    return {
+        "enabled": values.get(K_CONTEST_ENABLED, "1") != "0",
+        "text": values.get(K_CONTEST_TEXT) or DEFAULT_CONTEST_TEXT,
+        "style": _contest_style(values, K_CONTEST_STYLE),
+        "icon_custom_emoji_id": values.get(K_CONTEST_ICON),
+        "position": position if position in CONTEST_POSITIONS else CONTEST_TOP,
+        "post": (
+            {
+                "type": post_type,
+                "file_id": values.get(K_CONTEST_POST_FILE),
+                "text_html": values.get(K_CONTEST_POST_TEXT) or "",
+            }
+            if post_type
+            else None
+        ),
+        "join_text": values.get(K_CONTEST_JOIN_TEXT),
+        "join_icon": values.get(K_CONTEST_JOIN_ICON),
+        "join_style": _contest_style(values, K_CONTEST_JOIN_STYLE),
+    }
+
+
+async def get_contest_settings() -> dict:
+    """Asosiy menyudagi "Konkursda qatnashish" tugmasi va tarqatish posti."""
+    async with session_maker() as s:
+        rows = await s.execute(
+            select(Setting.key, Setting.value).where(Setting.key.in_(CONTEST_KEYS))
+        )
+        values = {key: value for key, value in rows}
+    return parse_contest_settings(values)
+
+
+def _check_style(style: Optional[str]) -> None:
+    if style is not None and style not in BUTTON_STYLES:
+        raise ValueError(f"Noto'g'ri tugma uslubi: {style}")
+
+
+def _check_button_text(text: str) -> str:
+    value = text.strip()
+    if not value or len(value) > 64:
+        raise ValueError("Tugma matni 1–64 ta belgi bo'lishi kerak")
+    return value
+
+
+async def set_contest_enabled(enabled: bool) -> None:
+    await set_setting(K_CONTEST_ENABLED, "1" if enabled else "0")
+
+
+async def set_contest_text(text: str, icon_custom_emoji_id: Optional[str] = None) -> None:
+    await set_setting(K_CONTEST_TEXT, _check_button_text(text))
+    await set_setting(K_CONTEST_ICON, icon_custom_emoji_id)
+
+
+async def set_contest_style(style: Optional[str]) -> None:
+    _check_style(style)
+    # "" -> oddiy; NULL/yo'q qator esa standart yashil bo'lib o'qiladi
+    await set_setting(K_CONTEST_STYLE, style or "")
+
+
+async def set_contest_position(position: str) -> None:
+    if position not in CONTEST_POSITIONS:
+        raise ValueError(f"Noto'g'ri joylashuv: {position}")
+    await set_setting(K_CONTEST_POSITION, position)
+
+
+async def set_contest_post(
+    type_: str, file_id: Optional[str], text_html: Optional[str]
+) -> None:
+    await set_setting(K_CONTEST_POST_TYPE, type_)
+    await set_setting(K_CONTEST_POST_FILE, file_id)
+    await set_setting(K_CONTEST_POST_TEXT, text_html)
+
+
+async def delete_contest_post() -> None:
+    """Standart tarqatish postiga qaytaradi."""
+    for key in (K_CONTEST_POST_TYPE, K_CONTEST_POST_FILE, K_CONTEST_POST_TEXT):
+        await set_setting(key, None)
+
+
+async def set_contest_join_button(
+    text: str, icon_custom_emoji_id: Optional[str] = None
+) -> None:
+    await set_setting(K_CONTEST_JOIN_TEXT, _check_button_text(text))
+    await set_setting(K_CONTEST_JOIN_ICON, icon_custom_emoji_id)
+
+
+async def set_contest_join_style(style: Optional[str]) -> None:
+    _check_style(style)
+    await set_setting(K_CONTEST_JOIN_STYLE, style or "")
+
+
+async def delete_contest_join_button() -> None:
+    """Post ostidagi tugmani standart matn va rangga qaytaradi."""
+    async with session_maker() as s:
+        await s.execute(
+            delete(Setting).where(
+                Setting.key.in_(
+                    (K_CONTEST_JOIN_TEXT, K_CONTEST_JOIN_ICON, K_CONTEST_JOIN_STYLE)
+                )
+            )
+        )
+        await s.commit()
 
 
 async def get_winners_limit() -> int:

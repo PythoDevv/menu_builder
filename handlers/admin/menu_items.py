@@ -19,6 +19,7 @@ from db.queries import (
     get_item,
     get_item_path,
     get_items,
+    get_contest_settings,
     get_my_points_settings,
     get_rating_settings,
     move_item,
@@ -220,12 +221,13 @@ ASK_COUNT_TEXT = (
 
 
 async def _is_reserved_root_title(parent_id: Optional[int], title: str) -> bool:
-    """Ildizda doimiy Ballarim/Reyting tugmalari bilan nom to'qnashmasin."""
+    """Ildizda doimiy Ballarim/Reyting/Konkurs tugmalari bilan nom to'qnashmasin."""
     if parent_id is not None:
         return False
     points = await get_my_points_settings()
     rating = await get_rating_settings()
-    return title in {points["text"], rating["text"]}
+    contest = await get_contest_settings()
+    return title in {points["text"], rating["text"], contest["text"]}
 
 BAD_COUNT_TEXT = (
     "❗️ Faqat <b>0 dan katta</b> butun son yuboring.\n"

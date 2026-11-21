@@ -45,6 +45,7 @@ BTN_POINTS = "🏆 Ballarim tugmasi"
 BTN_RATING = "🏅 Reyting tugmasi"
 BTN_WINNERS = "🏆 G'oliblar"
 BTN_PRIVATE_LINK = "🔐 Yopiq kanal linki"
+BTN_CONTEST = "🎁 Konkurs tugmasi"
 
 # --------------------------------------------------------------- super admin
 BTN_POINTS_RESET = "🧹 Ballarni 0 qilish"
@@ -148,6 +149,17 @@ BTN_RATING_ROW_SIZE = "🧩 Reyting joylashuvi"
 BTN_RATING_MESSAGE = "📝 Reyting posti"
 BTN_RATING_MESSAGE_RESET = "♻️ Reyting postini standartga qaytarish"
 
+# ------------------------------------------------------------ Konkurs tugmasi
+BTN_CT_TOP = "⬆️ Tepaga qo'yish"
+BTN_CT_BOTTOM = "⬇️ Pastga qo'yish"
+BTN_CT_RENAME = "✏️ Tugma nomi"
+BTN_CT_STYLE = "🎨 Tugma rangi"
+BTN_CT_POST = "📝 Tarqatish posti"
+BTN_CT_POST_RESET = "♻️ Postni standartga qaytarish"
+BTN_CT_JOIN = "🔘 Post tugmasi"
+BTN_CT_JOIN_STYLE = "🎨 Post tugmasi rangi"
+BTN_CT_JOIN_RESET = "♻️ Post tugmasini standartga qaytarish"
+
 # --------------------------------------------------------- Yopiq kanal linki
 BTN_PL_CHANNEL = "📢 Kanalni belgilash"
 BTN_PL_NEED = "👥 Takliflar soni"
@@ -198,6 +210,7 @@ def admin_home_kb() -> ReplyKeyboardMarkup:
             [BTN_STATS, BTN_WINNERS],
             [BTN_ADMINS, BTN_PRIVATE_LINK],
             [BTN_POINTS, BTN_RATING],
+            [BTN_CONTEST],
             [BTN_EXIT],
         ],
         "Bo'limni tanlang",
@@ -512,6 +525,28 @@ def rating_settings_kb(enabled: bool, custom_message: bool) -> ReplyKeyboardMark
     ]
     if custom_message:
         rows.append([BTN_RATING_MESSAGE_RESET])
+    rows.append([BTN_HOME])
+    return _kb(rows)
+
+
+# ------------------------------------------------------------ KONKURS TUGMASI
+def contest_position_label(position: str) -> str:
+    return "⬇️ menyuning eng pastida" if position == "bottom" else "⬆️ menyuning eng tepasida"
+
+
+def contest_settings_kb(
+    enabled: bool, position: str, custom_post: bool, custom_join: bool
+) -> ReplyKeyboardMarkup:
+    rows = [
+        [BTN_OFF if enabled else BTN_ON, BTN_CT_TOP if position == "bottom" else BTN_CT_BOTTOM],
+        [BTN_CT_RENAME, BTN_CT_STYLE],
+        [BTN_CT_POST, BTN_VIEW],
+        [BTN_CT_JOIN, BTN_CT_JOIN_STYLE],
+    ]
+    if custom_post:
+        rows.append([BTN_CT_POST_RESET])
+    if custom_join:
+        rows.append([BTN_CT_JOIN_RESET])
     rows.append([BTN_HOME])
     return _kb(rows)
 

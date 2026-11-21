@@ -14,6 +14,7 @@ from handlers.admin import (
     broadcast,
     channel_events,
     channels,
+    contest,
     export,
     menu_items,
     panel,
@@ -77,6 +78,7 @@ async def main() -> None:
         menu_items.router,
         admin_settings.router,
         rating.router,
+        contest.router,  # "Konkursda qatnashish" tugmasi va tarqatish posti
         winners.router,
         admin_referral.router,
         admin_private_link.router,  # N ta taklif -> yopiq kanalga shaxsiy havola

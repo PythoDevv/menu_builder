@@ -15,7 +15,14 @@ from aiogram.types import (
 )
 
 from db.models import Channel, MenuItem, SubscriptionButton
-from db.queries import DEFAULT_MY_POINTS_TEXT, DEFAULT_RATING_TEXT, DEFAULT_SUB_CHECK_TEXT
+from db.queries import (
+    CONTEST_BOTTOM,
+    CONTEST_TOP,
+    DEFAULT_CONTEST_TEXT,
+    DEFAULT_MY_POINTS_TEXT,
+    DEFAULT_RATING_TEXT,
+    DEFAULT_SUB_CHECK_TEXT,
+)
 from utils.referral import share_url
 
 BTN_BACK = "⬅️ Orqaga"
@@ -25,6 +32,7 @@ BTN_PHONE = "📱 Raqamni yuborish"
 BTN_SHARE = "📤 Do'stlarga yuborish"
 BTN_MY_POINTS = DEFAULT_MY_POINTS_TEXT
 BTN_RATING = DEFAULT_RATING_TEXT
+BTN_CONTEST = DEFAULT_CONTEST_TEXT
 
 CB_CHECK_SUB = "check_sub"
 
@@ -87,8 +95,17 @@ def menu_kb(
     rating_style: Optional[str] = None,
     rating_icon_custom_emoji_id: Optional[str] = None,
     rating_row_size: int = 2,
+    contest_enabled: bool = False,
+    contest_text: str = BTN_CONTEST,
+    contest_style: Optional[str] = None,
+    contest_icon_custom_emoji_id: Optional[str] = None,
+    contest_position: str = CONTEST_TOP,
 ) -> Keyboard:
-    """Menyu tugmalari va ildizdagi doimiy Ballarim/Reyting tugmalari."""
+    """Menyu tugmalari va ildizdagi doimiy Ballarim/Reyting/Konkurs tugmalari.
+
+    Konkurs tugmasi alohida, to'liq kenglikdagi qatorda turadi: menyuning eng
+    tepasida (standart) yoki eng pastida — admin tanlaydi.
+    """
     if is_root:
         row_size = rating_row_size if rating_row_size in {1, 2, 3, 4} else 2
         button_specs = [
@@ -116,6 +133,19 @@ def menu_kb(
                     row_size,
                 )
             )
+        if contest_enabled:
+            contest_spec = (
+                KeyboardButton(
+                    text=contest_text,
+                    style=contest_style,
+                    icon_custom_emoji_id=contest_icon_custom_emoji_id,
+                ),
+                1,
+            )
+            if contest_position == CONTEST_BOTTOM:
+                button_specs.append(contest_spec)
+            else:
+                button_specs.insert(0, contest_spec)
         rows = _button_rows(button_specs)
     else:
         rows = _rows(children)

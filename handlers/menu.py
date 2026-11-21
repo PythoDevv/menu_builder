@@ -9,12 +9,14 @@ from html import escape
 from typing import Optional
 
 from aiogram import F, Router
+from aiogram.exceptions import TelegramBadRequest
 from aiogram.filters import BaseFilter
 from aiogram.fsm.context import FSMContext
 from aiogram.types import LinkPreviewOptions, Message
 
 from db.models import MenuItem
 from db.queries import (
+    get_contest_settings,
     get_contents,
     get_item,
     get_items,
@@ -26,6 +28,7 @@ from db.queries import (
 )
 from keyboards.user_kb import BTN_BACK, BTN_HOME, Keyboard, menu_kb, share_kb
 from utils.admins import is_admin
+from utils.contest import default_post, send_contest_post
 from utils.content import send_content
 from utils.private_link import grant_if_earned
 from utils.referral import ref_link, render_my_points_text, render_ref_text
@@ -59,9 +62,10 @@ async def node_kb(node_id: Optional[int]) -> Keyboard:
 
 
 async def build_menu_kb(children: list[MenuItem], is_root: bool) -> Keyboard:
-    """Tugmalarning alohida ko'rinishi va "Ballarim" sozlamalari bilan menyu yaratadi."""
+    """Tugmalarning alohida ko'rinishi va Ballarim/Reyting/Konkurs sozlamalari bilan."""
     points = await get_my_points_settings() if is_root else None
     rating = await get_rating_settings() if is_root else None
+    contest = await get_contest_settings() if is_root else None
     return menu_kb(
         children,
         is_root=is_root,
@@ -78,6 +82,13 @@ async def build_menu_kb(children: list[MenuItem], is_root: bool) -> Keyboard:
             rating["icon_custom_emoji_id"] if rating else None
         ),
         rating_row_size=int(rating["row_size"]) if rating else 2,
+        contest_enabled=bool(contest["enabled"]) if contest else False,
+        contest_text=str(contest["text"]) if contest else "",
+        contest_style=contest["style"] if contest else None,
+        contest_icon_custom_emoji_id=(
+            contest["icon_custom_emoji_id"] if contest else None
+        ),
+        contest_position=str(contest["position"]) if contest else "top",
     )
 
 
@@ -170,6 +181,12 @@ class RatingFilter(BaseFilter):
         return bool(settings["enabled"]) and message.text == settings["text"]
 
 
+class ContestFilter(BaseFilter):
+    async def __call__(self, message: Message) -> bool:
+        settings = await get_contest_settings()
+        return bool(settings["enabled"]) and message.text == settings["text"]
+
+
 @router.message(MyPointsFilter())
 async def my_points(message: Message) -> None:
     """Doimiy 'Ballarim' tugmasi — shartli tugma bosilishini kutmasdan ham ko'rinadi."""
@@ -198,6 +215,28 @@ async def rating(message: Message) -> None:
         render_rating_text(template, top),
         link_preview_options=LinkPreviewOptions(is_disabled=True),
     )
+
+
+@router.message(ContestFilter())
+async def contest(message: Message) -> None:
+    """"Konkursda qatnashish" — foydalanuvchining shaxsiy havolasi bilan tarqatish posti.
+
+    Havola Ballarim'dagi bilan bir xil: `...?start=ref<tg_id>`.
+    """
+    user = message.from_user
+    link = await ref_link(message.bot, user.id)
+    settings = await get_contest_settings()
+    try:
+        await send_contest_post(
+            message.bot, message.chat.id, settings, link=link, name=user.full_name
+        )
+    except TelegramBadRequest:
+        # saqlangan media eskirgan yoki premium emoji/rang qabul qilinmadi —
+        # foydalanuvchi baribir o'z havolasini olsin
+        fallback = {"post": default_post()}
+        await send_contest_post(
+            message.bot, message.chat.id, fallback, link=link, name=user.full_name
+        )
 
 
 @router.message(F.text)

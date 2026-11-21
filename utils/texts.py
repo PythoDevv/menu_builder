@@ -63,3 +63,16 @@ DEFAULT_PRIVATE_LINK_TEXT = (
     "{link}\n\n"
     "⚠️ Havola faqat siz uchun va bir marta ishlaydi — uni boshqalarga bermang."
 )
+
+#: "Konkursda qatnashish" tugmasi bosilganda keladigan tarqatish posti.
+#: Foydalanuvchi uni do'stlariga / guruhlarga forward qiladi. `{link}` o'rniga
+#: o'sha odamning shaxsiy taklif havolasi (`...?start=ref<tg_id>`) qo'yiladi.
+#: Admin paneldagi "🎁 Konkurs tugmasi" -> "📝 Tarqatish posti" dan almashtiriladi.
+DEFAULT_CONTEST_POST_TEXT = (
+    "🎁 <b>Katta konkurs boshlandi!</b>\n\n"
+    "Botga qo'shiling, do'stlaringizni taklif qiling va qimmatbaho sovg'alarni "
+    "yutib oling 🏆\n\n"
+    "✅ Qatnashish bepul — bor-yo'g'i bir necha soniya.\n\n"
+    "👇 Qatnashish uchun havola:\n"
+    "{link}"
+)

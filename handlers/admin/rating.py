@@ -9,6 +9,7 @@ from aiogram.types import LinkPreviewOptions, Message
 
 from db.queries import (
     delete_rating_message,
+    get_contest_settings,
     get_items,
     get_my_points_settings,
     get_rating_settings,
@@ -120,7 +121,11 @@ async def save_rating_text(message: Message, state: FSMContext) -> None:
         return
     root_items = await get_items(None)
     points = await get_my_points_settings()
-    if any(item.title == text for item in root_items) or text == points["text"]:
+    contest = await get_contest_settings()
+    if any(item.title == text for item in root_items) or text in {
+        points["text"],
+        contest["text"],
+    }:
         await message.answer(
             "❗️ Asosiy menyuda bunday nomli tugma bor. Boshqa nom yuboring.",
             reply_markup=cancel_kb(),
