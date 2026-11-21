@@ -55,7 +55,7 @@ ol.steps>li{counter-increment:s;position:relative;padding:0 0 14px 44px}
 ol.steps>li::before{content:counter(s);position:absolute;left:0;top:0;width:30px;height:30px;border-radius:50%;
   background:var(--accent);color:#fff;font-weight:700;font-size:15px;display:flex;align-items:center;justify-content:center}
 ol.steps>li:not(:last-child)::after{content:"";position:absolute;left:14px;top:32px;bottom:2px;width:2px;background:var(--line)}
-ol.steps b{display:block;margin-bottom:2px}
+ol.steps>li>b{display:block;margin-bottom:2px}
 ol.steps p{margin:2px 0 0;color:var(--muted);font-size:15px}
 ul.dots{margin:6px 0;padding-left:20px}
 ul.dots li{margin:4px 0}
@@ -111,116 +111,186 @@ nav.bar{position:fixed;left:0;right:0;bottom:0;background:var(--nav);border-top:
   padding:6px 4px calc(6px + env(safe-area-inset-bottom));z-index:10;box-shadow:0 -2px 8px rgba(0,0,0,.06)}
 nav.bar .in{display:flex;gap:2px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;max-width:760px;margin:0 auto}
 nav.bar .in::-webkit-scrollbar{display:none}
-nav.bar a{flex:1 1 0;min-width:66px;display:flex;flex-direction:column;align-items:center;gap:1px;text-decoration:none;
+nav.bar a{flex:0 0 auto;min-width:66px;display:flex;flex-direction:column;align-items:center;gap:1px;text-decoration:none;
   color:var(--muted);font-size:11.5px;padding:5px 6px;border-radius:10px}
 nav.bar a span{font-size:21px;line-height:1.1}
 nav.bar a.on{color:var(--accent);background:var(--accent-soft);font-weight:700}
 .js .page{display:none}
 .js .page.active{display:block}
 .hint{font-size:12.5px;color:var(--muted);text-align:center;margin:8px 0 0}
+
+a.kb{text-decoration:none;display:block}
+.flow{font-size:13px;color:var(--muted);margin:-2px 0 10px}
+.toc{display:grid;gap:8px;margin:12px 0}
+.toc a{display:flex;gap:10px;align-items:center;background:var(--card);border-radius:12px;padding:10px 12px;
+  text-decoration:none;color:var(--text);box-shadow:var(--shadow);font-size:15px}
+.toc a span{font-size:20px;width:28px;text-align:center}
+.toc a small{display:block;color:var(--muted);font-size:12.5px}
 </style>
 </head>
 <body>
-
-<header class="top">
-  <div class="wrap">
-    <h1>🤖 Bot qo'llanmasi</h1>
-    <p>Botni bo'limma-bo'lim sozlash. Pastdagi menyudan kerakli bo'limni tanlang.</p>
-  </div>
-</header>
-
+<header class="top"><div class="wrap"><h1>🤖 Bot qo'llanmasi</h1>
+<p>Admin paneldagi har bir tugma alohida bo'limda. Pastdagi menyudan tanlang.</p></div></header>
 <main class="wrap">
+<section class="page" id="boshlash"><h2>🏠 Boshlash</h2><p class="lead">Bot nima qiladi va admin panelga qanday kiriladi.</p><div class="card"><p><b>Bot qisqacha:</b> foydalanuvchi botga kiradi, kanallarga obuna bo'ladi va menyudan kerakli bo'limni ochadi. Do'stini <b>shaxsiy havola</b> orqali taklif qilsa, har bir yangi odam uchun <b>+1 ball</b> oladi. Hammasi Telegram'dagi <b>admin panel</b> orqali sozlanadi.</p></div><ol class="steps"><li><b>Botga <code>/admin</code> deb yozing</b><p>Bu faqat adminlarda ishlaydi. Pastda admin panel tugmalari chiqadi.</p></li><li><b>Kerakli tugmani bosing</b><p>Pastdagi rasmda istalgan tugmani bossangiz, o'sha tugmaning qo'llanmasi ochiladi.</p></li><li><b>Har ekranda 3 ta yordamchi tugma bor</b><p><code>🏠 Admin panel</code> bosh sahifaga qaytaradi, <code>❌ Bekor qilish</code> amalni to'xtatadi, <code>🚪 Chiqish</code> paneldan chiqaradi.</p></li></ol><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m me"><div class="b">/admin</div></div><div class="m"><div class="b">👑 <b>Admin panel</b>
 
-<!-- =============================================================== BOSHLASH -->
-<section class="page" id="boshlash">
-  <h2>🏠 Boshlash</h2>
-  <p class="lead">Bot nima qiladi va admin panelga qanday kiriladi.</p>
+Kerakli bo'limni tanlang:</div></div></div><div class="k"><div class="r"><a class="kb" href="#kanallar">📢 Kanallar</a><a class="kb" href="#tugma">🔗 Tugma</a></div><div class="r"><a class="kb" href="#menyu">🗂 Menyu tugmalari</a></div><div class="r"><a class="kb" href="#start">✏️ Start xabar</a><a class="kb" href="#obuna">📌 Obuna xabari</a></div><div class="r"><a class="kb" href="#telefon">☎️ Telefon so'rash</a><a class="kb" href="#taklif">✍️ Taklif matni</a></div><div class="r"><a class="kb" href="#xabar">📨 Xabar yuborish</a><a class="kb" href="#excel">📊 Excel</a></div><div class="r"><a class="kb" href="#statistika">👥 Statistika</a><a class="kb" href="#goliblar">🏆 G'oliblar</a></div><div class="r"><a class="kb" href="#adminlar">👮 Adminlar</a><a class="kb" href="#yopiq">🔐 Yopiq kanal linki</a></div><div class="r"><a class="kb" href="#ballarim">🏆 Ballarim tugmasi</a><a class="kb" href="#reyting">🏅 Reyting tugmasi</a></div><div class="r"><a class="kb hl" href="#konkurs">🎁 Konkurs tugmasi</a></div><div class="r"><span class="kb">🚪 Chiqish</span></div></div></div><p class="cap">1-rasm. Admin panel. Tugmani bosing, uning bo'limi ochiladi.</p><h3>✅ Birinchi sozlash tartibi</h3><ol class="steps"><li><b>📢 Kanallar</b><p>Botni kanalga admin qilib, majburiy obunaga ulang.</p></li><li><b>🗂 Menyu tugmalari</b><p>Bo'limlar va ularning ichidagi kontentni qo'shing.</p></li><li><b>✏️ Start xabar</b><p>Salomlashuv xabarini qo'ying.</p></li><li><b>🎁 Konkurs tugmasi</b><p>Tarqatish postini sozlang.</p></li><li><b>🚪 Chiqish → /start</b><p>Botni oddiy foydalanuvchi sifatida tekshirib chiqing.</p></li></ol><h3>📚 Barcha bo'limlar</h3><div class="toc"><a href="#foydalanuvchi"><span>👤</span><div>ko'rinishi<small>Oddiy odam botni ochganda nimani ko'radi.</small></div></a><a href="#kanallar"><span>📢</span><div>Kanallar: majburiy obunaga ulash<small>Foydalanuvchi botdan foydalanishi uchun shu kanallarga obuna bo'lishi kerak.</small></div></a><a href="#tugma"><span>🔗</span><div>Tugma (obuna URL tugmalari)<small>Obuna ekraniga kanal bo'lmagan oddiy link tugma qo'shadi, masalan Instagram yoki sayt.</small></div></a><a href="#menyu"><span>🗂</span><div>Menyu tugmalari<small>Menyu cheksiz darajali bo'ladi: tugma ichida yana tugmalar ochish mumkin.</small></div></a><a href="#start"><span>✏️</span><div>Start xabar<small>/start bosilganda menyu bilan birga chiqadigan salomlashuv xabari.</small></div></a><a href="#obuna"><span>📌</span><div>Obuna xabari<small>Majburiy obuna ekranidagi post (2-rasm).</small></div></a><a href="#telefon"><span>☎️</span><div>Telefon so'rash<small>Foydalanuvchidan telefon raqamini so'rash.</small></div></a><a href="#taklif"><span>✍️</span><div>Taklif matni<small>Shartli (🔒) tugma hali ochilmagan bo'lsa, foydalanuvchiga shu matn chiqadi.</small></div></a><a href="#xabar"><span>📨</span><div>Xabar yuborish<small>Botdagi hamma faol foydalanuvchiga xabar yuborish.</small></div></a><a href="#excel"><span>📊</span><div>Excel<small>Barcha foydalanuvchilar ro'yxatini fayl qilib olish.</small></div></a><a href="#statistika"><span>👥</span><div>Statistika<small>Bitta tugma bilan botning umumiy holatini ko'rish.</small></div></a><a href="#goliblar"><span>🏆</span><div>G'oliblar<small>Konkurs yakunida TOP ro'yxatni olish va g'oliblarga xabar yozish.</small></div></a><a href="#adminlar"><span>👮</span><div>Adminlar<small>Botni boshqaradigan odamlarni qo'shish va olib tashlash.</small></div></a><a href="#yopiq"><span>🔐</span><div>Yopiq kanal linki<small>N ta odam taklif qilgan foydalanuvchiga yopiq kanalga shaxsiy, bir martalik havola beriladi.</small></div></a><a href="#ballarim"><span>🏆</span><div>Ballarim tugmasi<small>Foydalanuvchiga ballari va shaxsiy havolasini ko'rsatadi.</small></div></a><a href="#reyting"><span>🏅</span><div>Reyting tugmasi<small>Eng ko'p odam taklif qilganlar ro'yxati.</small></div></a><a href="#konkurs"><span>🎁</span><div>Konkurs tugmasi<small>“Konkursda qatnashish” tugmasi har bir odamga o'z shaxsiy havolasi bilan tarqatish posti beradi.</small></div></a><a href="#superadmin"><span>⭐</span><div>Superadmin<small>Faqat asosiy egalar uchun (serverdagi <code>.env</code> faylidagi ADMINS).</small></div></a><a href="#savollar"><span>❓</span><div>Ko'p beriladigan savollar<small>Ko'p uchraydigan muammolar va ularning yechimi.</small></div></a></div><div class="pager"><span></span><a class="next" href="#foydalanuvchi">User →</a></div></section>
+<section class="page" id="foydalanuvchi"><h2>👤 Foydalanuvchi ko'rinishi</h2><p class="lead">Oddiy odam botni ochganda nimani ko'radi.</p><ol class="steps"><li><b>Havola orqali kirib /start bosadi</b><p>Masalan: <code>https://t.me/sovga_konkurs_bot?start=ref123456789</code>. Havola oxiridagi raqam uni taklif qilgan odamning ID si.</p></li><li><b>Obuna ekrani</b><p>Kanallarga obuna bo'lib, <code>✅ A'zo bo'ldim</code> ni bosadi.</p></li><li><b>Telefon raqam</b><p>Faqat admin bu sozlamani yoqqan bo'lsa so'raladi.</p></li><li><b>Start xabar va menyu</b><p>Pastda menyu tugmalari chiqadi.</p></li></ol><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m me"><div class="b">/start</div></div><div class="m"><div class="b">👋 Botdan foydalanish uchun quyidagi kanallarga obuna bo'ling.
 
-  <div class="card">
-    <p><b>Bot qisqacha:</b> foydalanuvchi botga kiradi → kanallarga obuna bo'ladi → menyudan kerakli bo'limni ochadi. Do'stlarini <b>shaxsiy havola</b> orqali taklif qilsa, har bir yangi odam uchun <b>+1 ball</b> oladi. Botning hamma narsasi Telegram'dagi <b>admin panel</b> orqali sozlanadi, kod yozish shart emas.</p>
-  </div>
+So'ng <b>✅ A'zo bo'ldim</b> tugmasini bosing.</div><div class="ikb"><div class="r"><span class="ib">📢 Yangiliklar kanali</span></div><div class="r"><span class="ib">🔒 VIP guruh</span></div><div class="r"><span class="ib">📸 Instagram</span></div><div class="r"><span class="ib">✅ A'zo bo'ldim</span></div></div></div></div></div><p class="cap">2-rasm. Majburiy obuna ekrani.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">🏠 Asosiy menyu</div></div></div><div class="k"><div class="r"><span class="kb green">✅ Konkursda qatnashish</span></div><div class="r"><span class="kb">📚 Darslar</span><span class="kb">🎁 Sovg'alar</span></div><div class="r"><span class="kb">ℹ️ Biz haqimizda</span><span class="kb">📞 Aloqa</span></div><div class="r"><span class="kb">🏆 Ballarim</span><span class="kb">🏅 Reyting</span></div></div></div><p class="cap">3-rasm. Asosiy menyu.</p><div class="pager"><a href="#boshlash">← Bosh</a><a class="next" href="#kanallar">Kanallar →</a></div></section>
+<section class="page" id="kanallar"><h2>📢 Kanallar: majburiy obunaga ulash</h2><p class="lead">Foydalanuvchi botdan foydalanishi uchun shu kanallarga obuna bo'lishi kerak.</p><h3>1-qadam. Botni kanalga admin qilish (Telegram'da)</h3><ol class="steps"><li><b>Kanalingizni oching va tepadagi kanal nomini bosing</b></li><li><b>✏️ Tahrirlash → Administratorlar</b><p>Inglizcha interfeysda: Edit → Administrators.</p></li><li><b>Admin qo'shish → bot nomini qidiring</b><p>Masalan: <code>@sovga_konkurs_bot</code>.</p></li><li><b>Huquqlarni belgilang</b><p>Ochiq kanal uchun admin qilishning o'zi yetarli. Yopiq kanalda <b>“Havola orqali taklif qilish”</b> (Invite users via link) huquqini albatta yoqing.</p></li><li><b>Saqlang</b></li></ol><h3>2-qadam (A). Avtomatik ulanish: eng oson yo'l</h3><div class="card"><p>Botni kanalga admin qilganingiz zahoti bot sizga o'zi so'rov yuboradi. <b>✅ Ha, qo'shilsin</b> ni bossangiz bo'ldi.</p></div><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">🆕 <b>Yangi kanal</b>
 
-  <ol class="steps">
-    <li><b>Botga <code>/admin</code> deb yozing</b><p>Bu faqat adminlarda ishlaydi. Pastda admin panel tugmalari chiqadi (1-rasm).</p></li>
-    <li><b>Kerakli bo'limni bosing</b><p>Har bir bo'lim nima qilishini shu qo'llanmada ko'rasiz.</p></li>
-    <li><b>Har ekranda 3 ta yordamchi tugma ishlaydi</b><p><code>🏠 Admin panel</code> bosh sahifaga qaytaradi, <code>❌ Bekor qilish</code> amalni to'xtatadi, <code>🚪 Chiqish</code> paneldan chiqadi. Chiqqaningizdan keyin botni oddiy foydalanuvchi ko'zi bilan ko'rasiz.</p></li>
-  </ol>
+Bot <b>Yangiliklar kanali</b> kanalida admin qilindi.
+Turi: 📢 Ochiq
+ID: <code>-1001234567890</code>
 
-  <div class="phone">
-    <div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div>
-    <div class="chat">
-      <div class="m me"><div class="b">/admin</div></div>
-      <div class="m"><div class="b">👑 <b>Admin panel</b>
+Majburiy obuna ro'yxatiga qo'shilsinmi?</div><div class="ikb"><div class="r"><span class="ib">✅ Ha, qo'shilsin</span><span class="ib">❌ Yo'q</span></div></div></div></div></div><p class="cap">4-rasm. Avtomatik so'rov. U faqat botni admin qilgan admin'ga keladi.</p><h3>2-qadam (B). Qo'lda ulash</h3><ol class="steps"><li><b><code>📢 Kanallar</code> → <code>➕ Kanal qo'shish</code></b></li><li><b>Kanaldan istalgan postni botga forward qiling</b><p>Yoki <code>@yangiliklar_uz</code> yoki <code>-1001234567890</code> deb yozing.</p></li><li><b>Kanal turini tanlang</b><p><code>📢 Ochiq kanal</code> yoki <code>🔒 Yopiq (qo'shilish so'rovi)</code>.</p></li><li><b><code>✅ Kanal qo'shildi</code></b></li></ol><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">➕ <b>Kanal qo'shish</b>
 
-Kerakli bo'limni tanlang:</div></div>
-    </div>
-    <div class="k">
-      <div class="r"><span class="kb">📢 Kanallar</span><span class="kb">🔗 Tugma</span></div>
-      <div class="r"><span class="kb">🗂 Menyu tugmalari</span></div>
-      <div class="r"><span class="kb">✏️ Start xabar</span><span class="kb">📌 Obuna xabari</span></div>
-      <div class="r"><span class="kb">☎️ Telefon so'rash</span><span class="kb">✍️ Taklif matni</span></div>
-      <div class="r"><span class="kb">📨 Xabar yuborish</span><span class="kb">📊 Excel</span></div>
-      <div class="r"><span class="kb">👥 Statistika</span><span class="kb">🏆 G'oliblar</span></div>
-      <div class="r"><span class="kb">👮 Adminlar</span><span class="kb">🔐 Yopiq kanal linki</span></div>
-      <div class="r"><span class="kb">🏆 Ballarim tugmasi</span><span class="kb">🏅 Reyting tugmasi</span></div>
-      <div class="r"><span class="kb hl">🎁 Konkurs tugmasi</span></div>
-      <div class="r"><span class="kb">🚪 Chiqish</span></div>
-    </div>
-  </div>
-  <p class="cap">1-rasm. Admin panel. Sariq ramkadagi <b>🎁 Konkurs tugmasi</b> yangi bo'lim.</p>
+Kanaldan istalgan postni shu yerga <b>forward</b> qiling,
+yoki <code>@username</code> / <code>-1001234567890</code> ko'rinishida yuboring.
 
-  <h3>📚 Bo'limlar</h3>
-  <div class="grid">
-    <a href="#konkurs"><span>🎁</span><b>Konkurs</b><small>Tarqatish posti va shaxsiy havola</small></a>
-    <a href="#ballar"><span>🏆</span><b>Ballar</b><small>Ballarim va Reyting</small></a>
-  </div>
+⚠️ Bot o'sha kanalda <b>admin</b> bo'lishi shart.</div></div><div class="m me"><div class="b">↪️ Yangiliklar kanali'dan forward qilingan post</div></div><div class="m"><div class="b">✅ <b>Yangiliklar kanali</b> topildi.
 
-  <div class="pager"><span></span><a class="next" href="#konkurs">Konkurs →</a></div>
-</section>
+Kanal turini tanlang:</div></div></div><div class="k"><div class="r"><span class="kb">📢 Ochiq kanal</span></div><div class="r"><span class="kb">🔒 Yopiq (qo'shilish so'rovi)</span></div><div class="r"><span class="kb">❌ Bekor qilish</span></div></div></div><p class="cap">5-rasm. Kanalni qo'lda qo'shish.</p><h3>3-qadam. Kanal sozlamalari</h3><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">📢 <b>Kanallar</b>
 
-<!-- ================================================================ KONKURS -->
-<section class="page" id="konkurs">
-  <h2>🎁 Konkurs tugmasi <span class="badge">YANGI</span></h2>
-  <p class="lead">“Konkursda qatnashish” tugmasi har bir odamga <b>o'z shaxsiy havolasi</b> bilan tarqatish posti beradi.</p>
+🟢 — faol, 🔴 — o'chirilgan, 📢 — ochiq, 🔒 — yopiq
 
-  <h3>👤 Foydalanuvchi uchun qanday ishlaydi</h3>
-  <ol class="steps">
-    <li><b>Menyuda <code>✅ Konkursda qatnashish</code> ni bosadi</b><p>Tugma standart bo'yicha <b>yashil</b> va menyuning <b>eng tepasida</b> turadi.</p></li>
-    <li><b>Bot unga post yuboradi</b><p>Postdagi havola va post ostidagi <code>✅ Qatnashish</code> tugmasi o'sha odamning shaxsiy havolasi. Havola oxirida uning Telegram ID si turadi: <code>?start=ref123456789</code>. Bu Ballarim'dagi havolaning aynan o'zi.</p></li>
-    <li><b>Postni do'stlariga va guruhlarga forward qiladi</b><p>Forward qilinganda post ostidagi tugma ham saqlanadi.</p></li>
-    <li><b>Do'sti tugmani bosib botga kiradi</b><p>Post egasiga darhol tabrik keladi va <b>+1 ball</b> qo'shiladi.</p></li>
-  </ol>
+Kanal ustiga bosing — sozlamalari ochiladi.</div></div></div><div class="k"><div class="r"><span class="kb">1. 🟢 📢 Yangiliklar kanali</span></div><div class="r"><span class="kb">2. 🟢 🔒 VIP guruh</span></div><div class="r"><span class="kb">➕ Kanal qo'shish</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">6-rasm. Kanallar ro'yxati.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">📢 Ochiq kanal
 
-  <div class="phone">
-    <div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div>
-    <div class="chat">
-      <div class="m me"><div class="b">✅ Konkursda qatnashish</div></div>
-      <div class="m"><div class="b">🎁 <b>Katta konkurs boshlandi!</b>
+<b>Yangiliklar kanali</b>
+ID: <code>-1001234567890</code>
+Username: @yangiliklar_uz
+Premium emoji: yo'q
+Holat: 🟢 faol</div></div></div><div class="k"><div class="r"><span class="kb">🔴 To'xtatish</span><span class="kb">🗑 O'chirish</span></div><div class="r"><span class="kb">🌟 Tugma premium emoji</span></div><div class="r"><span class="kb">⬅️ Kanallar</span></div></div></div><p class="cap">7-rasm. Bitta kanal ekrani.</p><table class="keys card"><tr><td><code>🔴 To'xtatish</code></td><td>Kanalni vaqtincha tekshiruvdan chiqaradi, <code>🟢 Faollashtirish</code> qaytaradi.</td></tr><tr><td><code>🗑 O'chirish</code></td><td>Kanalni ro'yxatdan butunlay olib tashlaydi.</td></tr><tr><td><code>🌟 Tugma premium emoji</code></td><td>Obuna ekranidagi kanal tugmasiga premium emoji qo'yadi.</td></tr></table><div class="warn">⚠️ Yopiq kanalda qo'shilish so'rovini yuborishning o'zi tekshiruvdan o'tish uchun yetarli. Bot bu so'rovni ko'rishi uchun kanalda admin bo'lishi shart.</div><div class="pager"><a href="#foydalanuvchi">← User</a><a class="next" href="#tugma">URL →</a></div></section>
+<section class="page" id="tugma"><h2>🔗 Tugma (obuna URL tugmalari)</h2><p class="lead">Obuna ekraniga kanal bo'lmagan oddiy link tugma qo'shadi, masalan Instagram yoki sayt.</p><ol class="steps"><li><b><code>🔗 Tugma</code> → <code>➕ Tugma qo'shish</code></b><p>Bu bo'limni <code>/tugma</code> buyrug'i bilan ham ochish mumkin.</p></li><li><b>Tugma nomini yuboring</b><p>Masalan: <code>📸 Instagram</code> (64 belgigacha).</p></li><li><b>Linkni yuboring</b><p>Masalan: <code>https://instagram.com/sovga_uz</code>. <code>https://</code>, <code>http://</code> yoki <code>tg://</code> bilan boshlanishi kerak.</p></li><li><b><code>✅ Tugma saqlandi</code></b><p>Tugma kanallardan keyin, <code>✅ A'zo bo'ldim</code> dan oldin turadi (2-rasm).</p></li></ol><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">🔗 <b>Obuna URL tugmalari</b>
 
-Botga qo'shiling, do'stlaringizni taklif qiling va qimmatbaho sovg'alarni yutib oling 🏆
+Bu tugmalar majburiy obuna xabarida kanal tugmalaridan keyin, <b>A'zo bo'ldim</b> tugmasidan oldin chiqadi.</div></div></div><div class="k"><div class="r"><span class="kb">1. 🔗 📸 Instagram</span></div><div class="r"><span class="kb">➕ Tugma qo'shish</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">8-rasm. URL tugmalar ro'yxati.</p><div class="tip">💡 Bu tugmani bosish shart emas: foydalanuvchi uni bosmasa ham tekshiruvdan o'tadi.</div><div class="pager"><a href="#kanallar">← Kanallar</a><a class="next" href="#menyu">Menyu →</a></div></section>
+<section class="page" id="menyu"><h2>🗂 Menyu tugmalari</h2><p class="lead">Menyu cheksiz darajali bo'ladi: tugma ichida yana tugmalar ochish mumkin.</p><h3>➕ Yangi tugma qo'shish (qadamma-qadam)</h3><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m me"><div class="b">➕ Tugma qo'shish</div></div><div class="m"><div class="b">➕ Yangi tugma nomini yuboring (max 64 belgi).
+Premium custom emoji ishlatsangiz, uni nom bilan birga yuboring:</div></div><div class="m me"><div class="b">📚 Darslar</div></div><div class="m"><div class="b">👥 <b>Taklif sharti</b>
 
-✅ Qatnashish bepul — bor-yo'g'i bir necha soniya.
+«📚 Darslar» tugmasi <b>odam taklif qilgandan keyin</b> ochilsinmi?
 
-👇 Qatnashish uchun havola:
-<span class="lnk">https://t.me/sovga_konkurs_bot?start=ref123456789</span></div>
-        <div class="ikb"><div class="r"><span class="ib green">✅ Qatnashish</span></div></div>
-      </div>
-    </div>
-    <div class="k">
-      <div class="r"><span class="kb green">✅ Konkursda qatnashish</span></div>
-      <div class="r"><span class="kb">📚 Darslar</span><span class="kb">🎁 Sovg'alar</span></div>
-      <div class="r"><span class="kb">🏆 Ballarim</span><span class="kb">🏅 Reyting</span></div>
-    </div>
-  </div>
-  <p class="cap">5-rasm. Standart tarqatish posti. ID 123456789 bo'lgan foydalanuvchining shaxsiy havolasi bilan.</p>
+✅ <b>Ha</b> — foydalanuvchi belgilangan sonda odam taklif qilmaguncha tugma ochilmaydi.
+❌ <b>Yo'q</b> — tugma hammaga ochiq bo'ladi.</div></div></div><div class="k"><div class="r"><span class="kb">✅ Ha</span><span class="kb">❌ Yo'q</span></div><div class="r"><span class="kb">❌ Bekor qilish</span></div></div></div><p class="cap">9-rasm. Tugma nomini yozasiz, keyin bot taklif sharti kerakmi deb so'raydi.</p><ol class="steps"><li><b><code>🗂 Menyu tugmalari</code> → <code>➕ Tugma qo'shish</code></b></li><li><b>Nom yuboring</b><p>Masalan: <code>📚 Darslar</code>. Nom boshidagi premium emoji tugma ikonkasiga aylanadi.</p></li><li><b>Taklif sharti</b><p><code>❌ Yo'q</code>: tugma hammaga ochiq. <code>✅ Ha</code>: nechta odam kerakligini yozasiz, masalan <code>5</code>.</p></li><li><b>Tayyor</b><p>Tugma ro'yxatda paydo bo'ladi, standart bo'yicha <b>2 talik</b> joylashuvda.</p></li></ol><h3>📎 Tugmaga kontent qo'shish</h3><ol class="steps"><li><b>Ro'yxatdan tugmani bosing (masalan <code>1. 📚 Darslar</code>)</b><p>Tugmaning o'z ekrani ochiladi (10-rasm).</p></li><li><b><code>📎 Kontent (0)</code> → <code>➕ Kontent qo'shish</code></b></li><li><b>Kontentni ketma-ket yuboring</b><p>Matn, rasm, video, fayl, audio, stiker yoki albom yuborish mumkin.</p></li><li><b><code>✅ Tugatish</code></b><p>Foydalanuvchi tugmani bosganda shular ketma-ket yuboriladi.</p></li></ol><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">📚 Darslar
 
-  <h3>⚙️ Admin paneldan sozlash</h3>
-  <p>Admin panel → <code>🎁 Konkurs tugmasi</code>:</p>
+Tugma sozlamalari:</div></div></div><div class="k"><div class="r"><span class="kb">1. 🎥 Video darslar</span></div><div class="r"><span class="kb">➕ Tugma qo'shish</span></div><div class="r"><span class="kb">📎 Kontent (2)</span><span class="kb">👥 Taklif sharti: yo'q</span></div><div class="r"><span class="kb">🎨 Tugma rangi</span><span class="kb">🧩 Tugma joylashuvi</span></div><div class="r"><span class="kb">✏️ Nomi</span><span class="kb">🚫 Yashirish</span></div><div class="r"><span class="kb">⬆️ Yuqoriga</span><span class="kb">⬇️ Pastga</span><span class="kb">🗑 O'chirish</span></div><div class="r"><span class="kb">⬅️ Orqaga</span><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">10-rasm. Bitta tugma ekrani. Yuqorida uning ichidagi tugmalar.</p><table class="keys card"><tr><td><code>➕ Tugma qo'shish</code></td><td>Shu tugmaning <b>ichiga</b> yangi tugma qo'shadi, ya'ni ichki bo'lim yaratadi.</td></tr><tr><td><code>📎 Kontent (2)</code></td><td>Tugma bosilganda yuboriladigan narsalar.</td></tr><tr><td><code>👥 Taklif sharti</code></td><td>Necha kishi taklif qilganda ochilishi.</td></tr><tr><td><code>🎨 Tugma rangi</code></td><td>⚪️ Oddiy, 🔵 Ko'k, 🟢 Yashil yoki 🔴 Qizil (11-rasm).</td></tr><tr><td><code>🧩 Tugma joylashuvi</code></td><td>Bir qatorda 1, 2, 3 yoki 4 ta tugma.</td></tr><tr><td><code>✏️ Nomi</code></td><td>Nomini va premium ikonkasini o'zgartiradi.</td></tr><tr><td><code>🚫 Yashirish</code></td><td>Tugmani o'chirmasdan foydalanuvchidan yashiradi.</td></tr><tr><td><code>⬆️ ⬇️</code></td><td>Tugmalar tartibini o'zgartiradi.</td></tr><tr><td><code>🗑 O'chirish</code></td><td>Tugmani ichidagilari bilan birga o'chiradi.</td></tr></table><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">🎨 <b>Tugma rangi</b>
 
-  <div class="phone">
-    <div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div>
-    <div class="chat">
-      <div class="m"><div class="b">🎁 <b>Konkurs tugmasi</b>
+Hozir: <b>⚪️ Oddiy</b></div></div></div><div class="k"><div class="r"><span class="kb">⚪️ Oddiy</span></div><div class="r"><span class="kb blue">🔵 Ko'k</span><span class="kb green">🟢 Yashil</span><span class="kb red">🔴 Qizil</span></div><div class="r"><span class="kb">⬅️ Orqaga</span><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">11-rasm. Rang tanlash. Bu ekran hamma tugmalarda bir xil.</p><div class="warn">⚠️ Ro'yxatda <code>🔒5</code> belgisi bor tugma 5 ta taklif bilan ochiladi. Adminlar uchun shart tekshirilmaydi.</div><div class="pager"><a href="#tugma">← URL</a><a class="next" href="#start">Start →</a></div></section>
+<section class="page" id="start"><h2>✏️ Start xabar</h2><p class="lead">/start bosilganda menyu bilan birga chiqadigan salomlashuv xabari.</p><ol class="steps"><li><b><code>✏️ Start xabar</code> → <code>➕ Qo'shish</code></b></li><li><b>Xabarni yuboring</b><p>Matn, rasm, video yoki fayl yuborish mumkin. Formatlash va premium emojilar o'zgarmasdan saqlanadi.</p></li><li><b><code>✅ Start xabar saqlandi</code></b><p>Keyinchalik <code>✏️ O'zgartirish</code>, <code>👁 Ko'rish</code> yoki <code>🗑 O'chirish</code> tugmalari chiqadi.</p></li></ol><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">✏️ <b>Start xabar</b>
+
+Turi: 🖼 Rasm
+Foydalanuvchi /start bosganda shu xabar ko'rsatiladi.</div></div></div><div class="k"><div class="r"><span class="kb">✏️ O'zgartirish</span></div><div class="r"><span class="kb">👁 Ko'rish</span><span class="kb">🗑 O'chirish</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">12-rasm. Start xabar qo'yilgan holat.</p><div class="tip">💡 Start xabar qo'yilmasa, foydalanuvchiga faqat menyu tugmalari chiqadi.</div><div class="pager"><a href="#menyu">← Menyu</a><a class="next" href="#obuna">Obuna →</a></div></section>
+<section class="page" id="obuna"><h2>📌 Obuna xabari</h2><p class="lead">Majburiy obuna ekranidagi post (2-rasm).</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">📌 <b>Obuna xabari</b>
+
+Holat: <b>standart matn</b>
+
+A'zo bo'lganlarga har /start da qayta ko'rsatish: <b>🔴 O'CHIRILGAN</b>
+Tekshirish tugmasi: <b>✅ A'zo bo'ldim</b>
+Tugma premium emojisi: <b>yo'q</b></div></div></div><div class="k"><div class="r"><span class="kb">🟢 Har /start da ko'rsatish</span></div><div class="r"><span class="kb">➕ Qo'shish</span></div><div class="r"><span class="kb">👁 Ko'rish</span></div><div class="r"><span class="kb">✅ Tekshirish tugmasi</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">13-rasm. Obuna xabari bo'limi.</p><table class="keys card"><tr><td><code>➕ Qo'shish</code> / <code>✏️ O'zgartirish</code></td><td>Yangi post: matn, rasm, video, fayl yoki premium stiker. Kanal tugmalari post ostiga o'zi qo'shiladi.</td></tr><tr><td><code>🟢 Har /start da ko'rsatish</code></td><td>Yoqilsa, a'zo bo'lgan odam ham har /start da obuna ekranini ko'radi.</td></tr><tr><td><code>👁 Ko'rish</code></td><td>Foydalanuvchi ko'radigan ekranni ko'rsatadi.</td></tr><tr><td><code>✅ Tekshirish tugmasi</code></td><td>“✅ A'zo bo'ldim” tugmasining matnini va premium emojisini o'zgartiradi.</td></tr><tr><td><code>♻️ Standartga qaytarish</code></td><td>Post o'zgartirilgan bo'lsa chiqadi va standart matnga qaytaradi.</td></tr></table><div class="pager"><a href="#start">← Start</a><a class="next" href="#telefon">Telefon →</a></div></section>
+<section class="page" id="telefon"><h2>☎️ Telefon so'rash</h2><p class="lead">Foydalanuvchidan telefon raqamini so'rash.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">☎️ <b>Telefon so'rash</b>
+
+Holat: <b>🔴 O'CHIRILGAN</b>
+
+Raqam so'ralmaydi.</div></div></div><div class="k"><div class="r"><span class="kb">🟢 Yoqish</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">14-rasm. Telefon so'rash bo'limi.</p><ol class="steps"><li><b><code>🟢 Yoqish</code></b><p>Endi yangi foydalanuvchi obunadan keyin <code>📱 Raqamni yuborish</code> tugmasini ko'radi.</p></li><li><b>Raqam saqlanadi</b><p>Bir marta yuborgan odamdan qayta so'ralmaydi. Raqamlar 📊 Excel faylida bo'ladi.</p></li></ol><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">📱 Iltimos, telefon raqamingizni yuboring.</div></div></div><div class="k"><div class="r"><span class="kb">📱 Raqamni yuborish</span></div></div></div><p class="cap">15-rasm. Foydalanuvchi shuni ko'radi.</p><div class="pager"><a href="#obuna">← Obuna</a><a class="next" href="#taklif">Taklif →</a></div></section>
+<section class="page" id="taklif"><h2>✍️ Taklif matni</h2><p class="lead">Shartli (🔒) tugma hali ochilmagan bo'lsa, foydalanuvchiga shu matn chiqadi.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m me"><div class="b">📚 Darslar</div></div><div class="m"><div class="b">🔒 <b>📚 Darslar</b> — bu bo'lim hozircha yopiq.
+
+Ochish uchun botga <b>5</b> ta do'stingizni taklif qilishingiz kerak.
+
+👥 Siz taklif qilgansiz: <b>2</b> ta
+⏳ Yana kerak: <b>3</b> ta
+
+👇 Sizning shaxsiy havolangiz:
+<span class="lnk">https://t.me/sovga_konkurs_bot?start=ref123456789</span></div><div class="ikb"><div class="r"><span class="ib">📤 Do'stlarga yuborish</span></div></div></div></div></div><p class="cap">16-rasm. Standart taklif matni.</p><ol class="steps"><li><b><code>✍️ Taklif matni</code> → <code>➕ Qo'shish</code></b></li><li><b>Yangi matnni yuboring</b><p>Faqat matn yuboriladi. Qalin va kursiv yozuv saqlanadi.</p></li><li><b><code>👁 Ko'rish</code> bilan tekshiring</b><p>Kerak bo'lsa, <code>♻️ Standartga qaytarish</code> bilan eski matnga qaytasiz.</p></li></ol><table class="keys card"><tr><td><code>{title}</code></td><td>tugma nomi</td></tr><tr><td><code>{need}</code></td><td>kerakli takliflar soni</td></tr><tr><td><code>{count}</code></td><td>taklif qilganlar soni</td></tr><tr><td><code>{left}</code></td><td>yana nechta kerakligi</td></tr><tr><td><code>{link}</code></td><td>shaxsiy havola (yozilmasa, xabar oxiriga o'zi qo'shiladi)</td></tr></table><div class="pager"><a href="#telefon">← Telefon</a><a class="next" href="#xabar">Xabar →</a></div></section>
+<section class="page" id="xabar"><h2>📨 Xabar yuborish</h2><p class="lead">Botdagi hamma faol foydalanuvchiga xabar yuborish.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">📨 <b>Hammaga xabar</b>
+
+Yubormoqchi bo'lgan xabaringizni shu yerga tashlang.
+Matn, rasm, video, fayl — hammasi bo'ladi.
+Inline link-tugmalari ham aynan o'ziday yuboriladi.</div></div><div class="m"><div class="b"><div class="pic">🎁</div>🎉 Konkurs g'oliblari e'lon qilindi!</div></div><div class="m"><div class="b">👆 Shu xabar <b>1 250</b> ta foydalanuvchiga yuboriladi.
+
+Tasdiqlaysizmi?</div></div></div><div class="k"><div class="r"><span class="kb">✅ Yuborish</span></div><div class="r"><span class="kb">❌ Bekor qilish</span></div></div></div><p class="cap">17-rasm. Xabar yuborish.</p><ol class="steps"><li><b><code>📨 Xabar yuborish</code></b></li><li><b>Xabarni yuboring yoki forward qiling</b></li><li><b><code>✅ Yuborish</code></b><p>Bot yuborish jarayonini ko'rsatib boradi: <code>📨 Yuborilmoqda... 340/1250</code>.</p></li><li><b>Natija</b><p>Yuborilganlar, bloklaganlar, o'chirilgan akkauntlar va xatoliklar soni chiqadi.</p></li></ol><div class="tip">💡 Botni bloklagan odamlar avtomatik belgilanadi va keyingi safar ularga yuborilmaydi.</div><div class="pager"><a href="#taklif">← Taklif</a><a class="next" href="#excel">Excel →</a></div></section>
+<section class="page" id="excel"><h2>📊 Excel</h2><p class="lead">Barcha foydalanuvchilar ro'yxatini fayl qilib olish.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">📊 <b>Excel</b>
+
+Oxirgi yangilanish: <b>2026-11-21 03:00</b>
+Har kuni <b>03:00</b> da avtomatik yangilanadi.</div></div></div><div class="k"><div class="r"><span class="kb">📥 Faylni olish</span><span class="kb">🔄 Yangilash</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">18-rasm. Excel bo'limi (vaqt namuna uchun).</p><table class="keys card"><tr><td><code>📥 Faylni olish</code></td><td>Oxirgi <code>users.xlsx</code> faylini yuboradi.</td></tr><tr><td><code>🔄 Yangilash</code></td><td>Faylni hozir yangilab, keyin yuboradi.</td></tr></table><div class="tip">💡 Faylda ism, username, telefon, takliflar soni va kim taklif qilgani ko'rinadi.</div><div class="pager"><a href="#xabar">← Xabar</a><a class="next" href="#statistika">Statistika →</a></div></section>
+<section class="page" id="statistika"><h2>👥 Statistika</h2><p class="lead">Bitta tugma bilan botning umumiy holatini ko'rish.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m me"><div class="b">👥 Statistika</div></div><div class="m"><div class="b">👥 <b>Statistika</b>
+
+Jami: <b>1 300</b> ta
+Faol: <b>1 250</b> ta
+Bloklaganlar: <b>45</b> ta
+O'chirilgan akkauntlar: <b>5</b> ta
+Raqam qoldirgan: <b>820</b> ta
+
+Bugun qo'shilgan: <b>37</b> ta
+7 kunda: <b>214</b> ta
+
+🔗 Taklif orqali kelgan: <b>640</b> ta
+👤 Odam taklif qilganlar: <b>190</b> ta
+
+🏆 <b>Eng ko'p taklif qilganlar</b>
+1. Ali Valiyev — <b>24</b> ta
+2. Dilnoza Karimova — <b>19</b> ta
+3. Sardor Toshmatov — <b>15</b> ta</div></div></div></div><p class="cap">19-rasm. Statistika (raqamlar namuna).</p><div class="pager"><a href="#excel">← Excel</a><a class="next" href="#goliblar">G'oliblar →</a></div></section>
+<section class="page" id="goliblar"><h2>🏆 G'oliblar</h2><p class="lead">Konkurs yakunida TOP ro'yxatni olish va g'oliblarga xabar yozish.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">🏆 <b>G'oliblar boshqaruvi</b>
+
+Bitta xabarda ko'rsatiladigan g'oliblar: <b>10</b> ta.</div></div></div><div class="k"><div class="r"><span class="kb">📋 G'oliblarni chiqarish</span></div><div class="r"><span class="kb">🔢 G'oliblar soni</span><span class="kb">✉️ ID bo'yicha xabar</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">20-rasm. G'oliblar bo'limi.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m me"><div class="b">📋 G'oliblarni chiqarish</div></div><div class="m"><div class="b">🏆 <b>G'oliblar — TOP 3</b>
+
+1. Ismi: <b>Ali Valiyev</b> | Username: @ali_v | ID: <code>123456789</code> | Ball: <b>24</b>
+2. Ismi: <b>Dilnoza Karimova</b> | Username: — | ID: <code>987654321</code> | Ball: <b>19</b>
+3. Ismi: <b>Sardor Toshmatov</b> | Username: @sardor | ID: <code>555444333</code> | Ball: <b>15</b></div></div></div></div><p class="cap">21-rasm. G'oliblar ro'yxati.</p><table class="keys card"><tr><td><code>🔢 G'oliblar soni</code></td><td>1 dan 20 gacha son yuboring.</td></tr><tr><td><code>✉️ ID bo'yicha xabar</code></td><td>ID yozasiz (masalan <code>123456789</code>), bot odamni topib ko'rsatadi. Keyin xabarni yuborib, tasdiqlaysiz.</td></tr><tr><td><code>🧹 Barcha ballarni 0 qilish</code></td><td>Faqat superadmin'ga ko'rinadi. Batafsil ⭐ Superadmin bo'limida.</td></tr></table><div class="pager"><a href="#statistika">← Statistika</a><a class="next" href="#adminlar">Adminlar →</a></div></section>
+<section class="page" id="adminlar"><h2>👮 Adminlar</h2><p class="lead">Botni boshqaradigan odamlarni qo'shish va olib tashlash.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">👮 <b>Adminlar</b>
+
+⭐ — <code>.env</code> dagi asosiy admin (paneldan o'chirilmaydi)
+👤 — panel orqali qo'shilgan admin</div></div></div><div class="k"><div class="r"><span class="kb">⭐ 111111111</span></div><div class="r"><span class="kb">1. 👤 Ali Valiyev</span></div><div class="r"><span class="kb">➕ Admin qo'shish</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">22-rasm. Adminlar ro'yxati.</p><ol class="steps"><li><b><code>➕ Admin qo'shish</code></b></li><li><b>Telegram ID yuboring</b><p>Masalan: <code>123456789</code>. Yoki o'sha odamning biror xabarini forward qiling.</p></li><li><b>Tayyor</b><p>Yangi adminga <code>👑 Sizga admin huquqi berildi. Panelni ochish uchun /admin</code> degan xabar boradi.</p></li><li><b>Olib tashlash</b><p>Admin ustiga bosib, <code>🗑 Adminlikdan olish</code> → <code>✅ Ha, olib tashlansin</code>.</p></li></ol><div class="warn">⚠️ Yangi admin botga avval /start bosgan bo'lishi kerak. Aks holda unga xabar yetib bormaydi.</div><div class="pager"><a href="#goliblar">← G'oliblar</a><a class="next" href="#yopiq">Yopiq →</a></div></section>
+<section class="page" id="yopiq"><h2>🔐 Yopiq kanal linki</h2><p class="lead">N ta odam taklif qilgan foydalanuvchiga yopiq kanalga shaxsiy, bir martalik havola beriladi.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">🔐 <b>Yopiq kanal linki</b>
+
+Holat: <b>🔴 O'CHIRILGAN</b>
+Kanal: — belgilanmagan
+Shart: — belgilanmagan
+Post: <b>standart</b>
+Kirish tugmasi: <b>🔐 Kanalga kirish (standart)</b>
+Tabrik xabari: <b>standart</b>
+Havola olganlar: <b>0</b> ta</div></div></div><div class="k"><div class="r"><span class="kb">🟢 Yoqish</span></div><div class="r"><span class="kb">📢 Kanalni belgilash</span><span class="kb">👥 Takliflar soni</span></div><div class="r"><span class="kb">📝 Link posti</span><span class="kb">👁 Postni ko'rish</span></div><div class="r"><span class="kb">🔘 Kirish tugmasi matni</span></div><div class="r"><span class="kb">🎉 Tabrik xabari</span><span class="kb">👁 Tabrikni ko'rish</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">23-rasm. Yopiq kanal bo'limi.</p><ol class="steps"><li><b>Botni yopiq kanalga admin qiling</b><p><b>“Foydalanuvchilarni taklif qilish”</b> huquqi bilan (📢 Kanallar bo'limidagi 1-qadam).</p></li><li><b><code>📢 Kanalni belgilash</code></b><p>Kanaldan post forward qiling yoki ID sini yuboring.</p></li><li><b><code>👥 Takliflar soni</code></b><p>Masalan <code>10</code>.</p></li><li><b><code>📝 Link posti</code>, <code>🔘 Kirish tugmasi matni</code></b><p>Ixtiyoriy. Kalitlar: <code>{link}</code>, <code>{count}</code>, <code>{need}</code>.</p></li><li><b><code>🟢 Yoqish</code></b></li></ol><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">🎉 <b>Tabriklaymiz!</b>
+
+Sizning havolangiz orqali <b>Dilnoza</b> botga qo'shildi.
+➕ Sizga <b>+1 ball</b> berildi.
+
+🏆 Jami ballaringiz: <b>8</b> ta
+🔐 Yopiq kanal linkigacha yana <b>2</b> ta taklif qoldi.</div></div><div class="m"><div class="b">🎉 <b>Tabriklaymiz!</b>
+
+Siz <b>10</b> ta do'stingizni taklif qildingiz va yopiq kanalga kirish huquqini qo'lga kiritdingiz.
+
+🔐 Sizning shaxsiy havolangiz:
+<span class="lnk">https://t.me/+AbCdEf123456</span>
+
+⚠️ Havola faqat siz uchun va bir marta ishlaydi — uni boshqalarga bermang.</div><div class="ikb"><div class="r"><span class="ib">🔐 Kanalga kirish</span></div></div></div></div></div><p class="cap">24-rasm. Har taklifdagi tabrik va shart bajarilganda keladigan havola.</p><div class="warn">⚠️ Havola bitta odam kirishi bilan eskiradi. Bir odamga faqat bitta havola beriladi.</div><div class="pager"><a href="#adminlar">← Adminlar</a><a class="next" href="#ballarim">Ballarim →</a></div></section>
+<section class="page" id="ballarim"><h2>🏆 Ballarim tugmasi</h2><p class="lead">Foydalanuvchiga ballari va shaxsiy havolasini ko'rsatadi.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">🏆 <b>Ballarim tugmasi</b>
+
+Holat: <b>🟢 KO'RINADI</b>
+Matni: <b>🏆 Ballarim</b>
+Premium emoji: <b>yo'q</b>
+Rangi: <b>⚪️ Oddiy</b>
+
+Xabar: <b>standart matn</b></div></div></div><div class="k"><div class="r"><span class="kb">🔴 O'chirish</span></div><div class="r"><span class="kb">✏️ Tugma nomi</span><span class="kb">🎨 Rangini o'zgartirish</span></div><div class="r"><span class="kb">📝 Natija xabari</span><span class="kb">👁 Ko'rish</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">25-rasm. Ballarim bo'limi.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m me"><div class="b">🏆 Ballarim</div></div><div class="m"><div class="b">🏆 <b>Ballaringiz</b>
+
+Siz taklif qilgan odamlar soni: <b>7</b> ta
+
+Do'stlaringizni shu havola orqali taklif qiling:
+<span class="lnk">https://t.me/sovga_konkurs_bot?start=ref123456789</span></div><div class="ikb"><div class="r"><span class="ib">📤 Do'stlarga yuborish</span></div></div></div></div></div><p class="cap">26-rasm. Foydalanuvchi shuni ko'radi.</p><table class="keys card"><tr><td><code>🔴 O'chirish</code></td><td>Tugmani menyudan yashiradi.</td></tr><tr><td><code>✏️ Tugma nomi</code></td><td>Nomi va premium emojisi.</td></tr><tr><td><code>🎨 Rangini o'zgartirish</code></td><td>4 xil rangdan biri.</td></tr><tr><td><code>📝 Natija xabari</code></td><td>Kalitlar: <code>{count}</code> (ballar soni) va <code>{link}</code> (havola). <code>{link}</code> bo'lishi shart.</td></tr></table><div class="pager"><a href="#yopiq">← Yopiq</a><a class="next" href="#reyting">Reyting →</a></div></section>
+<section class="page" id="reyting"><h2>🏅 Reyting tugmasi</h2><p class="lead">Eng ko'p odam taklif qilganlar ro'yxati.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">🏅 <b>Reyting tugmasi</b>
+
+Holat: <b>🟢 KO'RINADI</b>
+Matni: <b>🏅 Reyting</b>
+Rangi: <b>⚪️ Oddiy</b>
+Joylashuvi: <b>2️⃣ ikkitalik</b>
+
+Post: <b>standart matn</b></div></div></div><div class="k"><div class="r"><span class="kb">🔴 O'chirish</span></div><div class="r"><span class="kb">✏️ Reyting tugmasi nomi</span><span class="kb">🎨 Reyting tugmasi rangi</span></div><div class="r"><span class="kb">🧩 Reyting joylashuvi</span></div><div class="r"><span class="kb">📝 Reyting posti</span><span class="kb">👁 Ko'rish</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">27-rasm. Reyting bo'limi.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m me"><div class="b">🏅 Reyting</div></div><div class="m"><div class="b">🏅 <b>Takliflar reytingi</b>
+
+1. Ali Valiyev — <b>24</b> ta
+2. Dilnoza Karimova — <b>19</b> ta
+3. Sardor Toshmatov — <b>15</b> ta
+
+Eng faol ishtirokchilar ro'yxati.</div></div></div></div><p class="cap">28-rasm. Reyting posti.</p><div class="tip">💡 Postga <code>{users-10}</code> deb yozsangiz, o'sha joyda TOP 10 chiqadi. Son 1 dan 50 gacha bo'lishi mumkin. <code>{users-10}</code> kaliti bo'lishi shart.</div><div class="pager"><a href="#ballarim">← Ballarim</a><a class="next" href="#konkurs">Konkurs →</a></div></section>
+<section class="page" id="konkurs"><h2>🎁 Konkurs tugmasi <span class="badge">YANGI</span></h2><p class="lead">“Konkursda qatnashish” tugmasi har bir odamga o'z shaxsiy havolasi bilan tarqatish posti beradi.</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m"><div class="b">🎁 <b>Konkurs tugmasi</b>
 
 Holat: <b>🟢 KO'RINADI</b>
 Matni: <b>✅ Konkursda qatnashish</b>
@@ -230,146 +300,32 @@ Joylashuvi: <b>⬆️ menyuning eng tepasida</b>
 
 Tarqatish posti: <b>standart matn</b>
 Post tugmasi: <b>✅ Qatnashish (standart)</b>
-Post tugmasi rangi: <b>🟢 Yashil</b></div></div>
-    </div>
-    <div class="k">
-      <div class="r"><span class="kb">🔴 O'chirish</span><span class="kb">⬇️ Pastga qo'yish</span></div>
-      <div class="r"><span class="kb">✏️ Tugma nomi</span><span class="kb">🎨 Tugma rangi</span></div>
-      <div class="r"><span class="kb">📝 Tarqatish posti</span><span class="kb">👁 Ko'rish</span></div>
-      <div class="r"><span class="kb">🔘 Post tugmasi</span><span class="kb">🎨 Post tugmasi rangi</span></div>
-      <div class="r"><span class="kb">🏠 Admin panel</span></div>
-    </div>
-  </div>
-  <p class="cap">6-rasm. Konkurs bo'limi standart sozlamalar bilan.</p>
+Post tugmasi rangi: <b>🟢 Yashil</b></div></div></div><div class="k"><div class="r"><span class="kb">🔴 O'chirish</span><span class="kb">⬇️ Pastga qo'yish</span></div><div class="r"><span class="kb">✏️ Tugma nomi</span><span class="kb">🎨 Tugma rangi</span></div><div class="r"><span class="kb">📝 Tarqatish posti</span><span class="kb">👁 Ko'rish</span></div><div class="r"><span class="kb">🔘 Post tugmasi</span><span class="kb">🎨 Post tugmasi rangi</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">29-rasm. Konkurs bo'limi.</p><h3>👤 Foydalanuvchi uchun</h3><ol class="steps"><li><b><code>✅ Konkursda qatnashish</code> ni bosadi</b><p>Tugma standart bo'yicha yashil va menyuning eng tepasida turadi.</p></li><li><b>Bot unga post yuboradi</b><p>Havola oxirida uning Telegram ID si turadi: <code>?start=ref123456789</code>.</p></li><li><b>Postni do'stlariga forward qiladi</b><p>Post ostidagi tugma ham forward bilan birga ketadi.</p></li><li><b>Do'sti botga kirsa, unga +1 ball</b><p>Va darhol tabrik xabari keladi.</p></li></ol><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m me"><div class="b">✅ Konkursda qatnashish</div></div><div class="m"><div class="b">🎁 <b>Katta konkurs boshlandi!</b>
 
-  <table class="keys card">
-    <tr><td><code>🔴 O'chirish</code><br><code>🟢 Yoqish</code></td><td>Tugmani menyuda ko'rsatadi yoki yashiradi.</td></tr>
-    <tr><td><code>⬇️ Pastga qo'yish</code><br><code>⬆️ Tepaga qo'yish</code></td><td>Tugma menyuning eng tepasida (standart) yoki eng pastida tursin.</td></tr>
-    <tr><td><code>✏️ Tugma nomi</code></td><td>Yangi nom yuboring. Nom boshidagi premium emoji ikonkaga aylanadi.</td></tr>
-    <tr><td><code>🎨 Tugma rangi</code></td><td>⚪️ Oddiy, 🔵 Ko'k, 🟢 Yashil yoki 🔴 Qizil.</td></tr>
-    <tr><td><code>📝 Tarqatish posti</code></td><td>Yangi post: matn, rasm, video, GIF yoki fayl (izohi bilan), yoki stiker. Qalin, kursiv va <b>premium emojilar</b> saqlanadi.</td></tr>
-    <tr><td><code>👁 Ko'rish</code></td><td>Postni o'zingizning havolangiz bilan ko'rsatadi, foydalanuvchi ham aynan shuni oladi.</td></tr>
-    <tr><td><code>🔘 Post tugmasi</code></td><td>Post ostidagi tugmaning matni va premium emojisi.</td></tr>
-    <tr><td><code>🎨 Post tugmasi rangi</code></td><td>Post ostidagi tugmaning rangi.</td></tr>
-    <tr><td><code>♻️ … standartga qaytarish</code></td><td>Post yoki post tugmasini o'zgartirgan bo'lsangiz chiqadi va standart holatga qaytaradi.</td></tr>
-  </table>
+Botga qo'shiling, do'stlaringizni taklif qiling va qimmatbaho sovg'alarni yutib oling 🏆
 
-  <h3>🔑 Post ichidagi kalitlar</h3>
-  <table class="keys card">
-    <tr><td><code>{link}</code></td><td>Foydalanuvchining shaxsiy havolasi, oxirida uning ID si bilan.</td></tr>
-    <tr><td><code>{name}</code></td><td>Postni tarqatayotgan odamning ismi. Masalan: <i>“Ali Valiyev sizni konkursga taklif qilmoqda”</i>.</td></tr>
-  </table>
+✅ Qatnashish bepul — bor-yo'g'i bir necha soniya.
 
-  <div class="tip">💡 Namuna: rasm yuborib, izohiga <code>🎁 Konkurs! {name} sizni taklif qilmoqda 👇 {link}</code> deb yozing. Matnda <code>{link}</code> bo'lmasa ham havola post ostidagi tugmada bo'ladi.</div>
-  <div class="warn">⚠️ Premium emoji ishlashi uchun bot egasining Telegram Premium obunasi faol bo'lishi kerak. Telegram premium emojini qabul qilmasa, bot saqlamaydi va sizga ogohlantirish beradi.</div>
+👇 Qatnashish uchun havola:
+<span class="lnk">https://t.me/sovga_konkurs_bot?start=ref123456789</span></div><div class="ikb"><div class="r"><span class="ib green">✅ Qatnashish</span></div></div></div></div><div class="k"><div class="r"><span class="kb green">✅ Konkursda qatnashish</span></div><div class="r"><span class="kb">📚 Darslar</span><span class="kb">🎁 Sovg'alar</span></div><div class="r"><span class="kb">🏆 Ballarim</span><span class="kb">🏅 Reyting</span></div></div></div><p class="cap">30-rasm. Standart tarqatish posti.</p><h3>⚙️ Tugmalar</h3><table class="keys card"><tr><td><code>🔴 O'chirish</code> / <code>🟢 Yoqish</code></td><td>Tugmani menyuda ko'rsatadi yoki yashiradi.</td></tr><tr><td><code>⬇️ Pastga qo'yish</code> / <code>⬆️ Tepaga qo'yish</code></td><td>Tugma menyuning eng tepasida (standart) yoki eng pastida tursin.</td></tr><tr><td><code>✏️ Tugma nomi</code></td><td>Nom va premium emoji.</td></tr><tr><td><code>🎨 Tugma rangi</code></td><td>4 xil rangdan biri.</td></tr><tr><td><code>📝 Tarqatish posti</code></td><td>Matn, rasm, video, GIF, fayl yoki stiker. Premium emojilar saqlanadi.</td></tr><tr><td><code>👁 Ko'rish</code></td><td>Postni sizning havolangiz bilan ko'rsatadi.</td></tr><tr><td><code>🔘 Post tugmasi</code></td><td>Post ostidagi tugmaning matni va premium emojisi.</td></tr><tr><td><code>🎨 Post tugmasi rangi</code></td><td>Post ostidagi tugmaning rangi.</td></tr><tr><td><code>♻️ ... standartga qaytarish</code></td><td>O'zgartirilgan bo'lsa chiqadi.</td></tr></table><table class="keys card"><tr><td><code>{link}</code></td><td>shaxsiy havola (oxirida odamning ID si)</td></tr><tr><td><code>{name}</code></td><td>postni tarqatayotgan odamning ismi</td></tr></table><div class="tip">💡 Namuna: rasm yuborib, izohiga <code>🎁 Konkurs! {name} sizni taklif qilmoqda 👇 {link}</code> deb yozing.</div><div class="pager"><a href="#reyting">← Reyting</a><a class="next" href="#superadmin">Super →</a></div></section>
+<section class="page" id="superadmin"><h2>⭐ Superadmin</h2><p class="lead">Faqat asosiy egalar uchun (serverdagi <code>.env</code> faylidagi ADMINS).</p><div class="phone"><div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div><div class="chat"><div class="m me"><div class="b">/superadmin</div></div><div class="m"><div class="b">🔐 <b>Superadmin panel</b>
 
-  <div class="pager"><a href="#boshlash">← Boshlash</a><a class="next" href="#ballar">Ballar →</a></div>
-</section>
+Bu bo'lim faqat <code>.env</code> dagi ADMINS ro'yxatiga ko'rinadi.
 
-<!-- ================================================================= BALLAR -->
-<section class="page" id="ballar">
-  <h2>🏆 Ballar va reyting</h2>
-  <p class="lead">Har bir taklif qilingan yangi odam bitta ball hisoblanadi.</p>
-
-  <h3>🏆 Ballarim tugmasi</h3>
-  <p>Foydalanuvchiga ballari soni va shaxsiy havolasi ko'rsatiladi, ostida <code>📤 Do'stlarga yuborish</code> tugmasi bo'ladi.</p>
-  <div class="phone">
-    <div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div>
-    <div class="chat">
-      <div class="m me"><div class="b">🏆 Ballarim</div></div>
-      <div class="m"><div class="b">🏆 <b>Ballaringiz</b>
-
-Siz taklif qilgan odamlar soni: <b>7</b> ta
-
-Do'stlaringizni shu havola orqali taklif qiling:
-<span class="lnk">https://t.me/sovga_konkurs_bot?start=ref123456789</span></div>
-        <div class="ikb"><div class="r"><span class="ib">📤 Do'stlarga yuborish</span></div></div>
-      </div>
-    </div>
-  </div>
-  <p class="cap">7-rasm. Ballarim xabari (standart matn).</p>
-  <ul class="dots">
-    <li>Admin panel → <code>🏆 Ballarim tugmasi</code>: ko'rsatish/yashirish, nomi, rangi, <code>📝 Natija xabari</code>.</li>
-    <li>Xabarda <code>{count}</code> (ballar soni) va <code>{link}</code> (havola) ishlatiladi. <code>{link}</code> bo'lishi shart.</li>
-  </ul>
-
-  <h3>🏅 Reyting tugmasi</h3>
-  <div class="phone">
-    <div class="ph-top"><div class="ava">S</div><div><b>Sovg'a Konkurs Bot</b><small>bot</small></div></div>
-    <div class="chat">
-      <div class="m me"><div class="b">🏅 Reyting</div></div>
-      <div class="m"><div class="b">🏅 <b>Takliflar reytingi</b>
-
-1. Ali Valiyev — <b>24</b> ta
-2. Dilnoza Karimova — <b>19</b> ta
-3. Sardor Toshmatov — <b>15</b> ta
-4. Madina Yusupova — <b>11</b> ta
-5. Jasur Rahimov — <b>9</b> ta
-
-Eng faol ishtirokchilar ro'yxati.</div></div>
-    </div>
-  </div>
-  <p class="cap">8-rasm. Reyting posti.</p>
-  <ul class="dots">
-    <li>Postga <code>{users-10}</code> deb yozilsa, o'sha joyda TOP 10 chiqadi. Son 1 dan 50 gacha bo'lishi mumkin.</li>
-    <li>Rangi, nomi, premium emojisi va joylashuvi (1–4 talik) sozlanadi. 2 talik joylashuvda Ballarim va Reyting yonma-yon turadi.</li>
-  </ul>
-
-  <h3>📏 Ball qanday hisoblanadi</h3>
-  <ul class="dots">
-    <li>Ball faqat botga <b>birinchi marta</b> kirgan yangi odam uchun beriladi.</li>
-    <li>O'zini o'zi taklif qilish hisoblanmaydi.</li>
-    <li>Ball odam /start bosgan zahoti yoziladi, obuna bo'lishini kutmaydi.</li>
-    <li>Kim nechta odam taklif qilgani 👥 Statistika va 📊 Excel bo'limlarida ko'rinadi.</li>
-  </ul>
-
-  <div class="pager"><a href="#konkurs">← Konkurs</a><a class="next" href="#boshlash">Boshiga ↑</a></div>
-  <p class="hint">Qo'llanma internetsiz ishlaydi: barcha rasm va matnlar shu faylning ichida.</p>
-</section>
-
+⚠️ Ballarni nolga tushirish va bazani restore qilishdan oldin bot avtomatik xavfsizlik dumpini yaratadi.</div></div></div><div class="k"><div class="r"><span class="kb">🧹 Ballarni 0 qilish</span></div><div class="r"><span class="kb">🗄 Dumplar / restore</span></div><div class="r"><span class="kb">🏠 Admin panel</span></div></div></div><p class="cap">31-rasm. Superadmin panel.</p><table class="keys card"><tr><td><code>🧹 Ballarni 0 qilish</code></td><td>Yangi konkurs boshlashdan oldin. Bot avval baza nusxasini oladi, keyin hamma ballarni nolga tushiradi.</td></tr><tr><td><code>🗄 Dumplar / restore</code></td><td>Saqlangan nusxani tanlab, bazani o'sha holatga qaytaradi.</td></tr></table><div class="warn">⚠️ Bu amallarni orqaga qaytarib bo'lmaydi, shuning uchun bot avval tasdiqlashni so'raydi.</div><div class="pager"><a href="#konkurs">← Konkurs</a><a class="next" href="#savollar">Savollar →</a></div></section>
+<section class="page" id="savollar"><h2>❓ Ko'p beriladigan savollar</h2><p class="lead">Ko'p uchraydigan muammolar va ularning yechimi.</p><div class="card"><p><b>Premium emoji chiqmayapti?</b> Bot egasining Telegram Premium obunasi faol bo'lishi kerak. Emojini matn bilan birga, bitta xabarda yuboring.</p></div><div class="card"><p><b>Sariq rang bormi?</b> Yo'q. Telegram faqat oddiy, ko'k, yashil va qizil ranglarni beradi. Sariq urg'u kerak bo'lsa, nomga 🟡 emoji qo'shing.</p></div><div class="card"><p><b>“Bunday nomli tugma bor” deyapti?</b> Asosiy menyuda ikkita tugma bir xil nomda bo'la olmaydi. Bu Ballarim, Reyting va Konkurs tugmalariga ham tegishli.</p></div><div class="card"><p><b>Kanal qo'shilmayapti?</b> Bot kanalda admin bo'lishi shart. Yopiq kanalda havola orqali taklif qilish huquqi ham kerak.</p></div><div class="card"><p><b>Ball hisoblanmadi?</b> Ball faqat botga birinchi marta kirgan odam uchun beriladi.</p></div><div class="card"><p><b>Panel tushunarsiz ekranda qoldi?</b> <code>/admin</code> yozing yoki <code>🏠 Admin panel</code> ni bosing.</p></div><p class="hint">Qo'llanma internetsiz ishlaydi: barcha rasm va matnlar shu faylning ichida.</p><div class="pager"><a href="#superadmin">← Super</a><a class="next" href="#boshlash">Boshiga →</a></div></section>
 </main>
-
-<nav class="bar" aria-label="Bo'limlar">
-  <div class="in">
-    <a href="#boshlash"><span>🏠</span>Boshlash</a>
-    <a href="#konkurs"><span>🎁</span>Konkurs</a>
-    <a href="#ballar"><span>🏆</span>Ballar</a>
-  </div>
-</nav>
-
-<script>
-/* JavaScript ishlasa: bo'limlar alohida sahifa bo'lib ochiladi.
-   Ishlamasa: hamma bo'lim ketma-ket ko'rinadi, pastki menyu shunchaki o'sha joyga o'tkazadi. */
-(function () {
-  try {
-    var pages = Array.prototype.slice.call(document.querySelectorAll('.page'));
-    var links = Array.prototype.slice.call(document.querySelectorAll('nav.bar a'));
-    if (!pages.length) return;
-    document.documentElement.className += ' js';
-
-    function show(id) {
-      var target = id ? document.getElementById(id) : null;
-      var page = target;
-      while (page && !(page.classList && page.classList.contains('page'))) page = page.parentNode;
-      if (!page) page = pages[0];
-      pages.forEach(function (p) { p.classList.toggle('active', p === page); });
-      links.forEach(function (a) {
-        var on = a.getAttribute('href') === '#' + page.id;
-        a.classList.toggle('on', on);
-        if (on && a.scrollIntoView) {
-          try { a.scrollIntoView({ block: 'nearest', inline: 'center' }); } catch (e) {}
-        }
-      });
-      if (target && target !== page && target.scrollIntoView) target.scrollIntoView();
-      else window.scrollTo(0, 0);
-    }
-
-    window.addEventListener('hashchange', function () { show(location.hash.slice(1)); });
-    show(location.hash.slice(1));
-  } catch (e) {
-    document.documentElement.className = document.documentElement.className.replace(' js', '');
-  }
-})();
-</script>
+<nav class="bar" aria-label="Bo'limlar"><div class="in"><a href="#boshlash"><span>🏠</span>Bosh</a><a href="#foydalanuvchi"><span>👤</span>User</a><a href="#kanallar"><span>📢</span>Kanallar</a><a href="#tugma"><span>🔗</span>URL</a><a href="#menyu"><span>🗂</span>Menyu</a><a href="#start"><span>✏️</span>Start</a><a href="#obuna"><span>📌</span>Obuna</a><a href="#telefon"><span>☎️</span>Telefon</a><a href="#taklif"><span>✍️</span>Taklif</a><a href="#xabar"><span>📨</span>Xabar</a><a href="#excel"><span>📊</span>Excel</a><a href="#statistika"><span>👥</span>Statistika</a><a href="#goliblar"><span>🏆</span>G'oliblar</a><a href="#adminlar"><span>👮</span>Adminlar</a><a href="#yopiq"><span>🔐</span>Yopiq</a><a href="#ballarim"><span>🏆</span>Ballarim</a><a href="#reyting"><span>🏅</span>Reyting</a><a href="#konkurs"><span>🎁</span>Konkurs</a><a href="#superadmin"><span>⭐</span>Super</a><a href="#savollar"><span>❓</span>Savollar</a></div></nav>
+<script>(function(){try{
+var pages=[].slice.call(document.querySelectorAll('.page')),links=[].slice.call(document.querySelectorAll('nav.bar a'));
+if(!pages.length)return;document.documentElement.className+=' js';
+function show(id){var t=id?document.getElementById(id):null,p=t;
+while(p&&!(p.classList&&p.classList.contains('page')))p=p.parentNode;if(!p)p=pages[0];
+pages.forEach(function(x){x.classList.toggle('active',x===p)});
+links.forEach(function(a){var on=a.getAttribute('href')==='#'+p.id;a.classList.toggle('on',on);
+if(on&&a.scrollIntoView){try{a.scrollIntoView({block:'nearest',inline:'center'})}catch(e){}}});
+window.scrollTo(0,0)}
+window.addEventListener('hashchange',function(){show(location.hash.slice(1))});show(location.hash.slice(1));
+}catch(e){document.documentElement.className=document.documentElement.className.replace(' js','')}})();</script>
 </body>
 </html>
